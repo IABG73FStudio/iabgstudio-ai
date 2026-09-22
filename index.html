@@ -78,7 +78,7 @@
             min-height: 20px;
         }
 
-        /* АДАПТИВНИЙ РЕЖИМ МОЗАЇКИ (GRID MOSAIC) */
+        /* КІМНАТА ДЗВІНКУ ТА РІВНОПРАВНА МОЗАЇКА */
         #callRoom {
             display: none;
             flex-direction: column;
@@ -87,14 +87,15 @@
 
         #videoGrid {
             flex: 1;
-            display: flex;
-            flex-wrap: wrap;
-            align-content: center;
-            justify-content: center;
+            display: grid;
             gap: 12px;
             padding: 16px;
             background: #08090c;
+            align-content: center;
+            justify-content: center;
             overflow-y: auto;
+            width: 100%;
+            height: 100%;
         }
 
         .video-container {
@@ -107,13 +108,10 @@
             justify-content: center;
             aspect-ratio: 16 / 9;
             border: 3px solid transparent;
-            transition: all 0.2s ease;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            
-            /* Динамічний розмір плитки у мозаїці */
-            flex: 1 1 calc(50% - 12px);
-            max-width: 100%;
-            max-height: 85vh;
+            width: 100%;
+            max-height: 80vh;
         }
 
         /* БІЛЕ СЯЙВО ПРИ РОЗМОВІ */
@@ -282,39 +280,35 @@
             }
         }
 
-        // РОЗСИЛКА ПОВІДОМЛЕННЯ ВСІМ ПІДДОСЛІДНИМ ПЕРАМ (FULL MESH)
+        // РАЗСИЛКА ПОВІДОМЛЕНЬ ВСІМ УЧАСНИКАМ У МЕРЕЖІ
         function broadcastData(msg) {
             Object.values(dataConns).forEach(conn => {
                 if (conn && conn.open) conn.send(msg);
             });
         }
 
-        // НАЛАШТУВАННЯ ДАТА-КАНАЛУ СИНХРОНІЗАЦІЇ
+        // ОБРОБКА ДАТА-КАНАЛУ ДЛЯ СИНХРОНІЗАЦІЇ СТАНІВ
         function setupDataConn(conn) {
             conn.on('open', () => {
                 dataConns[conn.peer] = conn;
-                // Відправляємо новому учаснику наш стан камери
+                // Надсилаємо свій стан камери новому співрозмовнику
                 conn.send({ type: 'CAM_STATE', peerId: myPeerId, enabled: isCamOn });
 
-                // Якщо я господар — передаю новому учаснику список усіх інших підключених людей
+                // Якщо я господар — відправляю новоприбулому повний список усіх присутніх
                 if (isHost) {
                     conn.send({ type: 'PEER_LIST', peers: Array.from(roomPeers) });
                     roomPeers.add(conn.peer);
-                    broadcastData({ type: 'NEW_PEER_JOINED', peerId: conn.peer });
                 }
             });
 
             conn.on('data', (data) => {
                 if (data.type === 'PEER_LIST') {
+                    // Отримано список людей від господаря -> Новий учасник телефонує кожному зі списку
                     data.peers.forEach(pId => {
                         if (pId !== myPeerId && !calls[pId]) {
-                            connectToPeer(pId);
+                            connectAndCallPeer(pId);
                         }
                     });
-                } else if (data.type === 'NEW_PEER_JOINED') {
-                    if (data.peerId !== myPeerId && !calls[data.peerId]) {
-                        connectToPeer(data.peerId);
-                    }
                 } else if (data.type === 'CAM_STATE') {
                     userCamStates[data.peerId] = data.enabled;
                     setCamDisplay(data.peerId, data.enabled);
@@ -330,13 +324,17 @@
             });
         }
 
-        // ПРЯМЕ ПІДКТЮЧЕННЯ ДО УЧАСНИКА (FULL MESH)
-        function connectToPeer(targetPeerId) {
-            if (dataConns[targetPeerId] && dataConns[targetPeerId].open) return;
+        // ІНІЦІАЦІЯ З'ЄДНАННЯ ТА ДЗВІНКА ДО УЧАСНИКА
+        function connectAndCallPeer(targetPeerId) {
+            if (targetPeerId === myPeerId) return;
 
-            const conn = peer.connect(targetPeerId);
-            setupDataConn(conn);
+            // Створюємо дата-з'єднання
+            if (!dataConns[targetPeerId]) {
+                const conn = peer.connect(targetPeerId);
+                setupDataConn(conn);
+            }
 
+            // Телефонуємо та відправляємо свій потік
             const call = peer.call(targetPeerId, localStream);
             handleCallStream(call, targetPeerId);
         }
@@ -359,7 +357,10 @@
                 addVideoStream(myPeerId, localStream, 'Ви (Господар)');
             });
 
+            // Приймаємо дата-з'єднання від гостей
             peer.on('connection', (conn) => setupDataConn(conn));
+
+            // Приймаємо дзвінки від гостей
             peer.on('call', (call) => {
                 call.answer(localStream);
                 handleCallStream(call);
@@ -368,7 +369,7 @@
             peer.on('error', (err) => showError("❌ Помилка сервера: " + err.type));
         }
 
-        // 2. ПРИЄДНАННЯ ДО КІМНАТИ
+        // 2. ПРИЄДНАННЯ ДО КІМНАТИ (УЧАСНИКИ)
         function joinByInput() {
             clearError();
             const rId = document.getElementById('roomInput').value.trim();
@@ -390,19 +391,21 @@
                 showCallScreen();
                 addVideoStream(myPeerId, localStream, 'Ви');
 
-                // З'єднуємося з господарем
-                connectToPeer(roomIdGlobal);
-
+                // Приймаємо вхідні підключення та дзвінки від інших людей у кімнаті
                 peer.on('connection', (conn) => setupDataConn(conn));
                 peer.on('call', (call) => {
                     call.answer(localStream);
                     handleCallStream(call);
                 });
+
+                // Першим ділом приєднуємося та телефонуємо господарю
+                connectAndCallPeer(roomIdGlobal);
             });
 
             peer.on('error', () => showError("❌ Не вдалося підключитися!"));
         }
 
+        // ОБРОБКА ТА ПРИЙОМ ВІДЕОПОТОКУ
         function handleCallStream(call, fallbackId) {
             const peerId = call.peer || fallbackId;
             if (!peerId) return;
@@ -418,7 +421,7 @@
             call.on('close', () => removeVideoStream(peerId));
         }
 
-        // СТВОРЕННЯ/ОНОВЛЕННЯ ВІДЕО ТА ПЕРЕРАХУНОК МОЗАЇКИ
+        // СТВОРЕННЯ/ОНОВЛЕННЯ ЕЛЕМЕНТА ВІДЕО В МОЗАЇЦІ
         function addVideoStream(peerId, stream, labelText) {
             let container = document.getElementById('container-' + peerId);
 
@@ -458,32 +461,24 @@
 
             const isCamEnabled = userCamStates[peerId] !== undefined ? userCamStates[peerId] : true;
             setCamDisplay(peerId, isCamEnabled);
-            updateMosaicLayout(); // Оновлюємо сітку мозаїки
+            updateMosaicLayout(); // Оновлюємо розміри сітки
         }
 
-        // РЕЖИМ МОЗАЇКИ: Динамічний перерахунок розмірів плиток
+        // РЕЖИМ МОЗАЇКИ ДЛЯ ВСІХ (CSS GRID AUTO LAYOUT)
         function updateMosaicLayout() {
             const grid = document.getElementById('videoGrid');
-            const items = grid.getElementsByClassName('video-container');
-            const count = items.length;
+            const count = grid.children.length;
 
-            for (let item of items) {
-                if (count === 1) {
-                    item.style.flex = '1 1 100%';
-                    item.style.maxWidth = '900px';
-                } else if (count === 2) {
-                    item.style.flex = '1 1 calc(50% - 12px)';
-                    item.style.maxWidth = '600px';
-                } else if (count <= 4) {
-                    item.style.flex = '1 1 calc(50% - 12px)';
-                    item.style.maxWidth = '500px';
-                } else if (count <= 6) {
-                    item.style.flex = '1 1 calc(33.33% - 12px)';
-                    item.style.maxWidth = '400px';
-                } else {
-                    item.style.flex = '1 1 calc(25% - 12px)';
-                    item.style.maxWidth = '300px';
-                }
+            if (count <= 1) {
+                grid.style.gridTemplateColumns = '1fr';
+            } else if (count === 2) {
+                grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(300px, 1fr))';
+            } else if (count <= 4) {
+                grid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+            } else if (count <= 6) {
+                grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+            } else {
+                grid.style.gridTemplateColumns = 'repeat(4, 1fr)';
             }
         }
 
@@ -494,7 +489,7 @@
             }
         }
 
-        // ДЕТЕКТОР ГОЛОСУ (БІЛЕ СЯЙВО)
+        // ДЕТЕКТОР ГОЛОСУ (БІЛЕ СЯЙВО НА ВІКНІ)
         function setupVoiceDetection(stream, containerId) {
             try {
                 if (stream.getAudioTracks().length === 0) return;
