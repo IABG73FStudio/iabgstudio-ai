@@ -78,7 +78,7 @@
             min-height: 20px;
         }
 
-        /* ВІДЕО-СІТКА */
+        /* АДАПТИВНИЙ РЕЖИМ МОЗАЇКИ (GRID MOSAIC) */
         #callRoom {
             display: none;
             flex-direction: column;
@@ -87,13 +87,14 @@
 
         #videoGrid {
             flex: 1;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 16px;
-            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px;
             background: #08090c;
             overflow-y: auto;
-            align-content: center;
         }
 
         .video-container {
@@ -105,15 +106,20 @@
             align-items: center;
             justify-content: center;
             aspect-ratio: 16 / 9;
-            min-height: 180px;
             border: 3px solid transparent;
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            
+            /* Динамічний розмір плитки у мозаїці */
+            flex: 1 1 calc(50% - 12px);
+            max-width: 100%;
+            max-height: 85vh;
         }
 
         /* БІЛЕ СЯЙВО ПРИ РОЗМОВІ */
         .video-container.speaking {
             border-color: #ffffff !important;
-            box-shadow: 0 0 25px 5px rgba(255, 255, 255, 0.85) !important;
+            box-shadow: 0 0 25px 6px rgba(255, 255, 255, 0.9) !important;
         }
 
         video {
@@ -135,27 +141,27 @@
         }
 
         .avatar-circle {
-            width: 90px;
-            height: 90px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.25);
             backdrop-filter: blur(8px);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 50px;
+            font-size: 45px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.4);
             user-select: none;
         }
 
         .user-label {
             position: absolute;
-            bottom: 12px;
-            left: 12px;
+            bottom: 10px;
+            left: 10px;
             background: rgba(0,0,0,0.75);
-            padding: 5px 12px;
+            padding: 4px 10px;
             border-radius: 8px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             z-index: 3;
             backdrop-filter: blur(4px);
@@ -163,22 +169,22 @@
 
         /* ПАНЕЛЬ КЕРУВАННЯ */
         .controls {
-            height: 80px;
+            height: 75px;
             background: #181922;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 14px;
+            gap: 12px;
             padding: 0 10px;
             border-top: 1px solid #28293d;
         }
 
         .ctrl-btn {
             width: auto;
-            padding: 12px 22px;
+            padding: 12px 20px;
             margin: 0;
             border-radius: 30px;
-            font-size: 15px;
+            font-size: 14px;
         }
 
         .btn-red { background: #ff4747; }
@@ -233,14 +239,14 @@
         let peer;
         let myPeerId = "";
         let isHost = false;
-        let hostConn = null;
         let isMicOn = true;
         let isCamOn = true;
         let roomIdGlobal = "";
 
         const calls = {};
-        const hostDataConns = {}; // Тільки у господаря: збірка всіх підключених людей
-        const userCamStates = {}; // Стан камер всіх людей
+        const dataConns = {};
+        const roomPeers = new Set();
+        const userCamStates = {};
 
         window.onload = () => {
             const hashRoom = window.location.hash.substring(1);
@@ -252,13 +258,8 @@
 
         window.onbeforeunload = () => leaveCall();
 
-        function showError(msg) {
-            document.getElementById('errorMsg').innerText = msg;
-        }
-
-        function clearError() {
-            document.getElementById('errorMsg').innerText = "";
-        }
+        function showError(msg) { document.getElementById('errorMsg').innerText = msg; }
+        function clearError() { document.getElementById('errorMsg').innerText = ""; }
 
         function getRandomColor(id) {
             let hash = 0;
@@ -276,33 +277,68 @@
                 }
                 return true;
             } catch (err) {
-                showError("❌ Надайте доступ до камери та мікрофона!");
+                showError("❌ Дозвольте доступ до камери та мікрофона!");
                 return false;
             }
         }
 
-        // ВІДПРАВКА СИГНАЛУ ПРО СТАН КАМЕРИ
-        function sendCamState(enabled) {
-            isCamOn = enabled;
-            userCamStates[myPeerId] = enabled;
-            setCamDisplay(myPeerId, enabled);
-
-            const msg = { type: 'CAM_STATE', peerId: myPeerId, enabled: enabled };
-
-            if (isHost) {
-                broadcastToAllClients(msg);
-            } else if (hostConn && hostConn.open) {
-                hostConn.send(msg);
-            }
+        // РОЗСИЛКА ПОВІДОМЛЕННЯ ВСІМ ПІДДОСЛІДНИМ ПЕРАМ (FULL MESH)
+        function broadcastData(msg) {
+            Object.values(dataConns).forEach(conn => {
+                if (conn && conn.open) conn.send(msg);
+            });
         }
 
-        // РОЗСИЛКА ГОСПОДАРЕМ ВСІМ УЧАСНИКАМ
-        function broadcastToAllClients(data, exceptPeerId = null) {
-            Object.keys(hostDataConns).forEach(pId => {
-                if (pId !== exceptPeerId && hostDataConns[pId] && hostDataConns[pId].open) {
-                    hostDataConns[pId].send(data);
+        // НАЛАШТУВАННЯ ДАТА-КАНАЛУ СИНХРОНІЗАЦІЇ
+        function setupDataConn(conn) {
+            conn.on('open', () => {
+                dataConns[conn.peer] = conn;
+                // Відправляємо новому учаснику наш стан камери
+                conn.send({ type: 'CAM_STATE', peerId: myPeerId, enabled: isCamOn });
+
+                // Якщо я господар — передаю новому учаснику список усіх інших підключених людей
+                if (isHost) {
+                    conn.send({ type: 'PEER_LIST', peers: Array.from(roomPeers) });
+                    roomPeers.add(conn.peer);
+                    broadcastData({ type: 'NEW_PEER_JOINED', peerId: conn.peer });
                 }
             });
+
+            conn.on('data', (data) => {
+                if (data.type === 'PEER_LIST') {
+                    data.peers.forEach(pId => {
+                        if (pId !== myPeerId && !calls[pId]) {
+                            connectToPeer(pId);
+                        }
+                    });
+                } else if (data.type === 'NEW_PEER_JOINED') {
+                    if (data.peerId !== myPeerId && !calls[data.peerId]) {
+                        connectToPeer(data.peerId);
+                    }
+                } else if (data.type === 'CAM_STATE') {
+                    userCamStates[data.peerId] = data.enabled;
+                    setCamDisplay(data.peerId, data.enabled);
+                } else if (data.type === 'LEAVE') {
+                    removeVideoStream(data.peerId);
+                    delete dataConns[data.peerId];
+                }
+            });
+
+            conn.on('close', () => {
+                removeVideoStream(conn.peer);
+                delete dataConns[conn.peer];
+            });
+        }
+
+        // ПРЯМЕ ПІДКТЮЧЕННЯ ДО УЧАСНИКА (FULL MESH)
+        function connectToPeer(targetPeerId) {
+            if (dataConns[targetPeerId] && dataConns[targetPeerId].open) return;
+
+            const conn = peer.connect(targetPeerId);
+            setupDataConn(conn);
+
+            const call = peer.call(targetPeerId, localStream);
+            handleCallStream(call, targetPeerId);
         }
 
         // 1. СТВОРЕННЯ КІМНАТИ (ГОСПОДАР)
@@ -318,51 +354,21 @@
 
             peer.on('open', (id) => {
                 myPeerId = id;
+                roomPeers.add(id);
                 showCallScreen();
                 addVideoStream(myPeerId, localStream, 'Ви (Господар)');
-                sendCamState(true);
             });
 
-            // Господар обробляє вхідні дата-з'єднання
-            peer.on('connection', (conn) => {
-                conn.on('open', () => {
-                    hostDataConns[conn.peer] = conn;
-                    
-                    // Передаємо новому учасникові поточні стани камери всіх людей
-                    conn.send({ type: 'SYNC_STATES', states: userCamStates });
-                });
-
-                conn.on('data', (data) => {
-                    if (data.type === 'CAM_STATE') {
-                        userCamStates[data.peerId] = data.enabled;
-                        setCamDisplay(data.peerId, data.enabled);
-                        // Господар ретранслює це всім іншим!
-                        broadcastToAllClients(data, data.peerId);
-                    } else if (data.type === 'LEAVE') {
-                        removeVideoStream(data.peerId);
-                        delete userCamStates[data.peerId];
-                        delete hostDataConns[data.peerId];
-                        broadcastToAllClients(data, data.peerId);
-                    }
-                });
-
-                conn.on('close', () => {
-                    removeVideoStream(conn.peer);
-                    delete hostDataConns[conn.peer];
-                    delete userCamStates[conn.peer];
-                    broadcastToAllClients({ type: 'LEAVE', peerId: conn.peer });
-                });
-            });
-
+            peer.on('connection', (conn) => setupDataConn(conn));
             peer.on('call', (call) => {
                 call.answer(localStream);
-                handleIncomingCall(call);
+                handleCallStream(call);
             });
 
             peer.on('error', (err) => showError("❌ Помилка сервера: " + err.type));
         }
 
-        // 2. ПРИЄДНАННЯ ДО КІМНАТИ (УЧАСНИКИ)
+        // 2. ПРИЄДНАННЯ ДО КІМНАТИ
         function joinByInput() {
             clearError();
             const rId = document.getElementById('roomInput').value.trim();
@@ -381,52 +387,23 @@
                 myPeerId = id;
                 isHost = false;
 
-                // Підключаємося до господаря
-                hostConn = peer.connect(roomIdGlobal);
+                showCallScreen();
+                addVideoStream(myPeerId, localStream, 'Ви');
 
-                hostConn.on('open', () => {
-                    showCallScreen();
-                    addVideoStream(myPeerId, localStream, 'Ви');
-                    sendCamState(true);
+                // З'єднуємося з господарем
+                connectToPeer(roomIdGlobal);
 
-                    // Телефонуємо господарю
-                    const call = peer.call(roomIdGlobal, localStream);
-                    handleIncomingCall(call, roomIdGlobal);
-                });
-
-                hostConn.on('data', (data) => {
-                    if (data.type === 'SYNC_STATES') {
-                        Object.assign(userCamStates, data.states);
-                        Object.keys(userCamStates).forEach(pId => {
-                            setCamDisplay(pId, userCamStates[pId]);
-                        });
-                    } else if (data.type === 'CAM_STATE') {
-                        userCamStates[data.peerId] = data.enabled;
-                        setCamDisplay(data.peerId, data.enabled);
-                    } else if (data.type === 'LEAVE') {
-                        removeVideoStream(data.peerId);
-                        delete userCamStates[data.peerId];
-                    }
-                });
-
+                peer.on('connection', (conn) => setupDataConn(conn));
                 peer.on('call', (call) => {
                     call.answer(localStream);
-                    handleIncomingCall(call);
+                    handleCallStream(call);
                 });
-
-                hostConn.on('error', () => showError("❌ Не вдалося підключитися до господаря!"));
             });
 
-            peer.on('error', (err) => {
-                if (err.type === 'peer-unavailable') {
-                    showError("❌ Кімнату не знайдено! Перевірте код.");
-                } else {
-                    showError("❌ Помилка підключення: " + err.type);
-                }
-            });
+            peer.on('error', () => showError("❌ Не вдалося підключитися!"));
         }
 
-        function handleIncomingCall(call, fallbackId) {
+        function handleCallStream(call, fallbackId) {
             const peerId = call.peer || fallbackId;
             if (!peerId) return;
 
@@ -441,7 +418,7 @@
             call.on('close', () => removeVideoStream(peerId));
         }
 
-        // СТВОРЕННЯ / ОНОВЛЕННЯ ВІДЕО-ЕЛЕМЕНТА
+        // СТВОРЕННЯ/ОНОВЛЕННЯ ВІДЕО ТА ПЕРЕРАХУНОК МОЗАЇКИ
         function addVideoStream(peerId, stream, labelText) {
             let container = document.getElementById('container-' + peerId);
 
@@ -479,12 +456,37 @@
                 if (video) video.srcObject = stream;
             }
 
-            // Застосовуємо збережений стан камери
             const isCamEnabled = userCamStates[peerId] !== undefined ? userCamStates[peerId] : true;
             setCamDisplay(peerId, isCamEnabled);
+            updateMosaicLayout(); // Оновлюємо сітку мозаїки
         }
 
-        // ПОКАЗ / ПРИХОВУВАННЯ ВІДЕО (ВІДНОСНО АВАТАРКИ)
+        // РЕЖИМ МОЗАЇКИ: Динамічний перерахунок розмірів плиток
+        function updateMosaicLayout() {
+            const grid = document.getElementById('videoGrid');
+            const items = grid.getElementsByClassName('video-container');
+            const count = items.length;
+
+            for (let item of items) {
+                if (count === 1) {
+                    item.style.flex = '1 1 100%';
+                    item.style.maxWidth = '900px';
+                } else if (count === 2) {
+                    item.style.flex = '1 1 calc(50% - 12px)';
+                    item.style.maxWidth = '600px';
+                } else if (count <= 4) {
+                    item.style.flex = '1 1 calc(50% - 12px)';
+                    item.style.maxWidth = '500px';
+                } else if (count <= 6) {
+                    item.style.flex = '1 1 calc(33.33% - 12px)';
+                    item.style.maxWidth = '400px';
+                } else {
+                    item.style.flex = '1 1 calc(25% - 12px)';
+                    item.style.maxWidth = '300px';
+                }
+            }
+        }
+
         function setCamDisplay(peerId, isEnabled) {
             const videoEl = document.getElementById('video-' + peerId);
             if (videoEl) {
@@ -523,15 +525,14 @@
                     requestAnimationFrame(checkVolume);
                 }
                 checkVolume();
-            } catch (e) {
-                console.log("Voice error:", e);
-            }
+            } catch (e) { console.log("Voice error:", e); }
         }
 
         function removeVideoStream(peerId) {
             const container = document.getElementById('container-' + peerId);
             if (container) container.remove();
             if (calls[peerId]) delete calls[peerId];
+            updateMosaicLayout();
         }
 
         function showCallScreen() {
@@ -556,7 +557,9 @@
             isCamOn = !isCamOn;
             localStream.getVideoTracks()[0].enabled = isCamOn;
 
-            sendCamState(isCamOn);
+            userCamStates[myPeerId] = isCamOn;
+            setCamDisplay(myPeerId, isCamOn);
+            broadcastData({ type: 'CAM_STATE', peerId: myPeerId, enabled: isCamOn });
 
             const btn = document.getElementById('camBtn');
             btn.innerText = isCamOn ? "📹 Камера" : "📷 Камера (Вимк)";
@@ -564,12 +567,7 @@
         }
 
         function leaveCall() {
-            if (isHost) {
-                broadcastToAllClients({ type: 'LEAVE', peerId: myPeerId });
-            } else if (hostConn && hostConn.open) {
-                hostConn.send({ type: 'LEAVE', peerId: myPeerId });
-            }
-
+            broadcastData({ type: 'LEAVE', peerId: myPeerId });
             if (localStream) localStream.getTracks().forEach(track => track.stop());
             if (peer) peer.destroy();
             window.location.hash = "";
