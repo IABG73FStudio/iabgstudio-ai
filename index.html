@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>IABG Meet - Відеодзвінки та Чат</title>
     
     <!-- Бібліотека PeerJS -->
@@ -83,6 +83,7 @@
             display: none;
             flex-direction: column;
             height: 100%;
+            position: relative;
         }
 
         #mainLayout {
@@ -97,13 +98,12 @@
         #videoGrid {
             flex: 1;
             display: grid;
-            gap: 16px;
-            padding: 20px;
+            gap: 12px;
+            padding: 16px;
             background: #08090c;
             align-items: center;
             justify-content: center;
             overflow-y: auto;
-            transition: all 0.3s ease-in-out;
             position: relative;
         }
 
@@ -122,18 +122,21 @@
             border: 3px solid transparent;
             box-shadow: 0 6px 20px rgba(0,0,0,0.5);
             cursor: pointer;
-            
-            /* Анімації появи та зміни розмірів */
-            transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+            animation: popIn 0.3s ease forwards;
         }
 
         @keyframes popIn {
-            0% { opacity: 0; transform: scale(0.6); }
+            0% { opacity: 0; transform: scale(0.8); }
             100% { opacity: 1; transform: scale(1); }
         }
 
-        /* РЕЖИМ «ФОКУС НА УЧАСНИКА» (ПОВНИЙ ЕКРАН ПРИ КЛІКУ) */
+        /* ВІЗУАЛЬНЕ ПРИХОВУВАННЯ НАДЛИШКОВИХ УЧАСНИКІВ (АУДІО ПРОДОВЖУЄ ГРАТИ) */
+        .video-container.overflow-hidden-user {
+            display: none !important;
+        }
+
+        /* РЕЖИМ «ФОКУС НА УЧАСНИКА» */
         #videoGrid.pinned-active .video-container {
             display: none !important;
         }
@@ -150,14 +153,14 @@
         #videoGrid.pinned-active .video-container.my-overlay {
             display: flex !important;
             position: absolute !important;
-            bottom: 30px !important;
-            right: 30px !important;
-            width: 220px !important;
-            height: 140px !important;
+            bottom: 20px !important;
+            right: 20px !important;
+            width: 150px !important;
+            height: 100px !important;
             z-index: 10 !important;
             border: 2px solid #00a2ff !important;
             box-shadow: 0 10px 30px rgba(0,0,0,0.8) !important;
-            border-radius: 14px !important;
+            border-radius: 12px !important;
         }
 
         /* БІЛЕ СЯЙВО ПРИ РОЗМОВІ */
@@ -184,40 +187,45 @@
         }
 
         .avatar-circle {
-            width: 80px;
-            height: 80px;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.25);
             backdrop-filter: blur(8px);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 45px;
+            font-size: 38px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.4);
             user-select: none;
         }
 
         .user-label {
             position: absolute;
-            bottom: 12px;
-            left: 12px;
+            bottom: 10px;
+            left: 10px;
             background: rgba(0,0,0,0.75);
-            padding: 5px 12px;
+            padding: 4px 10px;
             border-radius: 8px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             z-index: 3;
             backdrop-filter: blur(4px);
+            max-width: 80%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        /* БОКОВА ПАНЕЛЬ ЧАТУ */
+        /* ЧАТ (ПК ТА МОБІЛЬНИЙ АДАПТИВ) */
         #chatSidebar {
             width: 320px;
             background: #14151f;
             border-left: 1px solid #28293d;
             display: flex;
             flex-direction: column;
-            transition: transform 0.3s ease;
+            z-index: 20;
+            transition: transform 0.25s ease-in-out;
         }
 
         #chatSidebar.hidden { display: none; }
@@ -228,6 +236,22 @@
             font-size: 16px;
             border-bottom: 1px solid #28293d;
             background: #181922;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-chat-btn {
+            display: none;
+            background: #33344a;
+            border: none;
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            width: auto;
+            margin: 0;
         }
 
         #chatMessages {
@@ -266,10 +290,10 @@
             background: #181922;
         }
 
-        .chat-input-box input { margin: 0; padding: 10px; font-size: 13px; text-align: left; }
-        .chat-input-box button { width: auto; padding: 10px 16px; margin: 0; }
+        .chat-input-box input { margin: 0; padding: 12px; font-size: 14px; text-align: left; }
+        .chat-input-box button { width: auto; padding: 12px 18px; margin: 0; }
 
-        /* МОДАЛЬНЕ ВІКНО НАЛАШТУВАНЬ ПРИСТРОЇВ */
+        /* МОДАЛЬНЕ ВІКНО НАЛАШТУВАНЬ */
         #settingsModal {
             display: none;
             position: fixed;
@@ -305,18 +329,20 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            padding: 0 10px;
+            gap: 6px;
+            padding: 0 8px;
             border-top: 1px solid #28293d;
-            flex-wrap: wrap;
+            overflow-x: auto;
+            white-space: nowrap;
         }
 
         .ctrl-btn {
             width: auto;
-            padding: 10px 16px;
+            padding: 10px 14px;
             margin: 0;
             border-radius: 30px;
-            font-size: 13px;
+            font-size: 12px;
+            flex-shrink: 0;
         }
 
         .btn-red { background: #ff4747; }
@@ -325,6 +351,17 @@
         .btn-gray:hover { background: #444563; }
         .btn-blue { background: #00a2ff; }
         .btn-blue:hover { background: #0084cc; }
+
+        /* Мобільна адаптація для чату */
+        @media (max-width: 768px) {
+            #chatSidebar {
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+            }
+            .close-chat-btn { display: block; }
+        }
     </style>
 </head>
 <body>
@@ -356,9 +393,12 @@
             <!-- ВІДЕО МОЗАЇКА -->
             <div id="videoGrid"></div>
 
-            <!-- СПІЛЬНИЙ ЧАТ ДЛЯ ВСІХ -->
-            <div id="chatSidebar">
-                <div class="chat-header">💬 Чат кімнати</div>
+            <!-- СПІЛЬНИЙ ЧАТ -->
+            <div id="chatSidebar" class="hidden">
+                <div class="chat-header">
+                    <span>💬 Чат кімнати</span>
+                    <button class="close-chat-btn" onclick="toggleChat()">✕ Закрити</button>
+                </div>
                 <div id="chatMessages"></div>
                 <div class="chat-input-box">
                     <input type="text" id="msgInput" placeholder="Повідомлення..." onkeydown="if(event.key==='Enter') sendChatMessage()">
@@ -371,15 +411,15 @@
         <div class="controls">
             <button class="ctrl-btn btn-gray" id="micBtn" onclick="toggleMic()">🎤 Мікрофон</button>
             <button class="ctrl-btn btn-gray" id="camBtn" onclick="toggleCam()">📹 Камера</button>
-            <button class="ctrl-btn btn-gray" onclick="togglePiP()">📱 Picture-in-Picture</button>
+            <button class="ctrl-btn btn-gray" onclick="togglePiP()">📱 PiP</button>
             <button class="ctrl-btn btn-gray" onclick="openSettings()">⚙️ Пристрої</button>
             <button class="ctrl-btn btn-blue" onclick="toggleChat()">💬 Чат</button>
             <button class="ctrl-btn btn-gray" onclick="copyRoomLink()">🔗 Посилання</button>
-            <button class="ctrl-btn btn-red" onclick="leaveCall()">📞 Завершити</button>
+            <button class="ctrl-btn btn-red" onclick="leaveCall()">📞 Вийти</button>
         </div>
     </div>
 
-    <!-- МОДАЛЬНЕ ВІКНО НАЛАШТУВАНЬ МІКРОФОНА/КАМЕРИ -->
+    <!-- МОДАЛЬНЕ ВІКНО НАЛАШТУВАНЬ -->
     <div id="settingsModal">
         <div class="modal-body">
             <h2 style="margin-top:0;">⚙️ Налаштування пристроїв</h2>
@@ -423,8 +463,11 @@
         const calls = {}; 
         const userCamStates = {}; 
         const userNames = {}; 
+        
+        // Масив для збереження порядку активності (хто останнім говорив)
+        let activeSpeakerOrder = [];
 
-        // 🔊 СИНТЕЗАТОР ЗВУКОВИХ ЕФЕКТІВ (Web Audio API)
+        // 🔊 СИНТЕЗАТОР ЗВУКІВ
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
             try {
@@ -433,7 +476,6 @@
                 const gain = audioCtx.createGain();
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
-
                 const now = audioCtx.currentTime;
 
                 if (type === 'join') {
@@ -441,27 +483,23 @@
                     osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
                     gain.gain.setValueAtTime(0.15, now);
                     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-                    osc.start(now);
-                    osc.stop(now + 0.15);
+                    osc.start(now); osc.stop(now + 0.15);
                 } else if (type === 'leave') {
                     osc.frequency.setValueAtTime(660, now);
                     osc.frequency.exponentialRampToValueAtTime(330, now + 0.2);
                     gain.gain.setValueAtTime(0.15, now);
                     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                    osc.start(now);
-                    osc.stop(now + 0.2);
+                    osc.start(now); osc.stop(now + 0.2);
                 } else if (type === 'msg') {
                     osc.frequency.setValueAtTime(587.33, now);
                     gain.gain.setValueAtTime(0.1, now);
                     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                    osc.start(now);
-                    osc.stop(now + 0.1);
+                    osc.start(now); osc.stop(now + 0.1);
                 } else if (type === 'toggle') {
                     osc.frequency.setValueAtTime(300, now);
                     gain.gain.setValueAtTime(0.08, now);
                     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-                    osc.start(now);
-                    osc.stop(now + 0.08);
+                    osc.start(now); osc.stop(now + 0.08);
                 }
             } catch (e) { console.log(e); }
         }
@@ -481,16 +519,12 @@
 
         function getRandomColor(id) {
             let hash = 0;
-            for (let i = 0; i < id.length; i++) {
-                hash = id.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            const h = Math.abs(hash) % 360;
-            return `hsl(${h}, 65%, 40%)`;
+            for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
+            return `hsl(${Math.abs(hash) % 360}, 65%, 40%)`;
         }
 
         function getUserNameInput() {
-            const val = document.getElementById('userNameInput').value.trim();
-            return val || "Гравець";
+            return document.getElementById('userNameInput').value.trim() || "Гравець";
         }
 
         async function getMedia(audioId = null, videoId = null) {
@@ -501,25 +535,15 @@
                 };
 
                 const newStream = await navigator.mediaDevices.getUserMedia(constraints);
-
-                if (localStream) {
-                    localStream.getTracks().forEach(track => track.stop());
-                }
-
+                if (localStream) localStream.getTracks().forEach(track => track.stop());
                 localStream = newStream;
 
-                // Замінюємо треки у всіх активних дзвінках
                 Object.values(calls).forEach(call => {
                     const senders = call.peerConnection.getSenders();
-                    const videoSender = senders.find(s => s.track && s.track.kind === 'video');
-                    const audioSender = senders.find(s => s.track && s.track.kind === 'audio');
-
-                    if (videoSender && localStream.getVideoTracks()[0]) {
-                        videoSender.replaceTrack(localStream.getVideoTracks()[0]);
-                    }
-                    if (audioSender && localStream.getAudioTracks()[0]) {
-                        audioSender.replaceTrack(localStream.getAudioTracks()[0]);
-                    }
+                    const vSender = senders.find(s => s.track && s.track.kind === 'video');
+                    const aSender = senders.find(s => s.track && s.track.kind === 'audio');
+                    if (vSender && localStream.getVideoTracks()[0]) vSender.replaceTrack(localStream.getVideoTracks()[0]);
+                    if (aSender && localStream.getAudioTracks()[0]) aSender.replaceTrack(localStream.getAudioTracks()[0]);
                 });
 
                 const myVideo = document.getElementById('video-' + myPeerId);
@@ -527,7 +551,7 @@
 
                 return true;
             } catch (err) {
-                showError("❌ Не вдалося отримати доступ до вибраного пристрою!");
+                showError("❌ Не вдалося отримати доступ до мікрофона/камери!");
                 return false;
             }
         }
@@ -540,7 +564,6 @@
             });
         }
 
-        // 1. СТВОРЕННЯ КІМНАТИ (ГОСПОДАР)
         async function createRoom() {
             clearError();
             if (!await getMedia()) return;
@@ -556,6 +579,7 @@
                 myPeerId = id;
                 userCamStates[myPeerId] = true;
                 userNames[myPeerId] = myName + " (Господар)";
+                registerUser(myPeerId);
 
                 showCallScreen();
                 addVideoStream(myPeerId, localStream, userNames[myPeerId]);
@@ -575,7 +599,6 @@
             peer.on('error', (err) => showError("❌ Помилка сервера: " + err.type));
         }
 
-        // 2. ПРИЄДНАННЯ ДО КІМНАТИ (ГОСТІ)
         function joinByInput() {
             clearError();
             const rId = document.getElementById('roomInput').value.trim();
@@ -596,18 +619,14 @@
                 isHost = false;
                 userCamStates[myPeerId] = true;
                 userNames[myPeerId] = myName;
+                registerUser(myPeerId);
 
                 showCallScreen();
                 addVideoStream(myPeerId, localStream, myName + " (Ви)");
 
                 hostConn = peer.connect(roomIdGlobal);
-
                 hostConn.on('open', () => {
-                    hostConn.send({
-                        type: 'JOIN_REQ',
-                        peerId: myPeerId,
-                        name: myName
-                    });
+                    hostConn.send({ type: 'JOIN_REQ', peerId: myPeerId, name: myName });
                 });
 
                 hostConn.on('data', (data) => handleIncomingData(data, roomIdGlobal));
@@ -618,14 +637,14 @@
                 });
             });
 
-            peer.on('error', () => showError("❌ Не вдалося підключитися до кімнати!"));
+            peer.on('error', () => showError("❌ Не вдалося підключитися!"));
         }
 
-        // ОБРОБКА ВХІДНИХ ДАНИХ
         function handleIncomingData(data, senderPeerId) {
             if (data.type === 'JOIN_REQ' && isHost) {
                 userNames[data.peerId] = data.name;
                 userCamStates[data.peerId] = true;
+                registerUser(data.peerId);
 
                 clientConns[data.peerId].send({
                     type: 'ROOM_STATE',
@@ -634,19 +653,14 @@
                     camStates: userCamStates
                 });
 
-                broadcastFromHost({
-                    type: 'USER_JOINED',
-                    peerId: data.peerId,
-                    name: data.name
-                }, data.peerId);
-
+                broadcastFromHost({ type: 'USER_JOINED', peerId: data.peerId, name: data.name }, data.peerId);
                 playSound('join');
 
             } else if (data.type === 'ROOM_STATE') {
                 Object.assign(userNames, data.names);
                 Object.assign(userCamStates, data.camStates);
-
                 data.peers.forEach(pId => {
+                    registerUser(pId);
                     if (pId !== myPeerId) callPeer(pId);
                 });
                 playSound('join');
@@ -654,6 +668,7 @@
             } else if (data.type === 'USER_JOINED') {
                 userNames[data.peerId] = data.name;
                 userCamStates[data.peerId] = true;
+                registerUser(data.peerId);
                 playSound('join');
 
             } else if (data.type === 'CAM_STATE') {
@@ -670,12 +685,19 @@
                 removeVideoStream(data.peerId);
                 delete userCamStates[data.peerId];
                 delete userNames[data.peerId];
+                activeSpeakerOrder = activeSpeakerOrder.filter(id => id !== data.peerId);
                 playSound('leave');
 
                 if (isHost) {
                     delete clientConns[data.peerId];
                     broadcastFromHost(data, senderPeerId);
                 }
+            }
+        }
+
+        function registerUser(peerId) {
+            if (!activeSpeakerOrder.includes(peerId)) {
+                activeSpeakerOrder.push(peerId);
             }
         }
 
@@ -700,7 +722,6 @@
             call.on('close', () => removeVideoStream(peerId));
         }
 
-        // ДОДАВАННЯ ТА ОНОВЛЕННЯ ВІДЕО В МОЗАЇЦІ
         function addVideoStream(peerId, stream, labelText) {
             let container = document.getElementById('container-' + peerId);
 
@@ -710,7 +731,6 @@
                 container.className = 'video-container';
                 container.id = 'container-' + peerId;
 
-                // Клік по людині розгортає її на весь екран
                 container.onclick = () => togglePinUser(peerId);
 
                 const avatar = document.createElement('div');
@@ -736,7 +756,7 @@
                 container.appendChild(label);
                 grid.appendChild(container);
 
-                setupVoiceDetection(stream, container.id);
+                setupVoiceDetection(stream, peerId);
             } else {
                 const video = document.getElementById('video-' + peerId);
                 if (video) video.srcObject = stream;
@@ -749,19 +769,25 @@
             updateMosaicLayout();
         }
 
-        // РЕЖИМ «ФОКУС НА УЧАСНИКА» ПРИ КЛІКУ
+        function promoteSpeaker(peerId) {
+            const idx = activeSpeakerOrder.indexOf(peerId);
+            if (idx > 0) {
+                activeSpeakerOrder.splice(idx, 1);
+                activeSpeakerOrder.unshift(peerId);
+                updateMosaicLayout();
+            }
+        }
+
         function togglePinUser(peerId) {
             const grid = document.getElementById('videoGrid');
 
             if (pinnedPeerId === peerId) {
-                // Знімаємо фокус
                 pinnedPeerId = null;
                 grid.classList.remove('pinned-active');
                 document.querySelectorAll('.video-container').forEach(c => {
                     c.classList.remove('pinned', 'my-overlay');
                 });
             } else {
-                // Ставимо фокус на вибрану людину
                 pinnedPeerId = peerId;
                 grid.classList.add('pinned-active');
 
@@ -772,7 +798,6 @@
                 const targetContainer = document.getElementById('container-' + peerId);
                 if (targetContainer) targetContainer.classList.add('pinned');
 
-                // Моє вікно розміщується в кутку поверх
                 const myContainer = document.getElementById('container-' + myPeerId);
                 if (myContainer && myPeerId !== peerId) {
                     myContainer.classList.add('my-overlay');
@@ -782,33 +807,46 @@
             updateMosaicLayout();
         }
 
-        // АДАПТИВНА МОЗАЇКА
+        /* АДАПТИВНА МОЗАЇКА З АВТО-ПРИХОВУВАННЯМ ТА ПРИОРИТЕТОМ ГОЛОСУ */
         function updateMosaicLayout() {
             if (pinnedPeerId) return;
 
+            const isMobile = window.innerWidth <= 768;
+            const maxVisible = isMobile ? 6 : 20;
+
+            const visiblePeers = activeSpeakerOrder.slice(0, maxVisible);
+
+            // Перевіряємо та ховаємо/показуємо вікна
+            activeSpeakerOrder.forEach((peerId) => {
+                const container = document.getElementById('container-' + peerId);
+                if (container) {
+                    if (visiblePeers.includes(peerId)) {
+                        container.classList.remove('overflow-hidden-user');
+                    } else {
+                        container.classList.add('overflow-hidden-user');
+                    }
+                }
+            });
+
+            // Налаштовуємо сітку для видимих елементів
             const grid = document.getElementById('videoGrid');
-            const count = grid.children.length;
+            const count = visiblePeers.length;
 
             if (count <= 1) {
                 grid.style.gridTemplateColumns = '1fr';
                 grid.style.gridTemplateRows = '1fr';
             } else if (count === 2) {
-                if (window.innerWidth > 700) {
-                    grid.style.gridTemplateColumns = '1fr 1fr';
-                    grid.style.gridTemplateRows = '1fr';
-                } else {
-                    grid.style.gridTemplateColumns = '1fr';
-                    grid.style.gridTemplateRows = '1fr 1fr';
-                }
+                grid.style.gridTemplateColumns = isMobile ? '1fr' : '1fr 1fr';
+                grid.style.gridTemplateRows = isMobile ? '1fr 1fr' : '1fr';
             } else if (count <= 4) {
                 grid.style.gridTemplateColumns = '1fr 1fr';
                 grid.style.gridTemplateRows = '1fr 1fr';
             } else if (count <= 6) {
-                grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
-                grid.style.gridTemplateRows = 'repeat(2, 1fr)';
+                grid.style.gridTemplateColumns = isMobile ? '1fr 1fr' : 'repeat(3, 1fr)';
+                grid.style.gridTemplateRows = isMobile ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)';
             } else {
-                grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(220px, 1fr))';
-                grid.style.gridTemplateRows = 'repeat(auto-fit, minmax(160px, 1fr))';
+                grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(180px, 1fr))';
+                grid.style.gridTemplateRows = 'repeat(auto-fit, minmax(140px, 1fr))';
             }
         }
 
@@ -817,13 +855,11 @@
             if (videoEl) videoEl.style.display = isEnabled ? 'block' : 'none';
         }
 
-        // PICTURE-IN-PICTURE (ПЛАВАЮЧЕ ВІКНО)
         async function togglePiP() {
             try {
                 const targetId = pinnedPeerId || myPeerId;
                 const video = document.getElementById('video-' + targetId);
-
-                if (!video) return alert("❌ Немає відео для Picture-in-Picture!");
+                if (!video) return alert("❌ Немає відео!");
 
                 if (document.pictureInPictureElement) {
                     await document.exitPictureInPicture();
@@ -831,24 +867,20 @@
                     await video.requestPictureInPicture();
                 }
             } catch (err) {
-                alert("❌ Picture-in-Picture не підтримується на цьому браузері або пристрої.");
+                alert("❌ PiP не підтримується!");
             }
         }
 
-        // МЕНЮ НАЛАШТУВАНЬ КАМЕРИ ТА МІКРОФОНА
         async function openSettings() {
             const modal = document.getElementById('settingsModal');
             modal.style.display = 'flex';
 
             const devices = await navigator.mediaDevices.enumerateDevices();
-
             const micSelect = document.getElementById('micSelect');
             const camSelect = document.getElementById('camSelect');
             const speakerSelect = document.getElementById('speakerSelect');
 
-            micSelect.innerHTML = '';
-            camSelect.innerHTML = '';
-            speakerSelect.innerHTML = '';
+            micSelect.innerHTML = ''; camSelect.innerHTML = ''; speakerSelect.innerHTML = '';
 
             devices.forEach(device => {
                 const opt = document.createElement('option');
@@ -861,44 +893,29 @@
             });
         }
 
-        function closeSettings() {
-            document.getElementById('settingsModal').style.display = 'none';
-        }
+        function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
 
         async function changeAudioInput() {
-            const id = document.getElementById('micSelect').value;
-            await getMedia(id, document.getElementById('camSelect').value);
+            await getMedia(document.getElementById('micSelect').value, document.getElementById('camSelect').value);
         }
 
         async function changeVideoInput() {
-            const id = document.getElementById('camSelect').value;
-            await getMedia(document.getElementById('micSelect').value, id);
+            await getMedia(document.getElementById('micSelect').value, document.getElementById('camSelect').value);
         }
 
         async function changeAudioOutput() {
             const id = document.getElementById('speakerSelect').value;
-            const videos = document.querySelectorAll('video');
-
-            videos.forEach(v => {
-                if (typeof v.setSinkId === 'function') {
-                    v.setSinkId(id);
-                }
+            document.querySelectorAll('video').forEach(v => {
+                if (typeof v.setSinkId === 'function') v.setSinkId(id);
             });
         }
 
-        // СНІПЕТ ЧАТУ
         function sendChatMessage() {
             const input = document.getElementById('msgInput');
             const text = input.value.trim();
             if (!text) return;
 
-            const msgData = {
-                type: 'CHAT_MSG',
-                senderId: myPeerId,
-                senderName: myName,
-                text: text
-            };
-
+            const msgData = { type: 'CHAT_MSG', senderId: myPeerId, senderName: myName, text: text };
             appendChatMessage(myName, text, true);
             playSound('msg');
 
@@ -933,8 +950,8 @@
             updateMosaicLayout();
         }
 
-        // ДЕТЕКТОР ГОЛОСУ
-        function setupVoiceDetection(stream, containerId) {
+        /* ДЕТЕКТОР ГОЛОСУ З АВТО-ПЕРЕМІЩЕННЯМ СПІКЕРА НАГОРИ */
+        function setupVoiceDetection(stream, peerId) {
             try {
                 if (stream.getAudioTracks().length === 0) return;
 
@@ -945,9 +962,10 @@
                 source.connect(analyser);
 
                 const dataArray = new Uint8Array(analyser.frequencyBinCount);
+                let isSpeaking = false;
 
                 function checkVolume() {
-                    const container = document.getElementById(containerId);
+                    const container = document.getElementById('container-' + peerId);
                     if (!container) return;
 
                     analyser.getByteFrequencyData(dataArray);
@@ -957,8 +975,13 @@
 
                     if (average > 15) {
                         container.classList.add('speaking');
+                        if (!isSpeaking) {
+                            isSpeaking = true;
+                            promoteSpeaker(peerId); // Переміщуємо в активні
+                        }
                     } else {
                         container.classList.remove('speaking');
+                        isSpeaking = false;
                     }
 
                     requestAnimationFrame(checkVolume);
@@ -972,6 +995,7 @@
             delete userCamStates[peerId];
             delete userNames[peerId];
             delete clientConns[peerId];
+            activeSpeakerOrder = activeSpeakerOrder.filter(id => id !== peerId);
             broadcastFromHost({ type: 'LEAVE', peerId: peerId });
         }
 
@@ -994,14 +1018,14 @@
 
         function copyRoomLink() {
             navigator.clipboard.writeText(window.location.href);
-            alert("🔗 Посилання скопійовано! Надішли його друзям.");
+            alert("🔗 Посилання скопійовано!");
         }
 
         function toggleMic() {
             isMicOn = !isMicOn;
             localStream.getAudioTracks()[0].enabled = isMicOn;
             const btn = document.getElementById('micBtn');
-            btn.innerText = isMicOn ? "🎤 Мікрофон" : "🔇 Мікрофон (Вимк)";
+            btn.innerText = isMicOn ? "🎤 Мікрофон" : "🔇 Мікрофон";
             btn.style.background = isMicOn ? "#33344a" : "#ff4747";
             playSound('toggle');
         }
@@ -1018,7 +1042,7 @@
             else if (hostConn && hostConn.open) hostConn.send(msg);
 
             const btn = document.getElementById('camBtn');
-            btn.innerText = isCamOn ? "📹 Камера" : "📷 Камера (Вимк)";
+            btn.innerText = isCamOn ? "📹 Камера" : "📷 Камера";
             btn.style.background = isCamOn ? "#33344a" : "#ff4747";
             playSound('toggle');
         }
