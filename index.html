@@ -3,134 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roblox Friends Hub — IABG73Studio</title>
+    <title>Roblox Hub — IABG73Studio</title>
+    <!-- Аватарка сайту на вкладці браузера (Favicon) -->
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
-        body { background-color: #191b1d; color: #ffffff; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        .container { width: 100%; max-width: 800px; }
+        body { background-color: #111216; color: #ffffff; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 850px; }
         
-        header { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: #232527; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .logo { font-size: 22px; font-weight: bold; color: #00a2ff; display: flex; align-items: center; gap: 10px; }
-        .user-badge { display: flex; align-items: center; gap: 8px; background: #393b3d; padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        /* Шапка з логотипом */
+        header { display: flex; justify-content: space-between; align-items: center; padding: 12px 25px; background: #1c1e24; border-radius: 14px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+        .logo-link { text-decoration: none; }
+        .logo { font-size: 24px; font-weight: 800; color: #00a2ff; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: 0.2s; }
+        .logo:hover { transform: scale(1.03); color: #33b5ff; }
+        .site-avatar { width: 38px; height: 38px; border-radius: 8px; object-fit: cover; border: 2px solid #00a2ff; }
         
-        .card { background: #232527; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        h2 { margin-bottom: 15px; font-size: 20px; color: #e1e1e1; border-bottom: 2px solid #393b3d; padding-bottom: 8px; }
+        .user-badge { display: flex; align-items: center; gap: 10px; background: #2a2d37; padding: 6px 14px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+        .user-avatar-small { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #00a2ff; }
+        .logout-btn { background: none; border: none; color: #ff5555; cursor: pointer; font-size: 12px; margin-left: 8px; text-decoration: underline; }
         
-        input { width: 100%; padding: 12px; background: #111213; border: 1px solid #393b3d; border-radius: 8px; color: #fff; margin-bottom: 12px; font-size: 15px; }
-        input:focus { outline: none; border-color: #00a2ff; }
+        .card { background: #1c1e24; border-radius: 14px; padding: 22px; margin-bottom: 22px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 1px solid #282b35; }
+        h2 { margin-bottom: 15px; font-size: 20px; color: #e1e1e1; border-bottom: 2px solid #282b35; padding-bottom: 10px; display: flex; align-items: center; gap: 8px; }
         
-        .btn { background: #00a2ff; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; width: 100%; font-size: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 10px; }
+        input { width: 100%; padding: 12px 15px; background: #111216; border: 1px solid #333745; border-radius: 8px; color: #fff; font-size: 14px; outline: none; }
+        input:focus { border-color: #00a2ff; }
+        
+        .btn { background: #00a2ff; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; text-align: center; }
         .btn:hover { background: #0082cc; }
         .btn-green { background: #00b06f; }
         .btn-green:hover { background: #008f5a; }
-        .btn-danger { background: #ff4747; width: auto; padding: 4px 10px; font-size: 12px; border-radius: 6px; }
+        .btn-danger { background: #ff4747; width: auto; padding: 4px 8px; font-size: 12px; border-radius: 6px; }
 
-        .friends-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 15px; margin-top: 15px; }
-        .friend-card { background: #111213; border-radius: 10px; padding: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; border: 1px solid #2d3033; }
-        .avatar { width: 80px; height: 80px; border-radius: 50%; background: #393b3d; margin-bottom: 10px; object-fit: cover; border: 2px solid #00a2ff; }
-        .friend-name { font-weight: bold; font-size: 16px; margin-bottom: 4px; }
-        .friend-status { font-size: 13px; color: #00b06f; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-        .status-dot { width: 8px; height: 8px; background: #00b06f; border-radius: 50%; display: inline-block; }
-        .friend-game { font-size: 12px; color: #aaaaaa; margin-bottom: 12px; }
-        .join-btn { text-decoration: none; display: block; width: 100%; text-align: center; }
+        .friends-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-top: 15px; }
+        .friend-card { background: #111216; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; border: 1px solid #282b35; }
+        .avatar { width: 85px; height: 85px; border-radius: 50%; background: #2a2d37; margin-bottom: 12px; object-fit: cover; border: 3px solid #00a2ff; }
+        .site-name { font-weight: 800; font-size: 17px; color: #ffffff; }
+        .roblox-tag { font-size: 13px; color: #00a2ff; margin-bottom: 6px; }
+        .friend-status { font-size: 12px; color: #00b06f; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+        .status-dot { width: 8px; height: 8px; background: #00b06f; border-radius: 50%; }
+        .friend-game { font-size: 13px; color: #aaaaaa; margin-bottom: 14px; background: #1c1e24; padding: 4px 10px; border-radius: 6px; width: 100%; }
+        .join-btn { text-decoration: none; width: 100%; }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 100; }
-        .modal { background: #232527; padding: 30px; border-radius: 14px; width: 90%; max-width: 400px; text-align: center; }
+        .suggest-list { display: flex; flex-direction: column; gap: 10px; }
+        .suggest-item { display: flex; justify-content: space-between; align-items: center; background: #111216; padding: 10px 15px; border-radius: 8px; border: 1px solid #282b35; }
+        .suggest-info { display: flex; align-items: center; gap: 12px; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(5px); }
+        .modal { background: #1c1e24; padding: 30px; border-radius: 16px; width: 90%; max-width: 420px; text-align: center; border: 1px solid #282b35; }
     </style>
 </head>
 <body>
 
-    <!-- Модальне вікно створення акаунту -->
+    <!-- Модальне вікно авторизації -->
     <div id="loginModal" class="modal-overlay">
         <div class="modal">
-            <h2>👋 Створіть акаунт</h2>
-            <p style="color: #aaa; margin-bottom: 20px; font-size: 14px;">Введіть свій нікнейм, щоб увійти на сайт:</p>
-            <input type="text" id="usernameInput" placeholder="Твій нікнейм...">
-            <button class="btn" onclick="registerUser()">Увійти</button>
+            <img src="logo.jpg" style="width: 60px; height: 60px; border-radius: 12px; margin-bottom: 15px;" onerror="this.style.display='none'">
+            <h2>🔐 Прив'язка акаунту</h2>
+            <p style="color: #aaa; margin-bottom: 18px; font-size: 14px;">Створіть свій профіль та прив'яжіть Roblox:</p>
+            <div class="form-group">
+                <input type="text" id="siteNameInput" placeholder="Твоє ім'я/нік на сайті (наприклад: Влад)">
+                <input type="text" id="robloxTagInput" placeholder="Твій Roblox Username (для аватарки)">
+                <button class="btn btn-green" style="margin-top: 10px;" onclick="registerAccount()">Зберегти та увійти</button>
+            </div>
         </div>
     </div>
 
     <div class="container">
         <header>
-            <div class="logo">🎮 Roblox Hub</div>
-            <div class="user-badge">
-                👤 <span id="currentUserName">Гість</span>
+            <!-- Натискання на лого відкриває Roblox -->
+            <a href="https://www.roblox.com" target="_blank" class="logo-link" title="Натисни, щоб відкрити Roblox">
+                <div class="logo">
+                    <img src="logo.jpg" class="site-avatar" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/3/3a/Roblox_player_icon_2017.svg'">
+                    Roblox Hub
+                </div>
+            </a>
+            
+            <div class="user-badge" id="userBadge">
+                <img id="myAvatar" class="user-avatar-small" src="" alt="">
+                <span id="currentUserName">Гість</span>
+                <button class="logout-btn" onclick="logout()">Вийти</button>
             </div>
         </header>
 
-        <!-- Форма додавання друга -->
+        <!-- Додавання друга -->
         <div class="card">
-            <h2>➕ Додати друга Roblox</h2>
-            <input type="text" id="friendName" placeholder="Нікнейм друга в Roblox (наприклад: Builderman)">
-            <input type="text" id="gameName" placeholder="В що грає? (наприклад: Blox Fruits)">
-            <input type="text" id="placeId" placeholder="ID гри або посилання на плейс (наприклад: 2753915549)">
-            <button class="btn btn-green" onclick="addFriend()">Додати в список Друзі</button>
+            <h2>➕ Додати друга</h2>
+            <div class="form-group">
+                <input type="text" id="friendSiteName" placeholder="Ім'я друга (наприклад: Захар)">
+                <input type="text" id="friendRobloxTag" placeholder="Його Roblox Username (наприклад: Builderman)">
+                <input type="text" id="friendGame" placeholder="В що грає? (наприклад: Jujutsu Shenanigans)">
+                <input type="text" id="friendPlaceId" placeholder="ID плейсу або посилання на гру (необов'язково)">
+                <button class="btn btn-green" onclick="addFriend()">Додати в Друзі</button>
+            </div>
         </div>
 
-        <!-- Список друзів -->
+        <!-- Список Друзів -->
         <div class="card">
-            <h2>👥 Друзі</h2>
-            <div id="friendsGrid" class="friends-grid">
-                <!-- Тут з'являться картки -->
-            </div>
+            <h2>👥 Мої Друзі</h2>
+            <div id="friendsGrid" class="friends-grid"></div>
+        </div>
+
+        <!-- Список "Кого додати" -->
+        <div class="card">
+            <h2>💡 Кого можна додати</h2>
+            <div class="suggest-list" id="suggestList"></div>
         </div>
     </div>
 
     <script>
-        let currentUser = localStorage.getItem('roblox_hub_user');
-        let friends = JSON.parse(localStorage.getItem('roblox_hub_friends')) || [];
+        let myAccount = JSON.parse(localStorage.getItem('hub_account')) || null;
+        let friends = JSON.parse(localStorage.getItem('hub_friends')) || [];
+
+        const defaultSuggestions = [
+            { siteName: "Даша", robloxTag: "Roblox", game: "Blox Fruits", placeId: "2753915549" },
+            { siteName: "Захар", robloxTag: "Builderman", game: "Jujutsu Shenanigans", placeId: "10404130097" }
+        ];
 
         window.onload = function() {
-            if (currentUser) {
+            if (myAccount) {
                 document.getElementById('loginModal').style.display = 'none';
-                document.getElementById('currentUserName').innerText = currentUser;
+                document.getElementById('currentUserName').innerText = myAccount.siteName;
+                document.getElementById('myAvatar').src = `https://www.roblox.com/headshot-thumbnail/image?username=${encodeURIComponent(myAccount.robloxTag)}&width=150&height=150&format=png`;
             }
             renderFriends();
+            renderSuggestions();
         };
 
-        function registerUser() {
-            const name = document.getElementById('usernameInput').value.trim();
-            if (name) {
-                currentUser = name;
-                localStorage.setItem('roblox_hub_user', name);
-                document.getElementById('loginModal').style.display = 'none';
-                document.getElementById('currentUserName').innerText = name;
+        function registerAccount() {
+            const siteName = document.getElementById('siteNameInput').value.trim();
+            const robloxTag = document.getElementById('robloxTagInput').value.trim();
+
+            if (!siteName || !robloxTag) {
+                alert("Будь ласка, заповніть обидва поля!");
+                return;
             }
+
+            myAccount = { siteName, robloxTag };
+            localStorage.setItem('hub_account', JSON.stringify(myAccount));
+
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('currentUserName').innerText = siteName;
+            document.getElementById('myAvatar').src = `https://www.roblox.com/headshot-thumbnail/image?username=${encodeURIComponent(robloxTag)}&width=150&height=150&format=png`;
         }
 
-        function addFriend() {
-            const name = document.getElementById('friendName').value.trim();
-            const game = document.getElementById('gameName').value.trim() || 'У головному меню';
-            let placeId = document.getElementById('placeId').value.trim();
+        function logout() {
+            localStorage.removeItem('hub_account');
+            location.reload();
+        }
 
-            if (!name) return alert('Вкажіть нікнейм!');
+        function addFriend(customFriend = null) {
+            let friendData = customFriend;
 
-            if (placeId.includes('roblox.com/games/')) {
-                const match = placeId.match(/games\/(\d+)/);
-                if (match) placeId = match[1];
+            if (!friendData) {
+                const siteName = document.getElementById('friendSiteName').value.trim();
+                const robloxTag = document.getElementById('friendRobloxTag').value.trim();
+                const game = document.getElementById('friendGame').value.trim() || "У головному меню";
+                let placeId = document.getElementById('friendPlaceId').value.trim();
+
+                if (!siteName || !robloxTag) {
+                    alert("Введіть ім'я друга та його Roblox нік!");
+                    return;
+                }
+
+                if (placeId.includes('roblox.com/games/')) {
+                    const match = placeId.match(/games\/(\d+)/);
+                    if (match) placeId = match[1];
+                }
+
+                friendData = { siteName, robloxTag, game, placeId };
             }
 
-            const newFriend = {
-                id: Date.now(),
-                name: name,
-                game: game,
-                placeId: placeId,
-                status: placeId ? 'Грає зараз' : 'В мережі'
-            };
-
+            const newFriend = { id: Date.now(), ...friendData };
             friends.push(newFriend);
-            localStorage.setItem('roblox_hub_friends', JSON.stringify(friends));
+            localStorage.setItem('hub_friends', JSON.stringify(friends));
 
-            document.getElementById('friendName').value = '';
-            document.getElementById('gameName').value = '';
-            document.getElementById('placeId').value = '';
+            document.getElementById('friendSiteName').value = '';
+            document.getElementById('friendRobloxTag').value = '';
+            document.getElementById('friendGame').value = '';
+            document.getElementById('friendPlaceId').value = '';
 
             renderFriends();
         }
 
         function deleteFriend(id) {
             friends = friends.filter(f => f.id !== id);
-            localStorage.setItem('roblox_hub_friends', JSON.stringify(friends));
+            localStorage.setItem('hub_friends', JSON.stringify(friends));
             renderFriends();
         }
 
@@ -139,29 +197,52 @@
             grid.innerHTML = '';
 
             if (friends.length === 0) {
-                grid.innerHTML = '<p style="color: #888; grid-column: 1/-1; text-align: center;">Список друзів порожній. Додайте першого вище!</p>';
+                grid.innerHTML = '<p style="color: #777; grid-column: 1/-1; text-align: center; padding: 20px;">У вас поки немає доданих друзів.</p>';
                 return;
             }
 
             friends.forEach(friend => {
-                const avatarUrl = `https://www.roblox.com/headshot-thumbnail/image?username=${encodeURIComponent(friend.name)}&width=150&height=150&format=png`;
+                const avatarUrl = `https://www.roblox.com/headshot-thumbnail/image?username=${encodeURIComponent(friend.robloxTag)}&width=150&height=150&format=png`;
                 const joinLink = friend.placeId 
                     ? `https://www.roblox.com/games/${friend.placeId}` 
-                    : `https://www.roblox.com/search/users?keyword=${encodeURIComponent(friend.name)}`;
+                    : `https://www.roblox.com/search/users?keyword=${encodeURIComponent(friend.robloxTag)}`;
 
                 const card = document.createElement('div');
                 card.className = 'friend-card';
                 card.innerHTML = `
                     <button class="btn btn-danger" style="position: absolute; top: 10px; right: 10px;" onclick="deleteFriend(${friend.id})">✕</button>
                     <img src="${avatarUrl}" class="avatar" onerror="this.src='https://tr.rbxcdn.com/30day-avatar-headshot/150/150/AvatarHeadshot/Png/noFilter'">
-                    <div class="friend-name">${friend.name}</div>
-                    <div class="friend-status"><span class="status-dot"></span> ${friend.status}</div>
+                    <div class="site-name">${friend.siteName}</div>
+                    <div class="roblox-tag">@${friend.robloxTag}</div>
+                    <div class="friend-status"><span class="status-dot"></span> В мережі</div>
                     <div class="friend-game">🎮 ${friend.game}</div>
                     <a href="${joinLink}" target="_blank" class="join-btn btn btn-green">
-                        ${friend.placeId ? '🚀 Приєднатися' : '🔍 Профіль Roblox'}
+                        ${friend.placeId ? '🚀 Зайти у гру' : '🔍 Roblox Профіль'}
                     </a>
                 `;
                 grid.appendChild(card);
+            });
+        }
+
+        function renderSuggestions() {
+            const list = document.getElementById('suggestList');
+            list.innerHTML = '';
+
+            defaultSuggestions.forEach(item => {
+                const avatarUrl = `https://www.roblox.com/headshot-thumbnail/image?username=${encodeURIComponent(item.robloxTag)}&width=150&height=150&format=png`;
+                const div = document.createElement('div');
+                div.className = 'suggest-item';
+                div.innerHTML = `
+                    <div class="suggest-info">
+                        <img src="${avatarUrl}" class="user-avatar-small" style="width:36px; height:36px;">
+                        <div>
+                            <strong>${item.siteName}</strong> <span style="color:#777; font-size:12px;">(@${item.robloxTag})</span>
+                            <div style="font-size:12px; color:#00a2ff;">Грає в: ${item.game}</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-green" style="padding: 6px 14px; font-size: 12px;" onclick='addFriend(${JSON.stringify(item)})'>+ Додати</button>
+                `;
+                list.appendChild(div);
             });
         }
     </script>
