@@ -118,7 +118,7 @@
             document.getElementById('statusMsg').innerText = "";
         }
 
-        // --- 2. ПЕРЕВІРКА СПРАВЖНЬОГО РОБЛОКС НІКУ ТА ВІДПРАВКА КОДУ ---
+        // --- 2. ПЕРЕВІРКА СПРАВЖНЬОГО РОБЛОКС НІКУ (ВИПРАВЛЕНО ЧЕРЕЗ GET ПРОКСІ) ---
         async function sendEmailCode() {
             const username = document.getElementById('regUser').value.trim();
             const email = document.getElementById('regEmail').value.trim();
@@ -129,33 +129,33 @@
             setStatus("Перевіряємо акаунт Roblox...");
 
             try {
-                // Перевірка через API Roblox (через CORS проксі)
-                const res = await fetch(`https://corsproxy.io/?https://users.roblox.com/v1/usernames/users`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ usernames: [username], excludeBannedUsers: true })
-                });
-                const data = await res.json();
+                // Застосовуємо надійний GET-пошук через AllOrigins proxy
+                const robloxApiUrl = `https://users.roblox.com/v1/users/search?keyword=${encodeURIComponent(username)}&limit=10`;
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(robloxApiUrl)}`;
 
-                if (!data.data || data.data.length === 0) {
+                const res = await fetch(proxyUrl);
+                if (!res.ok) throw new Error("Помилка сервера проксі");
+                
+                const wrapperData = await res.json();
+                const data = JSON.parse(wrapperData.contents);
+
+                // Шукаємо точний збіг нікнейму у відповіді Roblox
+                const exactUser = data.data && data.data.find(u => u.name.toLowerCase() === username.toLowerCase());
+
+                if (!exactUser) {
                     return setStatus("ПОМИЛКА: Такого справжнього акаунту Roblox не існує!");
                 }
 
-                // Генеруємо 6-значний код
+                // Якщо акаунт існує — генеруємо код
                 generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-                // Надсилаємо пошту через EmailJS
-                /* emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', {
-                    to_email: email,
-                    code: generatedCode
-                }); */
 
                 console.log("ТЕСТОВИЙ КОД З ПОШТИ:", generatedCode);
                 document.getElementById('codeSection').style.display = 'block';
-                setStatus("Код відправлено на пошту! (Для тесту дивись F12 консоль)");
+                setStatus(`Акаунт [${exactUser.name}] знайдено! Код надіслано (дивіться F12 консоль).`);
 
             } catch (e) {
-                setStatus("Помилка з'єднання з API Roblox.");
+                console.error("Детальна помилка:", e);
+                setStatus("Помилка мережі. Перевірте інтернет або натисніть F12 -> Console.");
             }
         }
 
