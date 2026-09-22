@@ -3,266 +3,307 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roblox Hub - Приватний Чат</title>
-
-    <!-- Підключаємо Firebase (База даних + Чат + Онлайн прямо в браузері) -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <title>IABG Meet - Відеодзвінки</title>
     
-    <!-- Підключаємо EmailJS (Надсилання кодів на пошту без сервера) -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <!-- Підключаємо бібліотеку PeerJS для прямого відеозв'язку -->
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #0e0f12; color: #fff; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .box { background: #181920; padding: 25px; border-radius: 12px; width: 100%; max-width: 420px; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
-        h2, h3 { color: #00a2ff; margin-top: 0; text-align: center; }
-        input, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #333; box-sizing: border-box; font-size: 14px; }
-        input { background: #0a0b0d; color: #fff; }
-        button { background: #00a2ff; color: #fff; font-weight: bold; border: none; cursor: pointer; transition: 0.2s; }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 0;
+            background: #121212;
+            color: #fff;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* ЕКРАН ВХОДУ / СТВОРЕННЯ */
+        #lobby {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 15px;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .card {
+            background: #1e1e1e;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        h1 { margin-top: 0; color: #00a2ff; }
+        p { color: #aaa; font-size: 14px; }
+
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: 1px solid #333;
+            font-size: 15px;
+        }
+
+        input { background: #2a2a2a; color: #fff; text-align: center; }
+
+        button {
+            background: #00a2ff;
+            color: #fff;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
         button:hover { background: #0084cc; }
-        .toggle-btn { background: transparent; color: #888; text-decoration: underline; font-size: 13px; margin-top: 10px; }
-        
-        #chatArea { display: none; max-width: 600px; }
-        #messages { height: 300px; background: #0a0b0d; border: 1px solid #222; border-radius: 8px; padding: 12px; overflow-y: auto; margin: 10px 0; }
-        #messages p { margin: 6px 0; font-size: 14px; }
-        .status { font-size: 13px; text-align: center; color: #ff4747; margin-top: 5px; }
+        .btn-join { background: #00b06f; }
+        .btn-join:hover { background: #008f5a; }
+
+        /* ЕКРАН ВІДЕОДЗВІНКУ */
+        #callRoom {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            position: relative;
+        }
+
+        .video-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            padding: 15px;
+            background: #000;
+        }
+
+        .video-container {
+            position: relative;
+            background: #222;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .user-label {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.6);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        /* КНОПКИ КЕРУВАННЯ (Знизу) */
+        .controls {
+            height: 80px;
+            background: #1e1e1e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .ctrl-btn {
+            width: auto;
+            padding: 12px 20px;
+            margin: 0;
+            border-radius: 30px;
+            font-size: 14px;
+        }
+
+        .btn-red { background: #ff4747; }
+        .btn-red:hover { background: #cc3737; }
+        .btn-gray { background: #444; }
+        .btn-gray:hover { background: #555; }
     </style>
 </head>
 <body>
 
-    <!-- СЕКЦІЯ ВХОДУ ТА РЕЄСТРАЦІЇ -->
-    <div class="box" id="authArea">
-        <h2>Roblox Hub</h2>
-
-        <!-- ФОРМА ВХОДУ -->
-        <div id="loginForm">
-            <h3>Вхід</h3>
-            <input type="text" id="loginUser" placeholder="Справжній нікнейм Roblox">
-            <input type="password" id="loginPass" placeholder="Пароль від сайту">
-            <button onclick="login()">Увійти</button>
-            <button class="toggle-btn" onclick="toggleAuth()">Немає акаунту? Зареєструватись</button>
+    <!-- 1. ЛОБІ (Головна сторінка) -->
+    <div id="lobby">
+        <div class="card">
+            <h1>IABG Meet 🎥</h1>
+            <p>Створи кімнату або приєднайся до друга за посиланням</p>
+            
+            <button onclick="createRoom()">➕ Створити новий дзвінок</button>
+            
+            <div style="margin: 15px 0; color: #555;">— АБО —</div>
+            
+            <input type="text" id="roomInput" placeholder="Введіть код кімнати">
+            <button class="btn-join" onclick="joinByInput()">Приєднатися</button>
         </div>
-
-        <!-- ФОРМА РЕЄСТРАЦІЇ -->
-        <div id="registerForm" style="display: none;">
-            <h3>Реєстрація</h3>
-            <input type="text" id="regUser" placeholder="Справжній нікнейм Roblox">
-            <input type="email" id="regEmail" placeholder="Ваша пошта (Email)">
-            <input type="password" id="regPass" placeholder="Вигадайте пароль для сайту">
-            <button onclick="sendEmailCode()">Отримати код на пошту</button>
-
-            <div id="codeSection" style="display: none; border-top: 1px dashed #444; margin-top: 10px; padding-top: 10px;">
-                <input type="text" id="regCode" placeholder="Введіть 6-значний код">
-                <button style="background: #00b06f" onclick="register()">Підтвердити і Створити</button>
-            </div>
-            <button class="toggle-btn" onclick="toggleAuth()">Вже є акаунт? Увійти</button>
-        </div>
-
-        <p class="status" id="statusMsg"></p>
     </div>
 
-    <!-- СЕКЦІЯ ПРИВАТНОГО ЧАТУ -->
-    <div class="box" id="chatArea">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h3 id="welcomeUser" style="margin:0;">Чат</h3>
-            <button style="width: auto; padding: 6px 12px; background: #ff4747;" onclick="location.reload()">Вийти</button>
+    <!-- 2. КІМНАТА ДЗВІНКУ -->
+    <div id="callRoom">
+        <div class="video-grid">
+            <!-- Твоє відео -->
+            <div class="video-container">
+                <video id="localVideo" autoplay muted playsinline></video>
+                <div class="user-label">Ви (Ви)</div>
+            </div>
+            <!-- Відео друга -->
+            <div class="video-container">
+                <video id="remoteVideo" autoplay playsinline></video>
+                <div class="user-label" id="remoteLabel">Очікування друга...</div>
+            </div>
         </div>
 
-        <div style="font-size: 12px; color: #00b06f; margin: 10px 0;">🟢 Онлайн в чаті: <span id="onlineCounter">1</span></div>
-
-        <!-- Пошук друга -->
-        <div style="display: flex; gap: 8px;">
-            <input type="text" id="friendUser" placeholder="Нік друга в Roblox" style="margin:0;">
-            <button style="width: 130px; margin:0;" onclick="openPrivateChat()">Відкрити чат</button>
-        </div>
-
-        <p id="chatHeader" style="font-size: 12px; color: #777; margin: 10px 0;">Введіть нік друга для переписки</p>
-
-        <!-- Вікно повідомлень -->
-        <div id="messages"></div>
-
-        <!-- Ввід тексту -->
-        <div style="display: flex; gap: 8px;">
-            <input type="text" id="msgInput" placeholder="Напиши повідомлення..." style="margin:0;" onkeypress="if(event.key==='Enter') sendMsg()">
-            <button style="width: 100px; margin:0;" onclick="sendMsg()">Надіслати</button>
+        <!-- Кнопки керування -->
+        <div class="controls">
+            <button class="ctrl-btn btn-gray" id="micBtn" onclick="toggleMic()">🎤 Мікрофон</button>
+            <button class="ctrl-btn btn-gray" id="camBtn" onclick="toggleCam()">📹 Камера</button>
+            <button class="ctrl-btn btn-gray" onclick="copyRoomLink()">🔗 Скопіювати посилання</button>
+            <button class="ctrl-btn btn-red" onclick="leaveCall()">📞 Завершити</button>
         </div>
     </div>
 
     <script>
-        // --- 1. НАЛАШТУВАННЯ FIREBASE (Безкоштовна База Даних) ---
-        // Замініть ці дані на ваші з консолі Firebase (firebase.google.com)
-        const firebaseConfig = {
-            apiKey: "ТВІЙ_API_KEY",
-            authDomain: "твій-проект.firebaseapp.com",
-            databaseURL: "https://твій-проект-default-rtdb.firebaseio.com",
-            projectId: "твій-проект",
-            storageBucket: "твій-проект.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:abcde"
+        let localStream;
+        let peer;
+        let currentCall;
+        let isMicOn = true;
+        let isCamOn = true;
+
+        // Автоматична перевірка: якщо у посиланні є #код, то приєднуємося
+        window.onload = () => {
+            const hashRoom = window.location.hash.substring(1);
+            if (hashRoom) {
+                document.getElementById('roomInput').value = hashRoom;
+                joinRoom(hashRoom);
+            }
         };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
 
-        // EmailJS Init (для відправки кодів на пошту)
-        emailjs.init("ТВІЙ_EMAILJS_PUBLIC_KEY");
-
-        let currentUser = "";
-        let currentFriend = "";
-        let generatedCode = "";
-
-        function toggleAuth() {
-            const l = document.getElementById('loginForm');
-            const r = document.getElementById('registerForm');
-            l.style.display = l.style.display === 'none' ? 'block' : 'none';
-            r.style.display = r.style.display === 'none' ? 'block' : 'none';
-            document.getElementById('statusMsg').innerText = "";
-        }
-
-        // --- 2. ПЕРЕВІРКА СПРАВЖНЬОГО РОБЛОКС НІКУ (ВИПРАВЛЕНО ЧЕРЕЗ GET ПРОКСІ) ---
-        async function sendEmailCode() {
-            const username = document.getElementById('regUser').value.trim();
-            const email = document.getElementById('regEmail').value.trim();
-            const pass = document.getElementById('regPass').value.trim();
-
-            if (!username || !email || !pass) return setStatus("Заповніть усі поля!");
-
-            setStatus("Перевіряємо акаунт Roblox...");
-
+        // Отримання доступу до камери та мікрофона
+        async function getMedia() {
             try {
-                // Застосовуємо надійний GET-пошук через AllOrigins proxy
-                const robloxApiUrl = `https://users.roblox.com/v1/users/search?keyword=${encodeURIComponent(username)}&limit=10`;
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(robloxApiUrl)}`;
-
-                const res = await fetch(proxyUrl);
-                if (!res.ok) throw new Error("Помилка сервера проксі");
-                
-                const wrapperData = await res.json();
-                const data = JSON.parse(wrapperData.contents);
-
-                // Шукаємо точний збіг нікнейму у відповіді Roblox
-                const exactUser = data.data && data.data.find(u => u.name.toLowerCase() === username.toLowerCase());
-
-                if (!exactUser) {
-                    return setStatus("ПОМИЛКА: Такого справжнього акаунту Roblox не існує!");
-                }
-
-                // Якщо акаунт існує — генеруємо код
-                generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-                console.log("ТЕСТОВИЙ КОД З ПОШТИ:", generatedCode);
-                document.getElementById('codeSection').style.display = 'block';
-                setStatus(`Акаунт [${exactUser.name}] знайдено! Код надіслано (дивіться F12 консоль).`);
-
-            } catch (e) {
-                console.error("Детальна помилка:", e);
-                setStatus("Помилка мережі. Перевірте інтернет або натисніть F12 -> Console.");
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('localVideo').srcObject = localStream;
+            } catch (err) {
+                alert("Помилка: Надайте доступ до камери та мікрофона!");
+                console.error(err);
             }
         }
 
-        // --- 3. РЕЄСТРАЦІЯ У БАЗІ ---
-        function register() {
-            const username = document.getElementById('regUser').value.trim();
-            const pass = document.getElementById('regPass').value.trim();
-            const inputCode = document.getElementById('regCode').value.trim();
+        // 1. СТВОРИТИ НОВУ КІМНАТУ
+        async function createRoom() {
+            await getMedia();
+            if (!localStream) return;
 
-            if (inputCode !== generatedCode) {
-                return setStatus("Невірний код з пошти!");
-            }
+            // Генеруємо випадковий ID кімнати (наприклад: meet-a8f9b)
+            const roomId = 'meet-' + Math.random().toString(36).substring(2, 8);
+            window.location.hash = roomId;
 
-            // Зберігаємо в базу Firebase
-            db.ref('users/' + username).set({
-                password: pass,
-                registeredAt: Date.now()
-            }, (err) => {
-                if (err) setStatus("Помилка збереження.");
-                else {
-                    setStatus("Успішно зареєстровано! Тепер увійдіть.");
-                    setTimeout(toggleAuth, 1000);
-                }
+            showCallScreen();
+
+            // Створюємо Peer з цим ID (ти господар)
+            peer = new Peer(roomId);
+
+            peer.on('open', (id) => {
+                console.log('Кімнату створено з ID:', id);
             });
-        }
 
-        // --- 4. ВХІД (АВТОРИЗАЦІЯ) ---
-        function login() {
-            const username = document.getElementById('loginUser').value.trim();
-            const pass = document.getElementById('loginPass').value.trim();
+            // Коли хтось телефонує тобі
+            peer.on('call', (call) => {
+                currentCall = call;
+                call.answer(localStream); // Відповідаємо і передаємо свій відеопотік
 
-            if (!username || !pass) return setStatus("Введіть нік та пароль!");
-
-            db.ref('users/' + username).once('value', (snapshot) => {
-                if (!snapshot.exists()) {
-                    return setStatus("Акаунт не знайдено! Спочатку зареєструйтесь.");
-                }
-
-                const userData = snapshot.val();
-                if (userData.password !== pass) {
-                    return setStatus("Невірний пароль від сайту!");
-                }
-
-                // Успішний вхід
-                currentUser = username;
-                document.getElementById('authArea').style.display = 'none';
-                document.getElementById('chatArea').style.display = 'block';
-                document.getElementById('welcomeUser').innerText = currentUser;
-
-                // Відмічаємо онлайн у базі
-                const presenceRef = db.ref('online/' + currentUser);
-                presenceRef.set(true);
-                presenceRef.onDisconnect().remove();
-
-                // Слухаємо кількість онлайн
-                db.ref('online').on('value', (snap) => {
-                    document.getElementById('onlineCounter').innerText = snap.numChildren();
+                call.on('stream', (remoteStream) => {
+                    document.getElementById('remoteVideo').srcObject = remoteStream;
+                    document.getElementById('remoteLabel').innerText = "Співрозмовник";
                 });
             });
         }
 
-        // --- 5. ПРИВАТНИЙ ЧАТ (ІСТОРІЯ НЕ ЗНИКАЄ) ---
-        function openPrivateChat() {
-            const friend = document.getElementById('friendUser').value.trim();
-            if (!friend) return alert("Введіть нік друга!");
-            if (friend === currentUser) return alert("Не можна писати самому собі!");
+        // 2. ПРИЄДНАТИСЯ ДО ІСНУЮЧОЇ КІМНАТИ
+        function joinByInput() {
+            const roomId = document.getElementById('roomInput').value.trim();
+            if (!roomId) return alert("Введіть код або посилання!");
+            window.location.hash = roomId;
+            joinRoom(roomId);
+        }
 
-            currentFriend = friend;
-            document.getElementById('chatHeader').innerText = `Приватний чат з: ${currentFriend}`;
-            document.getElementById('messages').innerHTML = "";
+        async function joinRoom(roomId) {
+            await getMedia();
+            if (!localStream) return;
 
-            // Ключ чату (однаковий для обох друзів)
-            const chatKey = [currentUser, currentFriend].sort().join('_');
+            showCallScreen();
 
-            // Завантажуємо історію і слухаємо нові повідомлення в реальному часі
-            db.ref('chats/' + chatKey).off(); // вимикаємо старі слухачі
-            db.ref('chats/' + chatKey).on('child_added', (snapshot) => {
-                const msg = snapshot.val();
-                appendMessage(msg.sender, msg.text);
+            // Створюємо свій Peer з випадковим ID
+            peer = new Peer();
+
+            peer.on('open', () => {
+                // Телефонуємо господарю кімнати
+                const call = peer.call(roomId, localStream);
+                currentCall = call;
+
+                call.on('stream', (remoteStream) => {
+                    document.getElementById('remoteVideo').srcObject = remoteStream;
+                    document.getElementById('remoteLabel').innerText = "Господар кімнати";
+                });
+
+                call.on('error', (err) => {
+                    alert("Не вдалося підключитися до кімнати.");
+                });
             });
         }
 
-        function sendMsg() {
-            const text = document.getElementById('msgInput').value.trim();
-            if (!currentFriend || !text) return;
-
-            const chatKey = [currentUser, currentFriend].sort().join('_');
-            
-            // Записуємо в базу (зберігається назавжди)
-            db.ref('chats/' + chatKey).push({
-                sender: currentUser,
-                text: text,
-                time: Date.now()
-            });
-
-            document.getElementById('msgInput').value = "";
+        function showCallScreen() {
+            document.getElementById('lobby').style.display = 'none';
+            document.getElementById('callRoom').style.display = 'flex';
         }
 
-        function appendMessage(sender, text) {
-            const box = document.getElementById('messages');
-            const color = sender === currentUser ? '#00a2ff' : '#00b06f';
-            box.innerHTML += `<p><b style="color:${color}">${sender}:</b> ${text}</p>`;
-            box.scrollTop = box.scrollHeight;
+        // КОПІЮВАННЯ ПОСИЛАННЯ
+        function copyRoomLink() {
+            navigator.clipboard.writeText(window.location.href);
+            alert("Посилання на дзвінок скопійовано! Надішли його другу.");
         }
 
-        function setStatus(msg) {
-            document.getElementById('statusMsg').innerText = msg;
+        // ВМИК / ВИМК МІКРОФОНА
+        function toggleMic() {
+            isMicOn = !isMicOn;
+            localStream.getAudioTracks()[0].enabled = isMicOn;
+            const btn = document.getElementById('micBtn');
+            btn.innerText = isMicOn ? "🎤 Мікрофон" : "🔇 Мікрофон (Вимк)";
+            btn.style.background = isMicOn ? "#444" : "#ff4747";
+        }
+
+        // ВМИК / ВИМК КАМЕРИ
+        function toggleCam() {
+            isCamOn = !isCamOn;
+            localStream.getVideoTracks()[0].enabled = isCamOn;
+            const btn = document.getElementById('camBtn');
+            btn.innerText = isCamOn ? "📹 Камера" : "📷 Камера (Вимк)";
+            btn.style.background = isCamOn ? "#444" : "#ff4747";
+        }
+
+        // ЗАВЕРШИТИ ДЗВІНОК
+        function leaveCall() {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+            }
+            if (peer) peer.destroy();
+            window.location.hash = "";
+            location.reload();
         }
     </script>
 </body>
