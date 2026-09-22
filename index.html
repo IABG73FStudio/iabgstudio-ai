@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IABG Meet - Відеодзвінки</title>
+    <title>IABG Meet - Відеодзвінки та Чат</title>
     
     <!-- Бібліотека PeerJS -->
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -78,42 +78,57 @@
             min-height: 20px;
         }
 
-        /* КІМНАТА ДЗВІНКУ ТА РІВНОПРАВНА МОЗАЇКА */
+        /* ОСНОВНА КІМНАТА ДЗВІНКУ */
         #callRoom {
             display: none;
             flex-direction: column;
             height: 100%;
         }
 
+        #mainLayout {
+            flex: 1;
+            display: flex;
+            height: calc(100vh - 75px);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* МОЗАЇКА ВІДЕО З ВІДСТУПАМИ ТА АНІМАЦІЄЮ */
         #videoGrid {
             flex: 1;
             display: grid;
-            gap: 12px;
-            padding: 16px;
+            gap: 16px;
+            padding: 20px;
             background: #08090c;
-            width: 100%;
-            height: calc(100vh - 75px);
-            box-sizing: border-box;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
+            overflow-y: auto;
+            transition: all 0.3s ease-in-out;
         }
 
         .video-container {
             position: relative;
             background: #181920;
-            border-radius: 16px;
+            border-radius: 18px;
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
             width: 100%;
             height: 100%;
-            min-width: 0;  /* Запобігає поломці сітки */
-            min-height: 0; /* Запобігає поломці сітки */
+            min-width: 0;
+            min-height: 0;
             border: 3px solid transparent;
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+            
+            /* Анімації появи та зміни розмірів */
+            transition: transform 0.3s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.6); }
+            100% { opacity: 1; transform: scale(1); }
         }
 
         /* БІЛЕ СЯЙВО ПРИ РОЗМОВІ */
@@ -130,7 +145,6 @@
             z-index: 2;
         }
 
-        /* АВАТАРКА ЧОЛОВІЧКА С РАНДОМНИМ КОЛЬОРОМ */
         .avatar-placeholder {
             position: absolute;
             inset: 0;
@@ -156,15 +170,94 @@
 
         .user-label {
             position: absolute;
-            bottom: 10px;
-            left: 10px;
+            bottom: 12px;
+            left: 12px;
             background: rgba(0,0,0,0.75);
-            padding: 4px 10px;
+            padding: 5px 12px;
             border-radius: 8px;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
             z-index: 3;
             backdrop-filter: blur(4px);
+        }
+
+        /* БОКОВА ПАНЕЛЬ ЧАТУ */
+        #chatSidebar {
+            width: 320px;
+            background: #14151f;
+            border-left: 1px solid #28293d;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+
+        #chatSidebar.hidden {
+            display: none;
+        }
+
+        .chat-header {
+            padding: 16px;
+            font-weight: bold;
+            font-size: 16px;
+            border-bottom: 1px solid #28293d;
+            background: #181922;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #chatMessages {
+            flex: 1;
+            padding: 14px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .msg-item {
+            background: #222332;
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            word-break: break-word;
+        }
+
+        .msg-item.mine {
+            background: #005599;
+            align-self: flex-end;
+        }
+
+        .msg-author {
+            font-size: 11px;
+            color: #00a2ff;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .msg-item.mine .msg-author {
+            color: #7dd3ff;
+        }
+
+        .chat-input-box {
+            padding: 12px;
+            border-top: 1px solid #28293d;
+            display: flex;
+            gap: 8px;
+            background: #181922;
+        }
+
+        .chat-input-box input {
+            margin: 0;
+            padding: 10px;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        .chat-input-box button {
+            width: auto;
+            padding: 10px 16px;
+            margin: 0;
         }
 
         /* ПАНЕЛЬ КЕРУВАННЯ */
@@ -174,14 +267,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 10px;
             padding: 0 10px;
             border-top: 1px solid #28293d;
         }
 
         .ctrl-btn {
             width: auto;
-            padding: 12px 20px;
+            padding: 12px 18px;
             margin: 0;
             border-radius: 30px;
             font-size: 14px;
@@ -191,19 +284,25 @@
         .btn-red:hover { background: #cc3737; }
         .btn-gray { background: #33344a; }
         .btn-gray:hover { background: #444563; }
+        .btn-blue { background: #00a2ff; }
+        .btn-blue:hover { background: #0084cc; }
     </style>
 </head>
 <body>
 
-    <!-- ЕКРАН ВХОДУ -->
+    <!-- ЕКРАН ВХОДУ (ЛОБІ) -->
     <div id="lobby">
         <div class="card">
             <h1>IABG Meet 🎥</h1>
-            <p>Введіть код або створіть новий дзвінок</p>
+            <p>Введіть ваше ім'я та приєднайтеся до дзвінка</p>
             
+            <input type="text" id="userNameInput" placeholder="Введіть ваше ім'я..." value="Гравець">
+
+            <div style="margin: 10px 0; border-top: 1px solid #28293d;"></div>
+
             <button onclick="createRoom()">➕ Створити новий дзвінок</button>
             
-            <div style="margin: 12px 0; color: #555;">— АБО —</div>
+            <div style="margin: 8px 0; color: #555; font-size: 12px;">— АБО —</div>
             
             <input type="text" id="roomInput" placeholder="Введіть код кімнати">
             <button class="btn-join" onclick="joinByInput()">Приєднатися</button>
@@ -214,12 +313,29 @@
 
     <!-- КІМНАТА ДЗВІНКУ -->
     <div id="callRoom">
-        <div id="videoGrid"></div>
+        <div id="mainLayout">
+            <!-- ВІДЕО МОЗАЇКА -->
+            <div id="videoGrid"></div>
 
+            <!-- СПІЛЬНИЙ ЧАТ ДЛЯ ВСІХ -->
+            <div id="chatSidebar">
+                <div class="chat-header">
+                    <span>💬 Чат кімнати</span>
+                </div>
+                <div id="chatMessages"></div>
+                <div class="chat-input-box">
+                    <input type="text" id="msgInput" placeholder="Повідомлення..." onkeydown="if(event.key==='Enter') sendChatMessage()">
+                    <button class="btn-blue" onclick="sendChatMessage()">></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ПАНЕЛЬ КЕРУВАННЯ -->
         <div class="controls">
             <button class="ctrl-btn btn-gray" id="micBtn" onclick="toggleMic()">🎤 Мікрофон</button>
             <button class="ctrl-btn btn-gray" id="camBtn" onclick="toggleCam()">📹 Камера</button>
-            <button class="ctrl-btn btn-gray" onclick="copyRoomLink()">🔗 Скопіювати посилання</button>
+            <button class="ctrl-btn btn-blue" onclick="toggleChat()">💬 Чат</button>
+            <button class="ctrl-btn btn-gray" onclick="copyRoomLink()">🔗 Посилання</button>
             <button class="ctrl-btn btn-red" onclick="leaveCall()">📞 Завершити</button>
         </div>
     </div>
@@ -238,21 +354,22 @@
         let localStream;
         let peer;
         let myPeerId = "";
+        let myName = "Гравець";
         let isHost = false;
         let isMicOn = true;
         let isCamOn = true;
         let roomIdGlobal = "";
 
-        let hostConn = null; // Для гостей: з'єднання з господарем
-        const clientConns = {}; // Для господаря: з'єднання з усіма гостями
-        const calls = {}; // Усі активні медіа-дзвінки
-        const userCamStates = {}; // Стан камер всіх користувачів
+        let hostConn = null; 
+        const clientConns = {}; 
+        const calls = {}; 
+        const userCamStates = {}; 
+        const userNames = {}; 
 
         window.onload = () => {
             const hashRoom = window.location.hash.substring(1);
             if (hashRoom) {
                 document.getElementById('roomInput').value = hashRoom;
-                joinRoom(hashRoom);
             }
             window.addEventListener('resize', updateMosaicLayout);
         };
@@ -271,6 +388,11 @@
             return `hsl(${h}, 65%, 40%)`;
         }
 
+        function getUserNameInput() {
+            const val = document.getElementById('userNameInput').value.trim();
+            return val || "Гравець";
+        }
+
         async function getMedia() {
             try {
                 if (!localStream) {
@@ -283,7 +405,6 @@
             }
         }
 
-        // РЕТРАНСЛЯЦІЯ ВІД ГОСПОДАРЯ ДО ВСІХ ГОСТЕЙ
         function broadcastFromHost(msg, exceptPeerId = null) {
             Object.keys(clientConns).forEach(pId => {
                 if (pId !== exceptPeerId && clientConns[pId] && clientConns[pId].open) {
@@ -297,6 +418,7 @@
             clearError();
             if (!await getMedia()) return;
 
+            myName = getUserNameInput();
             isHost = true;
             roomIdGlobal = 'meet-' + Math.random().toString(36).substring(2, 8);
             window.location.hash = roomIdGlobal;
@@ -306,33 +428,21 @@
             peer.on('open', (id) => {
                 myPeerId = id;
                 userCamStates[myPeerId] = true;
+                userNames[myPeerId] = myName + " (Господар)";
+
                 showCallScreen();
-                addVideoStream(myPeerId, localStream, 'Ви (Господар)');
+                addVideoStream(myPeerId, localStream, userNames[myPeerId]);
             });
 
-            // Обробка вхідних з'єднань даних від гостей
             peer.on('connection', (conn) => {
                 conn.on('open', () => {
                     clientConns[conn.peer] = conn;
-
-                    // Передаємо новому гостю повний стан кімнати
-                    const currentPeers = Object.keys(clientConns).concat([myPeerId]);
-                    conn.send({
-                        type: 'ROOM_STATE',
-                        peers: currentPeers,
-                        camStates: userCamStates
-                    });
-
-                    // Оповіщаємо інших про нового учасника
-                    broadcastFromHost({ type: 'USER_JOINED', peerId: conn.peer }, conn.peer);
                 });
 
                 conn.on('data', (data) => handleIncomingData(data, conn.peer));
-
                 conn.on('close', () => handleUserLeave(conn.peer));
             });
 
-            // Приймаємо вхідні відео-дзвінки
             peer.on('call', (call) => {
                 call.answer(localStream);
                 handleCallStream(call);
@@ -341,7 +451,7 @@
             peer.on('error', (err) => showError("❌ Помилка сервера: " + err.type));
         }
 
-        // 2. ПРИЄДНАННЯ ДО КІМНАТИ (УЧАСНИКИ)
+        // 2. ПРИЄДНАННЯ ДО КІМНАТИ (ГОСТІ)
         function joinByInput() {
             clearError();
             const rId = document.getElementById('roomInput').value.trim();
@@ -353,6 +463,7 @@
             clearError();
             if (!await getMedia()) return;
 
+            myName = getUserNameInput();
             roomIdGlobal = rId;
             peer = new Peer(peerConfig);
 
@@ -360,20 +471,24 @@
                 myPeerId = id;
                 isHost = false;
                 userCamStates[myPeerId] = true;
+                userNames[myPeerId] = myName;
 
                 showCallScreen();
-                addVideoStream(myPeerId, localStream, 'Ви');
+                addVideoStream(myPeerId, localStream, myName + " (Ви)");
 
-                // Підключаємо канал даних до Господаря
                 hostConn = peer.connect(roomIdGlobal);
 
                 hostConn.on('open', () => {
-                    // Господар зареєструє нас і надішле ROOM_STATE
+                    // Надсилаємо господарю запит на вхід з іменем
+                    hostConn.send({
+                        type: 'JOIN_REQ',
+                        peerId: myPeerId,
+                        name: myName
+                    });
                 });
 
                 hostConn.on('data', (data) => handleIncomingData(data, roomIdGlobal));
 
-                // Обробляємо вхідні відеодзвінки від інших учасників
                 peer.on('call', (call) => {
                     call.answer(localStream);
                     handleCallStream(call);
@@ -383,28 +498,55 @@
             peer.on('error', () => showError("❌ Не вдалося підключитися до кімнати!"));
         }
 
-        // ОБРОБКА ДАНИХ СИНХРОНІЗАЦІЇ
+        // ОБРОБКА ВСІХ ВХІДНИХ ПОВІДОМЛЕНЬ ТА СИНХРОНІЗАЦІЯ
         function handleIncomingData(data, senderPeerId) {
-            if (data.type === 'ROOM_STATE') {
-                // Новий гравець отримує список усіх присутніх і телефонує кожному
+            if (data.type === 'JOIN_REQ' && isHost) {
+                userNames[data.peerId] = data.name;
+                userCamStates[data.peerId] = true;
+
+                // Передаємо новому гостю дані про всю кімнату
+                clientConns[data.peerId].send({
+                    type: 'ROOM_STATE',
+                    peers: Object.keys(userNames),
+                    names: userNames,
+                    camStates: userCamStates
+                });
+
+                // Оповіщаємо інших про нового учасника
+                broadcastFromHost({
+                    type: 'USER_JOINED',
+                    peerId: data.peerId,
+                    name: data.name
+                }, data.peerId);
+
+            } else if (data.type === 'ROOM_STATE') {
+                Object.assign(userNames, data.names);
                 Object.assign(userCamStates, data.camStates);
+
+                // Новий гравець телефонує усім присутнім
                 data.peers.forEach(pId => {
                     if (pId !== myPeerId) {
                         callPeer(pId);
                     }
                 });
+
             } else if (data.type === 'USER_JOINED') {
-                // Хтось новий увійшов. Очікуємо від нього дзвінка.
+                userNames[data.peerId] = data.name;
+                userCamStates[data.peerId] = true;
+
             } else if (data.type === 'CAM_STATE') {
                 userCamStates[data.peerId] = data.enabled;
                 setCamDisplay(data.peerId, data.enabled);
+                if (isHost) broadcastFromHost(data, senderPeerId);
 
-                if (isHost) {
-                    broadcastFromHost(data, senderPeerId);
-                }
+            } else if (data.type === 'CHAT_MSG') {
+                appendChatMessage(data.senderName, data.text, data.senderId === myPeerId);
+                if (isHost) broadcastFromHost(data, senderPeerId);
+
             } else if (data.type === 'LEAVE') {
                 removeVideoStream(data.peerId);
                 delete userCamStates[data.peerId];
+                delete userNames[data.peerId];
 
                 if (isHost) {
                     delete clientConns[data.peerId];
@@ -413,7 +555,6 @@
             }
         }
 
-        // ЗДІЙСНЕННЯ ДЗВІНКА ДО УЧАСНИКА
         function callPeer(targetPeerId) {
             if (!targetPeerId || targetPeerId === myPeerId || calls[targetPeerId]) return;
 
@@ -421,7 +562,6 @@
             handleCallStream(call, targetPeerId);
         }
 
-        // ОБРОБКА ВІДЕОПОТОКУ
         function handleCallStream(call, fallbackId) {
             const peerId = call.peer || fallbackId;
             if (!peerId) return;
@@ -430,16 +570,14 @@
             calls[peerId] = call;
 
             call.on('stream', (remoteStream) => {
-                let label = 'Учасник (' + peerId.substring(0, 4) + ')';
-                if (peerId === roomIdGlobal) label = 'Господар';
-
+                const label = userNames[peerId] || ('Учасник (' + peerId.substring(0, 4) + ')');
                 addVideoStream(peerId, remoteStream, label);
             });
 
             call.on('close', () => removeVideoStream(peerId));
         }
 
-        // СТВОРЕННЯ/ОНОВЛЕННЯ ЕЛЕМЕНТА ВІДЕО В МОЗАЇЦІ
+        // ДОДАВАННЯ ТА ОНОВЛЕННЯ ВІДЕО В МОЗАЇЦІ
         function addVideoStream(peerId, stream, labelText) {
             let container = document.getElementById('container-' + peerId);
 
@@ -464,6 +602,7 @@
 
                 const label = document.createElement('div');
                 label.className = 'user-label';
+                label.id = 'label-' + peerId;
                 label.innerText = labelText;
 
                 container.appendChild(avatar);
@@ -475,6 +614,8 @@
             } else {
                 const video = document.getElementById('video-' + peerId);
                 if (video) video.srcObject = stream;
+                const label = document.getElementById('label-' + peerId);
+                if (label) label.innerText = labelText;
             }
 
             const isCamEnabled = userCamStates[peerId] !== undefined ? userCamStates[peerId] : true;
@@ -482,7 +623,7 @@
             updateMosaicLayout();
         }
 
-        // ДИНАМІЧНИЙ РЕЖИМ МОЗАЇКИ ДЛЯ ВСІХ
+        // АДАПТИВНА МОЗАЇКА З ВІДСТУПАМИ
         function updateMosaicLayout() {
             const grid = document.getElementById('videoGrid');
             const count = grid.children.length;
@@ -491,7 +632,7 @@
                 grid.style.gridTemplateColumns = '1fr';
                 grid.style.gridTemplateRows = '1fr';
             } else if (count === 2) {
-                if (window.innerWidth > window.innerHeight) {
+                if (window.innerWidth > 700) {
                     grid.style.gridTemplateColumns = '1fr 1fr';
                     grid.style.gridTemplateRows = '1fr';
                 } else {
@@ -504,12 +645,9 @@
             } else if (count <= 6) {
                 grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
                 grid.style.gridTemplateRows = 'repeat(2, 1fr)';
-            } else if (count <= 9) {
-                grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
-                grid.style.gridTemplateRows = 'repeat(3, 1fr)';
             } else {
-                grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(200px, 1fr))';
-                grid.style.gridTemplateRows = 'repeat(auto-fit, minmax(150px, 1fr))';
+                grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(220px, 1fr))';
+                grid.style.gridTemplateRows = 'repeat(auto-fit, minmax(160px, 1fr))';
             }
         }
 
@@ -520,7 +658,55 @@
             }
         }
 
-        // ДЕТЕКТОР ГОЛОСУ (БІЛЕ СЯЙВО НА ВІКНІ)
+        // СНІПЕТ ЧАТУ
+        function sendChatMessage() {
+            const input = document.getElementById('msgInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const msgData = {
+                type: 'CHAT_MSG',
+                senderId: myPeerId,
+                senderName: myName,
+                text: text
+            };
+
+            appendChatMessage(myName, text, true);
+
+            if (isHost) {
+                broadcastFromHost(msgData);
+            } else if (hostConn && hostConn.open) {
+                hostConn.send(msgData);
+            }
+
+            input.value = '';
+        }
+
+        function appendChatMessage(author, text, isMine) {
+            const box = document.getElementById('chatMessages');
+            const item = document.createElement('div');
+            item.className = 'msg-item' + (isMine ? ' mine' : '');
+
+            const authorEl = document.createElement('div');
+            authorEl.className = 'msg-author';
+            authorEl.innerText = isMine ? 'Ви' : author;
+
+            const textEl = document.createElement('div');
+            textEl.innerText = text;
+
+            item.appendChild(authorEl);
+            item.appendChild(textEl);
+            box.appendChild(item);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function toggleChat() {
+            const sidebar = document.getElementById('chatSidebar');
+            sidebar.classList.toggle('hidden');
+            updateMosaicLayout();
+        }
+
+        // ДЕТЕКТОР ГОЛОСУ
         function setupVoiceDetection(stream, containerId) {
             try {
                 if (stream.getAudioTracks().length === 0) return;
@@ -557,6 +743,7 @@
         function handleUserLeave(peerId) {
             removeVideoStream(peerId);
             delete userCamStates[peerId];
+            delete userNames[peerId];
             delete clientConns[peerId];
             broadcastFromHost({ type: 'LEAVE', peerId: peerId });
         }
