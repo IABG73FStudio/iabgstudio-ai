@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IABG Meet - Відеодзвінки та Чат</title>
+    <title>Шкільна відеоконференція - IABG Meet</title>
     
     <!-- Бібліотека PeerJS -->
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -13,16 +13,16 @@
         body {
             margin: 0;
             padding: 0;
-            background: #0d0e12;
-            color: #fff;
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            background: #f4f6f9;
+            color: #2c3e50;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
         }
 
-        /* ЕКРАН ВХОДУ (ЛОБІ) */
+        /* ЕКРАН ВХОДУ (ЛОБІ) В ШКІЛЬНОМУ СТИЛІ */
         #lobby {
             display: flex;
             flex-direction: column;
@@ -30,51 +30,54 @@
             justify-content: center;
             height: 100%;
             padding: 20px;
+            background: linear-gradient(135deg, #e3f2fd, #f5f5f5);
         }
 
         .card {
-            background: #181922;
-            padding: 32px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            background: #ffffff;
+            padding: 36px;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
             max-width: 420px;
             width: 100%;
             text-align: center;
-            border: 1px solid #28293d;
+            border: 1px solid #e0e0e0;
         }
 
-        h1 { margin-top: 0; color: #00a2ff; font-size: 28px; }
-        p { color: #aaa; font-size: 14px; }
+        h1 { margin-top: 0; color: #1976d2; font-size: 26px; }
+        p { color: #666; font-size: 14px; }
 
         input, button, select {
             width: 100%;
-            padding: 14px;
+            padding: 12px 14px;
             margin: 8px 0;
-            border-radius: 10px;
-            border: 1px solid #333;
+            border-radius: 8px;
+            border: 1px solid #ccc;
             font-size: 15px;
+            outline: none;
         }
 
-        input, select { background: #222332; color: #fff; text-align: center; }
+        input, select { background: #fafafa; color: #333; text-align: left; }
+        input:focus, select:focus { border-color: #1976d2; box-shadow: 0 0 0 2px rgba(25,118,210,0.15); }
 
         button {
-            background: #00a2ff;
+            background: #1976d2;
             color: #fff;
-            font-weight: bold;
+            font-weight: 600;
             border: none;
             cursor: pointer;
-            transition: 0.2s;
+            transition: background 0.2s;
         }
 
-        button:hover { background: #0084cc; }
-        .btn-join { background: #00b06f; }
-        .btn-join:hover { background: #008f5a; }
+        button:hover { background: #115293; }
+        .btn-join { background: #2e7d32; }
+        .btn-join:hover { background: #1b5e20; }
 
         #errorMsg {
-            color: #ff4747;
-            font-weight: bold;
-            font-size: 14px;
-            margin-top: 15px;
+            color: #d32f2f;
+            font-weight: 600;
+            font-size: 13px;
+            margin-top: 12px;
             min-height: 20px;
         }
 
@@ -100,17 +103,23 @@
             display: grid;
             gap: 12px;
             padding: 16px;
-            background: #08090c;
+            background: #eef2f7;
             align-items: center;
             justify-content: center;
             overflow-y: auto;
             position: relative;
+            transition: box-shadow 0.3s ease;
+        }
+
+        /* ЧЕРВОНА РАМКА ПО БОКАХ, КОЛИ МІКРОФОН ВИМКНЕНО */
+        #videoGrid.mic-muted-border {
+            box-shadow: inset 0 0 0 6px rgba(211, 47, 47, 0.85);
         }
 
         .video-container {
             position: relative;
-            background: #181920;
-            border-radius: 18px;
+            background: #ffffff;
+            border-radius: 12px;
             overflow: hidden;
             display: flex;
             align-items: center;
@@ -119,24 +128,17 @@
             height: 100%;
             min-width: 0;
             min-height: 0;
-            border: 3px solid transparent;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+            border: 2px solid #dcdde1;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             cursor: pointer;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-            animation: popIn 0.3s ease forwards;
+            transition: all 0.2s ease;
         }
 
-        @keyframes popIn {
-            0% { opacity: 0; transform: scale(0.8); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-
-        /* ВІЗУАЛЬНЕ ПРИХОВУВАННЯ НАДЛИШКОВИХ УЧАСНИКІВ (АУДІО ПРОДОВЖУЄ ГРАТИ) */
         .video-container.overflow-hidden-user {
             display: none !important;
         }
 
-        /* РЕЖИМ «ФОКУС НА УЧАСНИКА» */
+        /* РЕЖИМ ФОКУСУ */
         #videoGrid.pinned-active .video-container {
             display: none !important;
         }
@@ -155,18 +157,18 @@
             position: absolute !important;
             bottom: 20px !important;
             right: 20px !important;
-            width: 150px !important;
-            height: 100px !important;
+            width: 160px !important;
+            height: 110px !important;
             z-index: 10 !important;
-            border: 2px solid #00a2ff !important;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8) !important;
-            border-radius: 12px !important;
+            border: 2px solid #1976d2 !important;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2) !important;
+            border-radius: 10px !important;
         }
 
-        /* БІЛЕ СЯЙВО ПРИ РОЗМОВІ */
+        /* ЗЕЛЕНЕ СЯЙВО ПРИ РОЗМОВІ */
         .video-container.speaking {
-            border-color: #ffffff !important;
-            box-shadow: 0 0 25px 6px rgba(255, 255, 255, 0.9) !important;
+            border-color: #2e7d32 !important;
+            box-shadow: 0 0 16px 3px rgba(46, 125, 50, 0.4) !important;
         }
 
         video {
@@ -187,16 +189,16 @@
         }
 
         .avatar-circle {
-            width: 70px;
-            height: 70px;
+            width: 64px;
+            height: 64px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(8px);
+            background: #1976d2;
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 38px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            font-size: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             user-select: none;
         }
 
@@ -204,24 +206,65 @@
             position: absolute;
             bottom: 10px;
             left: 10px;
-            background: rgba(0,0,0,0.75);
+            background: rgba(44, 62, 80, 0.85);
+            color: #fff;
             padding: 4px 10px;
-            border-radius: 8px;
+            border-radius: 6px;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 500;
             z-index: 3;
-            backdrop-filter: blur(4px);
             max-width: 80%;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        /* ЧАТ (ПК ТА МОБІЛЬНИЙ АДАПТИВ) */
+        /* ІНДИКАТОР ПІДНЯТОЇ РУКИ */
+        .hand-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ffa726;
+            color: #fff;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 14px;
+            z-index: 4;
+            display: none;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .video-container.hand-raised .hand-badge { display: block; }
+
+        /* КОНТЕКСТНЕ МЕНЮ (ПКМ) */
+        #contextMenu {
+            display: none;
+            position: fixed;
+            background: #ffffff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            width: 160px;
+            padding: 4px 0;
+        }
+
+        .menu-item {
+            padding: 10px 16px;
+            font-size: 13px;
+            color: #333;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .menu-item:hover { background: #f0f4f8; color: #1976d2; }
+        .menu-item.danger { color: #d32f2f; }
+        .menu-item.danger:hover { background: #fde8e8; }
+
+        /* ЧАТ */
         #chatSidebar {
             width: 320px;
-            background: #14151f;
-            border-left: 1px solid #28293d;
+            background: #ffffff;
+            border-left: 1px solid #e0e0e0;
             display: flex;
             flex-direction: column;
             z-index: 20;
@@ -231,11 +274,11 @@
         #chatSidebar.hidden { display: none; }
 
         .chat-header {
-            padding: 16px;
-            font-weight: bold;
-            font-size: 16px;
-            border-bottom: 1px solid #28293d;
-            background: #181922;
+            padding: 14px 16px;
+            font-weight: 600;
+            font-size: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            background: #f8f9fa;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -243,13 +286,13 @@
 
         .close-chat-btn {
             display: none;
-            background: #33344a;
+            background: #e0e0e0;
             border: none;
-            color: #fff;
-            padding: 6px 12px;
-            border-radius: 8px;
+            color: #333;
+            padding: 4px 10px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 12px;
             width: auto;
             margin: 0;
         }
@@ -261,77 +304,78 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
+            background: #fafafa;
         }
 
         .msg-item {
-            background: #222332;
+            background: #ffffff;
+            border: 1px solid #e8e8e8;
             padding: 10px 12px;
-            border-radius: 12px;
+            border-radius: 8px;
             font-size: 13px;
             word-break: break-word;
         }
 
-        .msg-item.mine { background: #005599; align-self: flex-end; }
+        .msg-item.mine { background: #e3f2fd; border-color: #bbdefb; align-self: flex-end; }
 
         .msg-author {
             font-size: 11px;
-            color: #00a2ff;
+            color: #1976d2;
             font-weight: bold;
             margin-bottom: 3px;
         }
 
-        .msg-item.mine .msg-author { color: #7dd3ff; }
-
         .chat-input-box {
             padding: 12px;
-            border-top: 1px solid #28293d;
+            border-top: 1px solid #e0e0e0;
             display: flex;
             gap: 8px;
-            background: #181922;
+            background: #f8f9fa;
         }
 
-        .chat-input-box input { margin: 0; padding: 12px; font-size: 14px; text-align: left; }
-        .chat-input-box button { width: auto; padding: 12px 18px; margin: 0; }
+        .chat-input-box input { margin: 0; padding: 10px; font-size: 13px; }
+        .chat-input-box button { width: auto; padding: 10px 16px; margin: 0; }
 
         /* МОДАЛЬНЕ ВІКНО НАЛАШТУВАНЬ */
         #settingsModal {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.5);
             z-index: 100;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(3px);
         }
 
         .modal-body {
-            background: #181922;
+            background: #ffffff;
             padding: 24px;
-            border-radius: 16px;
+            border-radius: 12px;
             max-width: 400px;
             width: 90%;
-            border: 1px solid #28293d;
+            border: 1px solid #ddd;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
 
         .modal-body label {
             display: block;
             margin-top: 12px;
             font-size: 13px;
-            color: #aaa;
+            color: #555;
             text-align: left;
         }
 
         /* ПАНЕЛЬ КЕРУВАННЯ */
         .controls {
             height: 75px;
-            background: #181922;
+            background: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
             padding: 0 8px;
-            border-top: 1px solid #28293d;
+            border-top: 1px solid #e0e0e0;
             overflow-x: auto;
             white-space: nowrap;
         }
@@ -340,19 +384,20 @@
             width: auto;
             padding: 10px 14px;
             margin: 0;
-            border-radius: 30px;
+            border-radius: 8px;
             font-size: 12px;
             flex-shrink: 0;
+            background: #e0e0e0;
+            color: #333;
         }
 
-        .btn-red { background: #ff4747; }
-        .btn-red:hover { background: #cc3737; }
-        .btn-gray { background: #33344a; }
-        .btn-gray:hover { background: #444563; }
-        .btn-blue { background: #00a2ff; }
-        .btn-blue:hover { background: #0084cc; }
+        .ctrl-btn:hover { background: #d0d0d0; }
+        .btn-red { background: #d32f2f !important; color: #fff !important; }
+        .btn-red:hover { background: #b71c1c !important; }
+        .btn-primary { background: #1976d2 !important; color: #fff !important; }
+        .btn-primary:hover { background: #115293 !important; }
+        .btn-warning { background: #ffa726 !important; color: #fff !important; }
 
-        /* Мобільна адаптація для чату */
         @media (max-width: 768px) {
             #chatSidebar {
                 position: absolute;
@@ -369,60 +414,67 @@
     <!-- ЕКРАН ВХОДУ (ЛОБІ) -->
     <div id="lobby">
         <div class="card">
-            <h1>IABG Meet 🎥</h1>
-            <p>Введіть ваше ім'я та приєднайтеся до дзвінка</p>
+            <h1>Шкільна конференція 📚</h1>
+            <p>Введіть ваше прізвище та ім'я для підключення</p>
             
-            <input type="text" id="userNameInput" placeholder="Введіть ваше ім'я..." value="Гравець">
+            <input type="text" id="userNameInput" placeholder="Учень / Вчитель..." value="Учень">
 
-            <div style="margin: 10px 0; border-top: 1px solid #28293d;"></div>
+            <div style="margin: 10px 0; border-top: 1px solid #eee;"></div>
 
-            <button onclick="createRoom()">➕ Створити новий дзвінок</button>
+            <button onclick="createRoom()">➕ Створити урок</button>
             
-            <div style="margin: 8px 0; color: #555; font-size: 12px;">— АБО —</div>
+            <div style="margin: 8px 0; color: #888; font-size: 12px;">— АБО —</div>
             
-            <input type="text" id="roomInput" placeholder="Введіть код кімнати">
-            <button class="btn-join" onclick="joinByInput()">Приєднатися</button>
+            <input type="text" id="roomInput" placeholder="Код уроку">
+            <button class="btn-join" onclick="joinByInput()">Приєднатися до уроку</button>
 
             <div id="errorMsg"></div>
         </div>
     </div>
 
-    <!-- КІМНАТА ДЗВІНКУ -->
+    <!-- КОНТЕКСТНЕ МЕНЮ ДЛЯ МОДЕРАЦІЇ -->
+    <div id="contextMenu">
+        <div class="menu-item" id="ctxMute" onclick="ctxActionMute()">Вимкнути звук</div>
+        <div class="menu-item" id="ctxChat" onclick="ctxActionChat()">Заборонити чат</div>
+        <div class="menu-item danger" onclick="ctxActionKick()">Виключити з уроку</div>
+    </div>
+
+    <!-- КІМНАТА УРОКУ -->
     <div id="callRoom">
         <div id="mainLayout">
-            <!-- ВІДЕО МОЗАЇКА -->
+            <!-- МОЗАЇКА ВІДЕО -->
             <div id="videoGrid"></div>
 
-            <!-- СПІЛЬНИЙ ЧАТ -->
+            <!-- ЧАТ -->
             <div id="chatSidebar" class="hidden">
                 <div class="chat-header">
-                    <span>💬 Чат кімнати</span>
-                    <button class="close-chat-btn" onclick="toggleChat()">✕ Закрити</button>
+                    <span>💬 Шкільний чат</span>
+                    <button class="close-chat-btn" onclick="toggleChat()">✕</button>
                 </div>
                 <div id="chatMessages"></div>
                 <div class="chat-input-box">
-                    <input type="text" id="msgInput" placeholder="Повідомлення..." onkeydown="if(event.key==='Enter') sendChatMessage()">
-                    <button class="btn-blue" onclick="sendChatMessage()">></button>
+                    <input type="text" id="msgInput" placeholder="Написати повідомлення..." onkeydown="if(event.key==='Enter') sendChatMessage()">
+                    <button class="btn-primary" onclick="sendChatMessage()">➤</button>
                 </div>
             </div>
         </div>
 
         <!-- ПАНЕЛЬ КЕРУВАННЯ -->
         <div class="controls">
-            <button class="ctrl-btn btn-gray" id="micBtn" onclick="toggleMic()">🎤 Мікрофон</button>
-            <button class="ctrl-btn btn-gray" id="camBtn" onclick="toggleCam()">📹 Камера</button>
-            <button class="ctrl-btn btn-gray" onclick="togglePiP()">📱 PiP</button>
-            <button class="ctrl-btn btn-gray" onclick="openSettings()">⚙️ Пристрої</button>
-            <button class="ctrl-btn btn-blue" onclick="toggleChat()">💬 Чат</button>
-            <button class="ctrl-btn btn-gray" onclick="copyRoomLink()">🔗 Посилання</button>
+            <button class="ctrl-btn" id="micBtn" onclick="toggleMic()">🎤 Мікрофон</button>
+            <button class="ctrl-btn" id="camBtn" onclick="toggleCam()">📹 Камера</button>
+            <button class="ctrl-btn" id="handBtn" onclick="toggleHand()">✋ Рука</button>
+            <button class="ctrl-btn" onclick="openSettings()">⚙️ Пристрої</button>
+            <button class="ctrl-btn btn-primary" onclick="toggleChat()">💬 Чат</button>
+            <button class="ctrl-btn" onclick="copyRoomLink()">🔗 Посилання</button>
             <button class="ctrl-btn btn-red" onclick="leaveCall()">📞 Вийти</button>
         </div>
     </div>
 
-    <!-- МОДАЛЬНЕ ВІКНО НАЛАШТУВАНЬ -->
+    <!-- МОДАЛЬНЕ ВІКНО ПРИСТРОЇВ -->
     <div id="settingsModal">
         <div class="modal-body">
-            <h2 style="margin-top:0;">⚙️ Налаштування пристроїв</h2>
+            <h2 style="margin-top:0; color:#1976d2; font-size:20px;">⚙️ Вибір обладнання</h2>
             
             <label>🎤 Мікрофон:</label>
             <select id="micSelect" onchange="changeAudioInput()"></select>
@@ -430,10 +482,7 @@
             <label>📹 Камера:</label>
             <select id="camSelect" onchange="changeVideoInput()"></select>
 
-            <label>🔊 Динаміки / Навушники:</label>
-            <select id="speakerSelect" onchange="changeAudioOutput()"></select>
-
-            <button class="btn-blue" style="margin-top:20px;" onclick="closeSettings()">Закрити</button>
+            <button class="btn-primary" style="margin-top:20px;" onclick="closeSettings()">Зберегти та закрити</button>
         </div>
     </div>
 
@@ -442,8 +491,7 @@
             config: {
                 iceServers: [
                     { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:stun1.l.google.com:19302' },
-                    { urls: 'stun:stun2.l.google.com:19302' }
+                    { urls: 'stun:stun1.l.google.com:19302' }
                 ]
             }
         };
@@ -451,23 +499,25 @@
         let localStream;
         let peer;
         let myPeerId = "";
-        let myName = "Гравець";
+        let myName = "Учень";
         let isHost = false;
         let isMicOn = true;
         let isCamOn = true;
+        let isHandRaised = false;
+        let isChatDisabled = false;
         let roomIdGlobal = "";
         let pinnedPeerId = null;
+        let targetPeerForMenu = null;
 
         let hostConn = null; 
         const clientConns = {}; 
         const calls = {}; 
         const userCamStates = {}; 
         const userNames = {}; 
-        
-        // Масив для збереження порядку активності (хто останнім говорив)
+        const userHands = {};
         let activeSpeakerOrder = [];
 
-        // 🔊 СИНТЕЗАТОР ЗВУКІВ
+        // 🔊 КРАСИВІ М'ЯКІ ЗВУКИ (Web Audio API)
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
             try {
@@ -479,37 +529,50 @@
                 const now = audioCtx.currentTime;
 
                 if (type === 'join') {
-                    osc.frequency.setValueAtTime(440, now);
-                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
-                    gain.gain.setValueAtTime(0.15, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-                    osc.start(now); osc.stop(now + 0.15);
-                } else if (type === 'leave') {
-                    osc.frequency.setValueAtTime(660, now);
-                    osc.frequency.exponentialRampToValueAtTime(330, now + 0.2);
-                    gain.gain.setValueAtTime(0.15, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                    osc.start(now); osc.stop(now + 0.2);
-                } else if (type === 'msg') {
-                    osc.frequency.setValueAtTime(587.33, now);
+                    // Дзвінкий дзвіночок приходу
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
                     gain.gain.setValueAtTime(0.1, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                    osc.start(now); osc.stop(now + 0.1);
-                } else if (type === 'toggle') {
-                    osc.frequency.setValueAtTime(300, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    osc.start(now); osc.stop(now + 0.3);
+                } else if (type === 'leave') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.setValueAtTime(330, now + 0.12);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                    osc.start(now); osc.stop(now + 0.25);
+                } else if (type === 'msg') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(784, now); // G5
                     gain.gain.setValueAtTime(0.08, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-                    osc.start(now); osc.stop(now + 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+                    osc.start(now); osc.stop(now + 0.12);
+                } else if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(350, now);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                    osc.start(now); osc.stop(now + 0.05);
                 }
-            } catch (e) { console.log(e); }
+            } catch (e) {}
         }
 
-        window.onload = () => {
+        window.onload = async () => {
             const hashRoom = window.location.hash.substring(1);
-            if (hashRoom) {
-                document.getElementById('roomInput').value = hashRoom;
-            }
+            if (hashRoom) document.getElementById('roomInput').value = hashRoom;
             window.addEventListener('resize', updateMosaicLayout);
+
+            // Закриття контекстного меню при кліку на екран
+            window.addEventListener('click', () => {
+                document.getElementById('contextMenu').style.display = 'none';
+            });
+
+            // Попереднє завантаження пристроїв для збереження
+            if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+                await populateDeviceSelects();
+            }
         };
 
         window.onbeforeunload = () => leaveCall();
@@ -517,18 +580,44 @@
         function showError(msg) { document.getElementById('errorMsg').innerText = msg; }
         function clearError() { document.getElementById('errorMsg').innerText = ""; }
 
-        function getRandomColor(id) {
-            let hash = 0;
-            for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
-            return `hsl(${Math.abs(hash) % 360}, 65%, 40%)`;
-        }
-
         function getUserNameInput() {
-            return document.getElementById('userNameInput').value.trim() || "Гравець";
+            return document.getElementById('userNameInput').value.trim() || "Учень";
         }
 
-        async function getMedia(audioId = null, videoId = null) {
+        // ЗБЕРЕЖЕННЯ ТА ВИКОРИСТАННЯ ПРИСТРОЇВ ІЗ localStorage
+        async function populateDeviceSelects() {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const micSelect = document.getElementById('micSelect');
+            const camSelect = document.getElementById('camSelect');
+
+            micSelect.innerHTML = '';
+            camSelect.innerHTML = '';
+
+            devices.forEach(device => {
+                const opt = document.createElement('option');
+                opt.value = device.deviceId;
+                opt.text = device.label || `${device.kind} (${device.deviceId.substring(0, 5)})`;
+
+                if (device.kind === 'audioinput') micSelect.appendChild(opt);
+                else if (device.kind === 'videoinput') camSelect.appendChild(opt);
+            });
+
+            // Встановлюємо збережені користувачем пристрої
+            const savedMic = localStorage.getItem('iabg_saved_mic');
+            const savedCam = localStorage.getItem('iabg_saved_cam');
+
+            if (savedMic) micSelect.value = savedMic;
+            if (savedCam) camSelect.value = savedCam;
+        }
+
+        async function getMedia() {
             try {
+                const micSelect = document.getElementById('micSelect');
+                const camSelect = document.getElementById('camSelect');
+
+                const audioId = micSelect && micSelect.value ? micSelect.value : localStorage.getItem('iabg_saved_mic');
+                const videoId = camSelect && camSelect.value ? camSelect.value : localStorage.getItem('iabg_saved_cam');
+
                 const constraints = {
                     audio: audioId ? { deviceId: { exact: audioId } } : true,
                     video: videoId ? { deviceId: { exact: videoId } } : true
@@ -537,6 +626,20 @@
                 const newStream = await navigator.mediaDevices.getUserMedia(constraints);
                 if (localStream) localStream.getTracks().forEach(track => track.stop());
                 localStream = newStream;
+
+                // Зберігаємо вибір у пам'ять браузера
+                const activeAudioTrack = localStream.getAudioTracks()[0];
+                const activeVideoTrack = localStream.getVideoTracks()[0];
+                
+                // Спробуємо витягнути реальний deviceId через settings
+                if (activeAudioTrack && activeAudioTrack.getSettings) {
+                    const settings = activeAudioTrack.getSettings();
+                    if (settings.deviceId) localStorage.setItem('iabg_saved_mic', settings.deviceId);
+                }
+                if (activeVideoTrack && activeVideoTrack.getSettings) {
+                    const settings = activeVideoTrack.getSettings();
+                    if (settings.deviceId) localStorage.setItem('iabg_saved_cam', settings.deviceId);
+                }
 
                 Object.values(calls).forEach(call => {
                     const senders = call.peerConnection.getSenders();
@@ -551,7 +654,7 @@
 
                 return true;
             } catch (err) {
-                showError("❌ Не вдалося отримати доступ до мікрофона/камери!");
+                showError("❌ Немає доступу до камери або мікрофона!");
                 return false;
             }
         }
@@ -570,7 +673,7 @@
 
             myName = getUserNameInput();
             isHost = true;
-            roomIdGlobal = 'meet-' + Math.random().toString(36).substring(2, 8);
+            roomIdGlobal = 'class-' + Math.random().toString(36).substring(2, 8);
             window.location.hash = roomIdGlobal;
 
             peer = new Peer(roomIdGlobal, peerConfig);
@@ -578,7 +681,7 @@
             peer.on('open', (id) => {
                 myPeerId = id;
                 userCamStates[myPeerId] = true;
-                userNames[myPeerId] = myName + " (Господар)";
+                userNames[myPeerId] = myName + " (Вчитель)";
                 registerUser(myPeerId);
 
                 showCallScreen();
@@ -596,13 +699,13 @@
                 handleCallStream(call);
             });
 
-            peer.on('error', (err) => showError("❌ Помилка сервера: " + err.type));
+            peer.on('error', (err) => showError("❌ Помилка: " + err.type));
         }
 
         function joinByInput() {
             clearError();
             const rId = document.getElementById('roomInput').value.trim();
-            if (!rId) return showError("❌ Введіть код або посилання!");
+            if (!rId) return showError("❌ Введіть код уроку!");
             joinRoom(rId);
         }
 
@@ -637,7 +740,7 @@
                 });
             });
 
-            peer.on('error', () => showError("❌ Не вдалося підключитися!"));
+            peer.on('error', () => showError("❌ Не вдалося приєднатися до уроку!"));
         }
 
         function handleIncomingData(data, senderPeerId) {
@@ -650,7 +753,9 @@
                     type: 'ROOM_STATE',
                     peers: Object.keys(userNames),
                     names: userNames,
-                    camStates: userCamStates
+                    camStates: userCamStates,
+                    hands: userHands,
+                    chatDisabled: isChatDisabled
                 });
 
                 broadcastFromHost({ type: 'USER_JOINED', peerId: data.peerId, name: data.name }, data.peerId);
@@ -659,6 +764,10 @@
             } else if (data.type === 'ROOM_STATE') {
                 Object.assign(userNames, data.names);
                 Object.assign(userCamStates, data.camStates);
+                Object.assign(userHands, data.hands);
+                isChatDisabled = data.chatDisabled;
+                if (isChatDisabled) document.getElementById('msgInput').disabled = true;
+
                 data.peers.forEach(pId => {
                     registerUser(pId);
                     if (pId !== myPeerId) callPeer(pId);
@@ -676,8 +785,27 @@
                 setCamDisplay(data.peerId, data.enabled);
                 if (isHost) broadcastFromHost(data, senderPeerId);
 
+            } else if (data.type === 'HAND_STATE') {
+                userHands[data.peerId] = data.raised;
+                setHandDisplay(data.peerId, data.raised);
+                if (isHost) broadcastFromHost(data, senderPeerId);
+
+            } else if (data.type === 'KICKED' && data.targetId === myPeerId) {
+                alert("⚠️ Вас виключено з уроку викладачем.");
+                leaveCall();
+
+            } else if (data.type === 'FORCE_MUTE' && data.targetId === myPeerId) {
+                if (isMicOn) toggleMic();
+                alert("⚠️ Викладач вимкнув вам мікрофон.");
+
+            } else if (data.type === 'TOGGLE_CHAT_LOCK') {
+                isChatDisabled = data.disabled;
+                document.getElementById('msgInput').disabled = isChatDisabled;
+                if (isChatDisabled) alert("⚠️ Викладач заблокував чат.");
+                else alert("🔓 Викладач розблокував чат.");
+
             } else if (data.type === 'CHAT_MSG') {
-                appendChatMessage(data.senderName, data.text, data.senderId === myPeerId);
+                appendChatMessage(data.senderName, data.text, false);
                 playSound('msg');
                 if (isHost) broadcastFromHost(data, senderPeerId);
 
@@ -685,6 +813,7 @@
                 removeVideoStream(data.peerId);
                 delete userCamStates[data.peerId];
                 delete userNames[data.peerId];
+                delete userHands[data.peerId];
                 activeSpeakerOrder = activeSpeakerOrder.filter(id => id !== data.peerId);
                 playSound('leave');
 
@@ -715,7 +844,7 @@
             calls[peerId] = call;
 
             call.on('stream', (remoteStream) => {
-                const label = userNames[peerId] || ('Учасник (' + peerId.substring(0, 4) + ')');
+                const label = userNames[peerId] || ('Учасник');
                 addVideoStream(peerId, remoteStream, label);
             });
 
@@ -731,13 +860,29 @@
                 container.className = 'video-container';
                 container.id = 'container-' + peerId;
 
+                // Клік по людині фокусує її
                 container.onclick = () => togglePinUser(peerId);
+
+                // ПРАВА КНОПКА МИШІ ДЛЯ МОДЕРАЦІЇ (Mute, Kick, No chat)
+                container.oncontextmenu = (e) => {
+                    e.preventDefault();
+                    if (!isHost && myPeerId !== peerId) return; // Модерирувати може тільки господар або себе
+                    targetPeerForMenu = peerId;
+                    
+                    const menu = document.getElementById('contextMenu');
+                    menu.style.display = 'block';
+                    menu.style.left = Math.min(e.pageX, window.innerWidth - 170) + 'px';
+                    menu.style.top = Math.min(e.pageY, window.innerHeight - 130) + 'px';
+                };
 
                 const avatar = document.createElement('div');
                 avatar.className = 'avatar-placeholder';
-                avatar.id = 'avatar-' + peerId;
-                avatar.style.background = getRandomColor(peerId);
                 avatar.innerHTML = `<div class="avatar-circle">👤</div>`;
+
+                const handBadge = document.createElement('div');
+                handBadge.className = 'hand-badge';
+                handBadge.id = 'hand-' + peerId;
+                handBadge.innerText = '✋ Піднята рука';
 
                 const video = document.createElement('video');
                 video.id = 'video-' + peerId;
@@ -752,6 +897,7 @@
                 label.innerText = labelText;
 
                 container.appendChild(avatar);
+                container.appendChild(handBadge);
                 container.appendChild(video);
                 container.appendChild(label);
                 grid.appendChild(container);
@@ -766,7 +912,35 @@
 
             const isCamEnabled = userCamStates[peerId] !== undefined ? userCamStates[peerId] : true;
             setCamDisplay(peerId, isCamEnabled);
+            const isHandOn = userHands[peerId] || false;
+            setHandDisplay(peerId, isHandOn);
             updateMosaicLayout();
+        }
+
+        // ДІЇ МОДЕРАТОРА З КОНТЕКСТНОГО МЕНЮ
+        function ctxActionMute() {
+            if (!targetPeerForMenu) return;
+            if (isHost && targetPeerForMenu !== myPeerId) {
+                const msg = { type: 'FORCE_MUTE', targetId: targetPeerForMenu };
+                if (clientConns[targetPeerForMenu]) clientConns[targetPeerForMenu].send(msg);
+            }
+        }
+
+        function ctxActionChat() {
+            if (!isHost) return;
+            isChatDisabled = !isChatDisabled;
+            const msg = { type: 'TOGGLE_CHAT_LOCK', disabled: isChatDisabled };
+            document.getElementById('msgInput').disabled = isChatDisabled;
+            broadcastFromHost(msg);
+        }
+
+        function ctxActionKick() {
+            if (!targetPeerForMenu) return;
+            if (isHost && targetPeerForMenu !== myPeerId) {
+                const msg = { type: 'KICKED', targetId: targetPeerForMenu };
+                if (clientConns[targetPeerForMenu]) clientConns[targetPeerForMenu].send(msg);
+                handleUserLeave(targetPeerForMenu);
+            }
         }
 
         function promoteSpeaker(peerId) {
@@ -780,55 +954,38 @@
 
         function togglePinUser(peerId) {
             const grid = document.getElementById('videoGrid');
-
             if (pinnedPeerId === peerId) {
                 pinnedPeerId = null;
                 grid.classList.remove('pinned-active');
-                document.querySelectorAll('.video-container').forEach(c => {
-                    c.classList.remove('pinned', 'my-overlay');
-                });
+                document.querySelectorAll('.video-container').forEach(c => c.classList.remove('pinned', 'my-overlay'));
             } else {
                 pinnedPeerId = peerId;
                 grid.classList.add('pinned-active');
-
-                document.querySelectorAll('.video-container').forEach(c => {
-                    c.classList.remove('pinned', 'my-overlay');
-                });
-
-                const targetContainer = document.getElementById('container-' + peerId);
-                if (targetContainer) targetContainer.classList.add('pinned');
-
-                const myContainer = document.getElementById('container-' + myPeerId);
-                if (myContainer && myPeerId !== peerId) {
-                    myContainer.classList.add('my-overlay');
-                }
+                document.querySelectorAll('.video-container').forEach(c => c.classList.remove('pinned', 'my-overlay'));
+                const target = document.getElementById('container-' + peerId);
+                if (target) target.classList.add('pinned');
+                const mine = document.getElementById('container-' + myPeerId);
+                if (mine && myPeerId !== peerId) mine.classList.add('my-overlay');
             }
-            playSound('toggle');
+            playSound('click');
             updateMosaicLayout();
         }
 
-        /* АДАПТИВНА МОЗАЇКА З АВТО-ПРИХОВУВАННЯМ ТА ПРИОРИТЕТОМ ГОЛОСУ */
         function updateMosaicLayout() {
             if (pinnedPeerId) return;
 
             const isMobile = window.innerWidth <= 768;
             const maxVisible = isMobile ? 6 : 20;
-
             const visiblePeers = activeSpeakerOrder.slice(0, maxVisible);
 
-            // Перевіряємо та ховаємо/показуємо вікна
             activeSpeakerOrder.forEach((peerId) => {
                 const container = document.getElementById('container-' + peerId);
                 if (container) {
-                    if (visiblePeers.includes(peerId)) {
-                        container.classList.remove('overflow-hidden-user');
-                    } else {
-                        container.classList.add('overflow-hidden-user');
-                    }
+                    if (visiblePeers.includes(peerId)) container.classList.remove('overflow-hidden-user');
+                    else container.classList.add('overflow-hidden-user');
                 }
             });
 
-            // Налаштовуємо сітку для видимих елементів
             const grid = document.getElementById('videoGrid');
             const count = visiblePeers.length;
 
@@ -855,62 +1012,34 @@
             if (videoEl) videoEl.style.display = isEnabled ? 'block' : 'none';
         }
 
-        async function togglePiP() {
-            try {
-                const targetId = pinnedPeerId || myPeerId;
-                const video = document.getElementById('video-' + targetId);
-                if (!video) return alert("❌ Немає відео!");
-
-                if (document.pictureInPictureElement) {
-                    await document.exitPictureInPicture();
-                } else {
-                    await video.requestPictureInPicture();
-                }
-            } catch (err) {
-                alert("❌ PiP не підтримується!");
+        function setHandDisplay(peerId, isRaised) {
+            const container = document.getElementById('container-' + peerId);
+            if (container) {
+                if (isRaised) container.classList.add('hand-raised');
+                else container.classList.remove('hand-raised');
             }
         }
 
         async function openSettings() {
-            const modal = document.getElementById('settingsModal');
-            modal.style.display = 'flex';
-
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            const micSelect = document.getElementById('micSelect');
-            const camSelect = document.getElementById('camSelect');
-            const speakerSelect = document.getElementById('speakerSelect');
-
-            micSelect.innerHTML = ''; camSelect.innerHTML = ''; speakerSelect.innerHTML = '';
-
-            devices.forEach(device => {
-                const opt = document.createElement('option');
-                opt.value = device.deviceId;
-                opt.text = device.label || `${device.kind} (${device.deviceId.substring(0, 5)})`;
-
-                if (device.kind === 'audioinput') micSelect.appendChild(opt);
-                else if (device.kind === 'videoinput') camSelect.appendChild(opt);
-                else if (device.kind === 'audiooutput') speakerSelect.appendChild(opt);
-            });
+            await populateDeviceSelects();
+            document.getElementById('settingsModal').style.display = 'flex';
         }
 
-        function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
+        function closeSettings() {
+            document.getElementById('settingsModal').style.display = 'none';
+            getMedia(); // Застосовуємо вибрані пристрої
+        }
 
         async function changeAudioInput() {
-            await getMedia(document.getElementById('micSelect').value, document.getElementById('camSelect').value);
+            await getMedia();
         }
 
         async function changeVideoInput() {
-            await getMedia(document.getElementById('micSelect').value, document.getElementById('camSelect').value);
-        }
-
-        async function changeAudioOutput() {
-            const id = document.getElementById('speakerSelect').value;
-            document.querySelectorAll('video').forEach(v => {
-                if (typeof v.setSinkId === 'function') v.setSinkId(id);
-            });
+            await getMedia();
         }
 
         function sendChatMessage() {
+            if (isChatDisabled) return alert("⚠️ Чат заблоковано викладачем.");
             const input = document.getElementById('msgInput');
             const text = input.value.trim();
             if (!text) return;
@@ -946,15 +1075,13 @@
         function toggleChat() {
             const sidebar = document.getElementById('chatSidebar');
             sidebar.classList.toggle('hidden');
-            playSound('toggle');
+            playSound('click');
             updateMosaicLayout();
         }
 
-        /* ДЕТЕКТОР ГОЛОСУ З АВТО-ПЕРЕМІЩЕННЯМ СПІКЕРА НАГОРИ */
         function setupVoiceDetection(stream, peerId) {
             try {
                 if (stream.getAudioTracks().length === 0) return;
-
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const source = audioContext.createMediaStreamSource(stream);
                 const analyser = audioContext.createAnalyser();
@@ -977,23 +1104,23 @@
                         container.classList.add('speaking');
                         if (!isSpeaking) {
                             isSpeaking = true;
-                            promoteSpeaker(peerId); // Переміщуємо в активні
+                            promoteSpeaker(peerId);
                         }
                     } else {
                         container.classList.remove('speaking');
                         isSpeaking = false;
                     }
-
                     requestAnimationFrame(checkVolume);
                 }
                 checkVolume();
-            } catch (e) { console.log("Voice error:", e); }
+            } catch (e) {}
         }
 
         function handleUserLeave(peerId) {
             removeVideoStream(peerId);
             delete userCamStates[peerId];
             delete userNames[peerId];
+            delete userHands[peerId];
             delete clientConns[peerId];
             activeSpeakerOrder = activeSpeakerOrder.filter(id => id !== peerId);
             broadcastFromHost({ type: 'LEAVE', peerId: peerId });
@@ -1001,7 +1128,6 @@
 
         function removeVideoStream(peerId) {
             if (pinnedPeerId === peerId) togglePinUser(peerId);
-
             const container = document.getElementById('container-' + peerId);
             if (container) container.remove();
             if (calls[peerId]) {
@@ -1018,22 +1144,32 @@
 
         function copyRoomLink() {
             navigator.clipboard.writeText(window.location.href);
-            alert("🔗 Посилання скопійовано!");
+            alert("🔗 Посилання на урок скопійовано!");
         }
 
+        // КЕРУВАННЯ МІКРОФОНОМ З ЧЕРВОНОЮ РАМКОЮ
         function toggleMic() {
             isMicOn = !isMicOn;
             localStream.getAudioTracks()[0].enabled = isMicOn;
+            
             const btn = document.getElementById('micBtn');
-            btn.innerText = isMicOn ? "🎤 Мікрофон" : "🔇 Мікрофон";
-            btn.style.background = isMicOn ? "#33344a" : "#ff4747";
-            playSound('toggle');
+            const grid = document.getElementById('videoGrid');
+
+            if (isMicOn) {
+                btn.innerText = "🎤 Мікрофон";
+                btn.classList.remove('btn-red');
+                grid.classList.remove('mic-muted-border');
+            } else {
+                btn.innerText = "🔇 Мікрофон (Вимк)";
+                btn.classList.add('btn-red');
+                grid.classList.add('mic-muted-border');
+            }
+            playSound('click');
         }
 
         function toggleCam() {
             isCamOn = !isCamOn;
             localStream.getVideoTracks()[0].enabled = isCamOn;
-
             userCamStates[myPeerId] = isCamOn;
             setCamDisplay(myPeerId, isCamOn);
 
@@ -1042,9 +1178,35 @@
             else if (hostConn && hostConn.open) hostConn.send(msg);
 
             const btn = document.getElementById('camBtn');
-            btn.innerText = isCamOn ? "📹 Камера" : "📷 Камера";
-            btn.style.background = isCamOn ? "#33344a" : "#ff4747";
-            playSound('toggle');
+            if (isCamOn) {
+                btn.innerText = "📹 Камера";
+                btn.classList.remove('btn-red');
+            } else {
+                btn.innerText = "📷 Камера (Вимк)";
+                btn.classList.add('btn-red');
+            }
+            playSound('click');
+        }
+
+        // ФУНКЦІЯ ПІДНЯТТЯ РУКИ ✋
+        function toggleHand() {
+            isHandRaised = !isHandRaised;
+            userHands[myPeerId] = isHandRaised;
+            setHandDisplay(myPeerId, isHandRaised);
+
+            const btn = document.getElementById('handBtn');
+            if (isHandRaised) {
+                btn.innerText = "✋ Рука піднята";
+                btn.classList.add('btn-warning');
+            } else {
+                btn.innerText = "✋ Рука";
+                btn.classList.remove('btn-warning');
+            }
+
+            const msg = { type: 'HAND_STATE', peerId: myPeerId, raised: isHandRaised };
+            if (isHost) broadcastFromHost(msg);
+            else if (hostConn && hostConn.open) hostConn.send(msg);
+            playSound('click');
         }
 
         function leaveCall() {
