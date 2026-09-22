@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Шкільна відеоконференція - IABG Meet</title>
+    <title>IABG Meet - Конференція</title>
     
     <!-- Бібліотека PeerJS -->
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -13,8 +13,8 @@
         body {
             margin: 0;
             padding: 0;
-            background: #f4f6f9;
-            color: #2c3e50;
+            background: #0f1015;
+            color: #e4e6eb;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             flex-direction: column;
@@ -22,7 +22,7 @@
             overflow: hidden;
         }
 
-        /* ЕКРАН ВХОДУ (ЛОБІ) В ШКІЛЬНОМУ СТИЛІ */
+        /* ЕКРАН ВХОДУ (ЛОБІ) */
         #lobby {
             display: flex;
             flex-direction: column;
@@ -30,38 +30,38 @@
             justify-content: center;
             height: 100%;
             padding: 20px;
-            background: linear-gradient(135deg, #e3f2fd, #f5f5f5);
+            background: radial-gradient(circle at center, #1e222d 0%, #0f1015 100%);
         }
 
         .card {
-            background: #ffffff;
+            background: #181b24;
             padding: 36px;
             border-radius: 16px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            box-shadow: 0 10px 35px rgba(0,0,0,0.5);
             max-width: 420px;
             width: 100%;
             text-align: center;
-            border: 1px solid #e0e0e0;
+            border: 1px solid #2d3343;
         }
 
-        h1 { margin-top: 0; color: #1976d2; font-size: 26px; }
-        p { color: #666; font-size: 14px; }
+        h1 { margin-top: 0; color: #3b82f6; font-size: 26px; }
+        p { color: #9ca3af; font-size: 14px; }
 
         input, button, select {
             width: 100%;
             padding: 12px 14px;
             margin: 8px 0;
             border-radius: 8px;
-            border: 1px solid #ccc;
+            border: 1px solid #374151;
             font-size: 15px;
             outline: none;
         }
 
-        input, select { background: #fafafa; color: #333; text-align: left; }
-        input:focus, select:focus { border-color: #1976d2; box-shadow: 0 0 0 2px rgba(25,118,210,0.15); }
+        input, select { background: #1f2937; color: #fff; text-align: left; }
+        input:focus, select:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.25); }
 
         button {
-            background: #1976d2;
+            background: #3b82f6;
             color: #fff;
             font-weight: 600;
             border: none;
@@ -69,12 +69,12 @@
             transition: background 0.2s;
         }
 
-        button:hover { background: #115293; }
-        .btn-join { background: #2e7d32; }
-        .btn-join:hover { background: #1b5e20; }
+        button:hover { background: #2563eb; }
+        .btn-join { background: #10b981; }
+        .btn-join:hover { background: #059669; }
 
         #errorMsg {
-            color: #d32f2f;
+            color: #ef4444;
             font-weight: 600;
             font-size: 13px;
             margin-top: 12px;
@@ -103,7 +103,7 @@
             display: grid;
             gap: 12px;
             padding: 16px;
-            background: #eef2f7;
+            background: #12141c;
             align-items: center;
             justify-content: center;
             overflow-y: auto;
@@ -113,12 +113,12 @@
 
         /* ЧЕРВОНА РАМКА ПО БОКАХ, КОЛИ МІКРОФОН ВИМКНЕНО */
         #videoGrid.mic-muted-border {
-            box-shadow: inset 0 0 0 6px rgba(211, 47, 47, 0.85);
+            box-shadow: inset 0 0 0 6px rgba(239, 68, 68, 0.85);
         }
 
         .video-container {
             position: relative;
-            background: #ffffff;
+            background: #1e222d;
             border-radius: 12px;
             overflow: hidden;
             display: flex;
@@ -128,8 +128,8 @@
             height: 100%;
             min-width: 0;
             min-height: 0;
-            border: 2px solid #dcdde1;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 2px solid #2d3343;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             cursor: pointer;
             transition: all 0.2s ease;
         }
@@ -160,15 +160,15 @@
             width: 160px !important;
             height: 110px !important;
             z-index: 10 !important;
-            border: 2px solid #1976d2 !important;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2) !important;
+            border: 2px solid #3b82f6 !important;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5) !important;
             border-radius: 10px !important;
         }
 
         /* ЗЕЛЕНЕ СЯЙВО ПРИ РОЗМОВІ */
         .video-container.speaking {
-            border-color: #2e7d32 !important;
-            box-shadow: 0 0 16px 3px rgba(46, 125, 50, 0.4) !important;
+            border-color: #10b981 !important;
+            box-shadow: 0 0 16px 3px rgba(16, 185, 129, 0.4) !important;
         }
 
         video {
@@ -192,13 +192,13 @@
             width: 64px;
             height: 64px;
             border-radius: 50%;
-            background: #1976d2;
+            background: #3b82f6;
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 30px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             user-select: none;
         }
 
@@ -206,8 +206,8 @@
             position: absolute;
             bottom: 10px;
             left: 10px;
-            background: rgba(44, 62, 80, 0.85);
-            color: #fff;
+            background: rgba(15, 16, 21, 0.85);
+            color: #e4e6eb;
             padding: 4px 10px;
             border-radius: 6px;
             font-size: 12px;
@@ -224,14 +224,14 @@
             position: absolute;
             top: 10px;
             right: 10px;
-            background: #ffa726;
+            background: #f59e0b;
             color: #fff;
             padding: 4px 8px;
             border-radius: 6px;
             font-size: 14px;
             z-index: 4;
             display: none;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
         }
         .video-container.hand-raised .hand-badge { display: block; }
 
@@ -239,10 +239,10 @@
         #contextMenu {
             display: none;
             position: fixed;
-            background: #ffffff;
-            border: 1px solid #ccc;
+            background: #1f2937;
+            border: 1px solid #374151;
             border-radius: 8px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
             z-index: 1000;
             width: 160px;
             padding: 4px 0;
@@ -251,20 +251,20 @@
         .menu-item {
             padding: 10px 16px;
             font-size: 13px;
-            color: #333;
+            color: #e4e6eb;
             cursor: pointer;
             user-select: none;
         }
 
-        .menu-item:hover { background: #f0f4f8; color: #1976d2; }
-        .menu-item.danger { color: #d32f2f; }
-        .menu-item.danger:hover { background: #fde8e8; }
+        .menu-item:hover { background: #374151; color: #3b82f6; }
+        .menu-item.danger { color: #ef4444; }
+        .menu-item.danger:hover { background: #451a03; }
 
         /* ЧАТ */
         #chatSidebar {
             width: 320px;
-            background: #ffffff;
-            border-left: 1px solid #e0e0e0;
+            background: #181b24;
+            border-left: 1px solid #2d3343;
             display: flex;
             flex-direction: column;
             z-index: 20;
@@ -277,8 +277,8 @@
             padding: 14px 16px;
             font-weight: 600;
             font-size: 15px;
-            border-bottom: 1px solid #e0e0e0;
-            background: #f8f9fa;
+            border-bottom: 1px solid #2d3343;
+            background: #1f2937;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -286,9 +286,9 @@
 
         .close-chat-btn {
             display: none;
-            background: #e0e0e0;
+            background: #374151;
             border: none;
-            color: #333;
+            color: #fff;
             padding: 4px 10px;
             border-radius: 6px;
             cursor: pointer;
@@ -304,33 +304,33 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            background: #fafafa;
+            background: #12141c;
         }
 
         .msg-item {
-            background: #ffffff;
-            border: 1px solid #e8e8e8;
+            background: #1e222d;
+            border: 1px solid #2d3343;
             padding: 10px 12px;
             border-radius: 8px;
             font-size: 13px;
             word-break: break-word;
         }
 
-        .msg-item.mine { background: #e3f2fd; border-color: #bbdefb; align-self: flex-end; }
+        .msg-item.mine { background: #1e3a8a; border-color: #1d4ed8; align-self: flex-end; }
 
         .msg-author {
             font-size: 11px;
-            color: #1976d2;
+            color: #60a5fa;
             font-weight: bold;
             margin-bottom: 3px;
         }
 
         .chat-input-box {
             padding: 12px;
-            border-top: 1px solid #e0e0e0;
+            border-top: 1px solid #2d3343;
             display: flex;
             gap: 8px;
-            background: #f8f9fa;
+            background: #1f2937;
         }
 
         .chat-input-box input { margin: 0; padding: 10px; font-size: 13px; }
@@ -341,41 +341,41 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.7);
             z-index: 100;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(3px);
+            backdrop-filter: blur(4px);
         }
 
         .modal-body {
-            background: #ffffff;
+            background: #181b24;
             padding: 24px;
             border-radius: 12px;
             max-width: 400px;
             width: 90%;
-            border: 1px solid #ddd;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid #2d3343;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .modal-body label {
             display: block;
             margin-top: 12px;
             font-size: 13px;
-            color: #555;
+            color: #9ca3af;
             text-align: left;
         }
 
         /* ПАНЕЛЬ КЕРУВАННЯ */
         .controls {
             height: 75px;
-            background: #ffffff;
+            background: #181b24;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
             padding: 0 8px;
-            border-top: 1px solid #e0e0e0;
+            border-top: 1px solid #2d3343;
             overflow-x: auto;
             white-space: nowrap;
         }
@@ -387,16 +387,16 @@
             border-radius: 8px;
             font-size: 12px;
             flex-shrink: 0;
-            background: #e0e0e0;
-            color: #333;
+            background: #2d3343;
+            color: #e4e6eb;
         }
 
-        .ctrl-btn:hover { background: #d0d0d0; }
-        .btn-red { background: #d32f2f !important; color: #fff !important; }
-        .btn-red:hover { background: #b71c1c !important; }
-        .btn-primary { background: #1976d2 !important; color: #fff !important; }
-        .btn-primary:hover { background: #115293 !important; }
-        .btn-warning { background: #ffa726 !important; color: #fff !important; }
+        .ctrl-btn:hover { background: #374151; }
+        .btn-red { background: #ef4444 !important; color: #fff !important; }
+        .btn-red:hover { background: #dc2626 !important; }
+        .btn-primary { background: #3b82f6 !important; color: #fff !important; }
+        .btn-primary:hover { background: #2563eb !important; }
+        .btn-warning { background: #f59e0b !important; color: #fff !important; }
 
         @media (max-width: 768px) {
             #chatSidebar {
@@ -414,19 +414,19 @@
     <!-- ЕКРАН ВХОДУ (ЛОБІ) -->
     <div id="lobby">
         <div class="card">
-            <h1>Шкільна конференція 📚</h1>
-            <p>Введіть ваше прізвище та ім'я для підключення</p>
+            <h1>IABG Meet 🚀</h1>
+            <p>Введіть своє ім'я для підключення</p>
             
-            <input type="text" id="userNameInput" placeholder="Учень / Вчитель..." value="Учень">
+            <input type="text" id="userNameInput" placeholder="Ваше ім'я..." value="Гість">
 
-            <div style="margin: 10px 0; border-top: 1px solid #eee;"></div>
+            <div style="margin: 10px 0; border-top: 1px solid #2d3343;"></div>
 
-            <button onclick="createRoom()">➕ Створити урок</button>
+            <button onclick="createRoom()">➕ Створити кімнату</button>
             
-            <div style="margin: 8px 0; color: #888; font-size: 12px;">— АБО —</div>
+            <div style="margin: 8px 0; color: #6b7280; font-size: 12px;">— АБО —</div>
             
-            <input type="text" id="roomInput" placeholder="Код уроку">
-            <button class="btn-join" onclick="joinByInput()">Приєднатися до уроку</button>
+            <input type="text" id="roomInput" placeholder="Код кімнати">
+            <button class="btn-join" onclick="joinByInput()">Приєднатися</button>
 
             <div id="errorMsg"></div>
         </div>
@@ -436,10 +436,10 @@
     <div id="contextMenu">
         <div class="menu-item" id="ctxMute" onclick="ctxActionMute()">Вимкнути звук</div>
         <div class="menu-item" id="ctxChat" onclick="ctxActionChat()">Заборонити чат</div>
-        <div class="menu-item danger" onclick="ctxActionKick()">Виключити з уроку</div>
+        <div class="menu-item danger" onclick="ctxActionKick()">Кікнути з дзвінка</div>
     </div>
 
-    <!-- КІМНАТА УРОКУ -->
+    <!-- КІМНАТА ДЗВІНКУ -->
     <div id="callRoom">
         <div id="mainLayout">
             <!-- МОЗАЇКА ВІДЕО -->
@@ -448,7 +448,7 @@
             <!-- ЧАТ -->
             <div id="chatSidebar" class="hidden">
                 <div class="chat-header">
-                    <span>💬 Шкільний чат</span>
+                    <span>💬 Чат конференції</span>
                     <button class="close-chat-btn" onclick="toggleChat()">✕</button>
                 </div>
                 <div id="chatMessages"></div>
@@ -466,6 +466,7 @@
             <button class="ctrl-btn" id="handBtn" onclick="toggleHand()">✋ Рука</button>
             <button class="ctrl-btn" onclick="openSettings()">⚙️ Пристрої</button>
             <button class="ctrl-btn btn-primary" onclick="toggleChat()">💬 Чат</button>
+            <button class="ctrl-btn" onclick="togglePipMode()">📺 PiP</button>
             <button class="ctrl-btn" onclick="copyRoomLink()">🔗 Посилання</button>
             <button class="ctrl-btn btn-red" onclick="leaveCall()">📞 Вийти</button>
         </div>
@@ -474,13 +475,16 @@
     <!-- МОДАЛЬНЕ ВІКНО ПРИСТРОЇВ -->
     <div id="settingsModal">
         <div class="modal-body">
-            <h2 style="margin-top:0; color:#1976d2; font-size:20px;">⚙️ Вибір обладнання</h2>
+            <h2 style="margin-top:0; color:#3b82f6; font-size:20px;">⚙️ Вибір обладнання</h2>
             
             <label>🎤 Мікрофон:</label>
             <select id="micSelect" onchange="changeAudioInput()"></select>
 
             <label>📹 Камера:</label>
             <select id="camSelect" onchange="changeVideoInput()"></select>
+
+            <label>🔊 Динаміки (Вихід звуку):</label>
+            <select id="speakerSelect" onchange="changeAudioOutput()"></select>
 
             <button class="btn-primary" style="margin-top:20px;" onclick="closeSettings()">Зберегти та закрити</button>
         </div>
@@ -499,7 +503,7 @@
         let localStream;
         let peer;
         let myPeerId = "";
-        let myName = "Учень";
+        let myName = "Гість";
         let isHost = false;
         let isMicOn = true;
         let isCamOn = true;
@@ -517,7 +521,7 @@
         const userHands = {};
         let activeSpeakerOrder = [];
 
-        // 🔊 КРАСИВІ М'ЯКІ ЗВУКИ (Web Audio API)
+        // 🔊 НОВІ КРАСИВІ ТА М'ЯКІ ЗВУКИ (Web Audio API)
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
             try {
@@ -529,32 +533,32 @@
                 const now = audioCtx.currentTime;
 
                 if (type === 'join') {
-                    // Дзвінкий дзвіночок приходу
+                    // Приємний двотональний дзвіночок входу
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(523.25, now); // C5
-                    osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
-                    gain.gain.setValueAtTime(0.1, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-                    osc.start(now); osc.stop(now + 0.3);
+                    osc.frequency.setValueAtTime(440, now); // A4
+                    osc.frequency.setValueAtTime(659.25, now + 0.12); // E5
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                    osc.start(now); osc.stop(now + 0.35);
                 } else if (type === 'leave') {
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(440, now);
-                    osc.frequency.setValueAtTime(330, now + 0.12);
-                    gain.gain.setValueAtTime(0.1, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-                    osc.start(now); osc.stop(now + 0.25);
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(392, now + 0.12);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    osc.start(now); osc.stop(now + 0.3);
                 } else if (type === 'msg') {
                     osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(784, now); // G5
-                    gain.gain.setValueAtTime(0.08, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-                    osc.start(now); osc.stop(now + 0.12);
+                    osc.frequency.setValueAtTime(880, now); // A5
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                    osc.start(now); osc.stop(now + 0.15);
                 } else if (type === 'click') {
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(350, now);
-                    gain.gain.setValueAtTime(0.05, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
-                    osc.start(now); osc.stop(now + 0.05);
+                    osc.frequency.setValueAtTime(300, now);
+                    gain.gain.setValueAtTime(0.03, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+                    osc.start(now); osc.stop(now + 0.04);
                 }
             } catch (e) {}
         }
@@ -564,12 +568,10 @@
             if (hashRoom) document.getElementById('roomInput').value = hashRoom;
             window.addEventListener('resize', updateMosaicLayout);
 
-            // Закриття контекстного меню при кліку на екран
             window.addEventListener('click', () => {
                 document.getElementById('contextMenu').style.display = 'none';
             });
 
-            // Попереднє завантаження пристроїв для збереження
             if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
                 await populateDeviceSelects();
             }
@@ -581,17 +583,19 @@
         function clearError() { document.getElementById('errorMsg').innerText = ""; }
 
         function getUserNameInput() {
-            return document.getElementById('userNameInput').value.trim() || "Учень";
+            return document.getElementById('userNameInput').value.trim() || "Гість";
         }
 
-        // ЗБЕРЕЖЕННЯ ТА ВИКОРИСТАННЯ ПРИСТРОЇВ ІЗ localStorage
+        // ЗАВАНТАЖЕННЯ ТА ЗБЕРЕЖЕННЯ ПРИСТРОЇВ (localStorage)
         async function populateDeviceSelects() {
             const devices = await navigator.mediaDevices.enumerateDevices();
             const micSelect = document.getElementById('micSelect');
             const camSelect = document.getElementById('camSelect');
+            const speakerSelect = document.getElementById('speakerSelect');
 
             micSelect.innerHTML = '';
             camSelect.innerHTML = '';
+            if (speakerSelect) speakerSelect.innerHTML = '';
 
             devices.forEach(device => {
                 const opt = document.createElement('option');
@@ -600,14 +604,16 @@
 
                 if (device.kind === 'audioinput') micSelect.appendChild(opt);
                 else if (device.kind === 'videoinput') camSelect.appendChild(opt);
+                else if (device.kind === 'audiooutput' && speakerSelect) speakerSelect.appendChild(opt);
             });
 
-            // Встановлюємо збережені користувачем пристрої
             const savedMic = localStorage.getItem('iabg_saved_mic');
             const savedCam = localStorage.getItem('iabg_saved_cam');
+            const savedSpeaker = localStorage.getItem('iabg_saved_speaker');
 
             if (savedMic) micSelect.value = savedMic;
             if (savedCam) camSelect.value = savedCam;
+            if (savedSpeaker && speakerSelect) speakerSelect.value = savedSpeaker;
         }
 
         async function getMedia() {
@@ -627,11 +633,9 @@
                 if (localStream) localStream.getTracks().forEach(track => track.stop());
                 localStream = newStream;
 
-                // Зберігаємо вибір у пам'ять браузера
                 const activeAudioTrack = localStream.getAudioTracks()[0];
                 const activeVideoTrack = localStream.getVideoTracks()[0];
                 
-                // Спробуємо витягнути реальний deviceId через settings
                 if (activeAudioTrack && activeAudioTrack.getSettings) {
                     const settings = activeAudioTrack.getSettings();
                     if (settings.deviceId) localStorage.setItem('iabg_saved_mic', settings.deviceId);
@@ -673,7 +677,7 @@
 
             myName = getUserNameInput();
             isHost = true;
-            roomIdGlobal = 'class-' + Math.random().toString(36).substring(2, 8);
+            roomIdGlobal = 'meet-' + Math.random().toString(36).substring(2, 8);
             window.location.hash = roomIdGlobal;
 
             peer = new Peer(roomIdGlobal, peerConfig);
@@ -681,7 +685,7 @@
             peer.on('open', (id) => {
                 myPeerId = id;
                 userCamStates[myPeerId] = true;
-                userNames[myPeerId] = myName + " (Вчитель)";
+                userNames[myPeerId] = myName + " (Організатор)";
                 registerUser(myPeerId);
 
                 showCallScreen();
@@ -705,7 +709,7 @@
         function joinByInput() {
             clearError();
             const rId = document.getElementById('roomInput').value.trim();
-            if (!rId) return showError("❌ Введіть код уроку!");
+            if (!rId) return showError("❌ Введіть код кімнати!");
             joinRoom(rId);
         }
 
@@ -740,7 +744,7 @@
                 });
             });
 
-            peer.on('error', () => showError("❌ Не вдалося приєднатися до уроку!"));
+            peer.on('error', () => showError("❌ Не вдалося приєднатися до кімнати!"));
         }
 
         function handleIncomingData(data, senderPeerId) {
@@ -791,18 +795,18 @@
                 if (isHost) broadcastFromHost(data, senderPeerId);
 
             } else if (data.type === 'KICKED' && data.targetId === myPeerId) {
-                alert("⚠️ Вас виключено з уроку викладачем.");
+                alert("⚠️ Вас виключено з дзвінка.");
                 leaveCall();
 
             } else if (data.type === 'FORCE_MUTE' && data.targetId === myPeerId) {
                 if (isMicOn) toggleMic();
-                alert("⚠️ Викладач вимкнув вам мікрофон.");
+                alert("⚠️ Організатор вимкнув вам мікрофон.");
 
             } else if (data.type === 'TOGGLE_CHAT_LOCK') {
                 isChatDisabled = data.disabled;
                 document.getElementById('msgInput').disabled = isChatDisabled;
-                if (isChatDisabled) alert("⚠️ Викладач заблокував чат.");
-                else alert("🔓 Викладач розблокував чат.");
+                if (isChatDisabled) alert("⚠️ Організатор заблокував чат.");
+                else alert("🔓 Організатор розблокував чат.");
 
             } else if (data.type === 'CHAT_MSG') {
                 appendChatMessage(data.senderName, data.text, false);
@@ -860,13 +864,12 @@
                 container.className = 'video-container';
                 container.id = 'container-' + peerId;
 
-                // Клік по людині фокусує її
                 container.onclick = () => togglePinUser(peerId);
 
-                // ПРАВА КНОПКА МИШІ ДЛЯ МОДЕРАЦІЇ (Mute, Kick, No chat)
+                // ПРАВА КНОПКА МИШІ ДЛЯ МОДЕРАЦІЇ
                 container.oncontextmenu = (e) => {
                     e.preventDefault();
-                    if (!isHost && myPeerId !== peerId) return; // Модерирувати може тільки господар або себе
+                    if (!isHost && myPeerId !== peerId) return;
                     targetPeerForMenu = peerId;
                     
                     const menu = document.getElementById('contextMenu');
@@ -917,7 +920,6 @@
             updateMosaicLayout();
         }
 
-        // ДІЇ МОДЕРАТОРА З КОНТЕКСТНОГО МЕНЮ
         function ctxActionMute() {
             if (!targetPeerForMenu) return;
             if (isHost && targetPeerForMenu !== myPeerId) {
@@ -1027,19 +1029,45 @@
 
         function closeSettings() {
             document.getElementById('settingsModal').style.display = 'none';
-            getMedia(); // Застосовуємо вибрані пристрої
+            getMedia();
         }
 
-        async function changeAudioInput() {
-            await getMedia();
+        async function changeAudioInput() { await getMedia(); }
+        async function changeVideoInput() { await getMedia(); }
+
+        async function changeAudioOutput() {
+            const speakerSelect = document.getElementById('speakerSelect');
+            if (speakerSelect && speakerSelect.value) {
+                localStorage.setItem('iabg_saved_speaker', speakerSelect.value);
+                const videos = document.querySelectorAll('video');
+                for (let v of videos) {
+                    if (typeof v.sinkId !== 'undefined') {
+                        try { await v.setSinkId(speakerSelect.value); } catch (e) {}
+                    }
+                }
+            }
         }
 
-        async function changeVideoInput() {
-            await getMedia();
+        // 📺 НАДІЙНИЙ PiP (Картинка в картинці для телефонів при виході з браузера)
+        async function togglePipMode() {
+            try {
+                const myVideo = document.getElementById('video-' + myPeerId);
+                if (!myVideo) return;
+
+                if (document.pictureInPictureElement) {
+                    await document.exitPictureInPicture();
+                } else if (myVideo.requestPictureInPicture) {
+                    await myVideo.requestPictureInPicture();
+                } else {
+                    alert("⚠️ Режим PiP не підтримується на цьому пристрої.");
+                }
+            } catch (err) {
+                alert("⚠️ Не вдалося увімкнути режим PiP.");
+            }
         }
 
         function sendChatMessage() {
-            if (isChatDisabled) return alert("⚠️ Чат заблоковано викладачем.");
+            if (isChatDisabled) return alert("⚠️ Чат заблоковано організатором.");
             const input = document.getElementById('msgInput');
             const text = input.value.trim();
             if (!text) return;
@@ -1144,10 +1172,9 @@
 
         function copyRoomLink() {
             navigator.clipboard.writeText(window.location.href);
-            alert("🔗 Посилання на урок скопійовано!");
+            alert("🔗 Посилання на кімнату скопійовано!");
         }
 
-        // КЕРУВАННЯ МІКРОФОНОМ З ЧЕРВОНОЮ РАМКОЮ
         function toggleMic() {
             isMicOn = !isMicOn;
             localStream.getAudioTracks()[0].enabled = isMicOn;
@@ -1188,7 +1215,6 @@
             playSound('click');
         }
 
-        // ФУНКЦІЯ ПІДНЯТТЯ РУКИ ✋
         function toggleHand() {
             isHandRaised = !isHandRaised;
             userHands[myPeerId] = isHandRaised;
