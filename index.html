@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IABG Meet - Відеодзвінки</title>
     
-    <!-- Підключаємо бібліотеку PeerJS для прямого відеозв'язку -->
+    <!-- Бібліотека PeerJS для реального глобального зв'язку -->
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
     <style>
@@ -19,17 +19,16 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
+            overflow: hidden;
         }
 
-        /* ЕКРАН ВХОДУ / СТВОРЕННЯ */
+        /* ЛОБІ */
         #lobby {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100%;
-            gap: 15px;
-            text-align: center;
             padding: 20px;
         }
 
@@ -40,6 +39,7 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             max-width: 400px;
             width: 100%;
+            text-align: center;
         }
 
         h1 { margin-top: 0; color: #00a2ff; }
@@ -69,31 +69,48 @@
         .btn-join { background: #00b06f; }
         .btn-join:hover { background: #008f5a; }
 
-        /* ЕКРАН ВІДЕОДЗВІНКУ */
+        #errorMsg {
+            color: #ff4747;
+            font-weight: bold;
+            font-size: 14px;
+            margin-top: 15px;
+            min-height: 20px;
+        }
+
+        /* СІТКА ДЗВІНКУ ТА ЕФЕКТ БІЛОГО СЯЙВА ПРИ РОЗМОВІ */
         #callRoom {
             display: none;
             flex-direction: column;
             height: 100%;
-            position: relative;
         }
 
-        .video-grid {
+        #videoGrid {
             flex: 1;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 15px;
             padding: 15px;
             background: #000;
+            overflow-y: auto;
         }
 
         .video-container {
             position: relative;
             background: #222;
-            border-radius: 12px;
+            border-radius: 14px;
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
+            aspect-ratio: 16 / 9;
+            border: 3px solid transparent;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        /* КОЛИ ЛЮДИНА ГОВОРИТЬ — РАМКА СВІТИТЬСЯ БІЛИМ */
+        .video-container.speaking {
+            border-color: #ffffff !important;
+            box-shadow: 0 0 20px 4px rgba(255, 255, 255, 0.9) !important;
         }
 
         video {
@@ -106,25 +123,27 @@
             position: absolute;
             bottom: 10px;
             left: 10px;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.7);
             padding: 4px 10px;
             border-radius: 6px;
             font-size: 12px;
+            font-weight: 500;
+            z-index: 2;
         }
 
-        /* КНОПКИ КЕРУВАННЯ (Знизу) */
         .controls {
-            height: 80px;
+            height: 75px;
             background: #1e1e1e;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 15px;
+            gap: 12px;
+            padding: 0 10px;
         }
 
         .ctrl-btn {
             width: auto;
-            padding: 12px 20px;
+            padding: 10px 18px;
             margin: 0;
             border-radius: 30px;
             font-size: 14px;
@@ -138,37 +157,28 @@
 </head>
 <body>
 
-    <!-- 1. ЛОБІ (Головна сторінка) -->
+    <!-- ЕКРАН ВХОДУ -->
     <div id="lobby">
         <div class="card">
             <h1>IABG Meet 🎥</h1>
-            <p>Створи кімнату або приєднайся до друга за посиланням</p>
+            <p>Введи код або створи нову кімнату</p>
             
             <button onclick="createRoom()">➕ Створити новий дзвінок</button>
             
-            <div style="margin: 15px 0; color: #555;">— АБО —</div>
+            <div style="margin: 10px 0; color: #555;">— АБО —</div>
             
             <input type="text" id="roomInput" placeholder="Введіть код кімнати">
             <button class="btn-join" onclick="joinByInput()">Приєднатися</button>
+
+            <!-- ЧЕРВОНА ПОМИЛКА ЗНИЗУ -->
+            <div id="errorMsg"></div>
         </div>
     </div>
 
-    <!-- 2. КІМНАТА ДЗВІНКУ -->
+    <!-- КІМНАТА ДЗВІНКУ -->
     <div id="callRoom">
-        <div class="video-grid">
-            <!-- Твоє відео -->
-            <div class="video-container">
-                <video id="localVideo" autoplay muted playsinline></video>
-                <div class="user-label">Ви (Ви)</div>
-            </div>
-            <!-- Відео друга -->
-            <div class="video-container">
-                <video id="remoteVideo" autoplay playsinline></video>
-                <div class="user-label" id="remoteLabel">Очікування друга...</div>
-            </div>
-        </div>
+        <div id="videoGrid"></div>
 
-        <!-- Кнопки керування -->
         <div class="controls">
             <button class="ctrl-btn btn-gray" id="micBtn" onclick="toggleMic()">🎤 Мікрофон</button>
             <button class="ctrl-btn btn-gray" id="camBtn" onclick="toggleCam()">📹 Камера</button>
@@ -180,11 +190,10 @@
     <script>
         let localStream;
         let peer;
-        let currentCall;
         let isMicOn = true;
         let isCamOn = true;
+        const connectedPeers = {};
 
-        // Автоматична перевірка: якщо у посиланні є #код, то приєднуємося
         window.onload = () => {
             const hashRoom = window.location.hash.substring(1);
             if (hashRoom) {
@@ -193,78 +202,182 @@
             }
         };
 
-        // Отримання доступу до камери та мікрофона
+        function showError(msg) {
+            document.getElementById('errorMsg').innerText = msg;
+        }
+
+        function clearError() {
+            document.getElementById('errorMsg').innerText = "";
+        }
+
         async function getMedia() {
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                document.getElementById('localVideo').srcObject = localStream;
+                return true;
             } catch (err) {
-                alert("Помилка: Надайте доступ до камери та мікрофона!");
-                console.error(err);
+                showError("❌ Дозвольте доступ до камери та мікрофона у браузері!");
+                return false;
             }
         }
 
-        // 1. СТВОРИТИ НОВУ КІМНАТУ
+        // СТВОРЕННЯ КІМНАТИ
         async function createRoom() {
-            await getMedia();
-            if (!localStream) return;
+            clearError();
+            const hasMedia = await getMedia();
+            if (!hasMedia) return;
 
-            // Генеруємо випадковий ID кімнати (наприклад: meet-a8f9b)
             const roomId = 'meet-' + Math.random().toString(36).substring(2, 8);
             window.location.hash = roomId;
 
-            showCallScreen();
-
-            // Створюємо Peer з цим ID (ти господар)
             peer = new Peer(roomId);
 
             peer.on('open', (id) => {
-                console.log('Кімнату створено з ID:', id);
+                showCallScreen();
+                addVideoStream('local', localStream, 'Ви (Господар)');
             });
 
-            // Коли хтось телефонує тобі
             peer.on('call', (call) => {
-                currentCall = call;
-                call.answer(localStream); // Відповідаємо і передаємо свій відеопотік
-
+                call.answer(localStream);
                 call.on('stream', (remoteStream) => {
-                    document.getElementById('remoteVideo').srcObject = remoteStream;
-                    document.getElementById('remoteLabel').innerText = "Співрозмовник";
+                    addVideoStream(call.peer, remoteStream, `Учасник (${call.peer.substring(0, 4)})`);
                 });
+                call.on('close', () => removeVideoStream(call.peer));
+                connectedPeers[call.peer] = call;
+            });
+
+            peer.on('error', (err) => {
+                showError("❌ Помилка сервера: " + err.type);
             });
         }
 
-        // 2. ПРИЄДНАТИСЯ ДО ІСНУЮЧОЇ КІМНАТИ
+        // ПРИЄДНАННЯ ДО КІМНАТИ ЗА КОДОМ
         function joinByInput() {
+            clearError();
             const roomId = document.getElementById('roomInput').value.trim();
-            if (!roomId) return alert("Введіть код або посилання!");
-            window.location.hash = roomId;
+            if (!roomId) {
+                showError("❌ Введіть код або посилання кімнати!");
+                return;
+            }
             joinRoom(roomId);
         }
 
         async function joinRoom(roomId) {
-            await getMedia();
-            if (!localStream) return;
+            clearError();
+            const hasMedia = await getMedia();
+            if (!hasMedia) return;
 
-            showCallScreen();
-
-            // Створюємо свій Peer з випадковим ID
             peer = new Peer();
 
-            peer.on('open', () => {
-                // Телефонуємо господарю кімнати
+            peer.on('open', (id) => {
                 const call = peer.call(roomId, localStream);
-                currentCall = call;
+                let connected = false;
 
                 call.on('stream', (remoteStream) => {
-                    document.getElementById('remoteVideo').srcObject = remoteStream;
-                    document.getElementById('remoteLabel').innerText = "Господар кімнати";
+                    connected = true;
+                    showCallScreen();
+                    addVideoStream('local', localStream, 'Ви');
+                    addVideoStream(roomId, remoteStream, 'Господар');
                 });
 
-                call.on('error', (err) => {
-                    alert("Не вдалося підключитися до кімнати.");
+                call.on('close', () => removeVideoStream(roomId));
+
+                peer.on('call', (incomingCall) => {
+                    incomingCall.answer(localStream);
+                    incomingCall.on('stream', (remoteStream) => {
+                        addVideoStream(incomingCall.peer, remoteStream, `Учасник (${incomingCall.peer.substring(0, 4)})`);
+                    });
+                    incomingCall.on('close', () => removeVideoStream(incomingCall.peer));
                 });
+
+                setTimeout(() => {
+                    if (!connected) {
+                        showError("❌ Кімнату з таким кодом не знайдено!");
+                        if (localStream) localStream.getTracks().forEach(t => t.stop());
+                        peer.destroy();
+                    }
+                }, 4000);
             });
+
+            peer.on('error', (err) => {
+                if (err.type === 'peer-unavailable') {
+                    showError("❌ Помилка: Кімнату з таким кодом не знайдено!");
+                } else {
+                    showError("❌ Помилка з'єднання з сервером: " + err.type);
+                }
+            });
+        }
+
+        // ДОДАВАННЯ ВІДЕО ТА ДЕТЕКТОР ГОЛОСУ
+        function addVideoStream(peerId, stream, labelText) {
+            if (document.getElementById('container-' + peerId)) return;
+
+            const grid = document.getElementById('videoGrid');
+            const container = document.createElement('div');
+            container.className = 'video-container';
+            container.id = 'container-' + peerId;
+
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.autoplay = true;
+            video.playsInline = true;
+            if (peerId === 'local') video.muted = true;
+
+            const label = document.createElement('div');
+            label.className = 'user-label';
+            label.innerText = labelText;
+
+            container.appendChild(video);
+            container.appendChild(label);
+            grid.appendChild(container);
+
+            // Підключаємо аналізатор гучності для білого сяйва
+            setupVoiceDetection(stream, container.id);
+        }
+
+        // ФУНКЦІЯ: БІЛЕ СЯЙВО ПРИ ГОЛОВІ (Web Audio API)
+        function setupVoiceDetection(stream, containerId) {
+            try {
+                const audioTracks = stream.getAudioTracks();
+                if (audioTracks.length === 0) return;
+
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const source = audioContext.createMediaStreamSource(stream);
+                const analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                source.connect(analyser);
+
+                const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+                function checkVolume() {
+                    const container = document.getElementById(containerId);
+                    if (!container) return; // якщо учасник вийшов, зупиняємо перевірку
+
+                    analyser.getByteFrequencyData(dataArray);
+                    let sum = 0;
+                    for (let i = 0; i < dataArray.length; i++) {
+                        sum += dataArray[i];
+                    }
+                    let average = sum / dataArray.length;
+
+                    // Якщо гучність більша ніж порог (людина говорить)
+                    if (average > 18) {
+                        container.classList.add('speaking');
+                    } else {
+                        container.classList.remove('speaking');
+                    }
+
+                    requestAnimationFrame(checkVolume);
+                }
+
+                checkVolume();
+            } catch (e) {
+                console.log("Помилка детектора голосу:", e);
+            }
+        }
+
+        function removeVideoStream(peerId) {
+            const container = document.getElementById('container-' + peerId);
+            if (container) container.remove();
         }
 
         function showCallScreen() {
@@ -272,13 +385,11 @@
             document.getElementById('callRoom').style.display = 'flex';
         }
 
-        // КОПІЮВАННЯ ПОСИЛАННЯ
         function copyRoomLink() {
             navigator.clipboard.writeText(window.location.href);
-            alert("Посилання на дзвінок скопійовано! Надішли його другу.");
+            alert("🔗 Посилання скопійовано! Відправ його друзям.");
         }
 
-        // ВМИК / ВИМК МІКРОФОНА
         function toggleMic() {
             isMicOn = !isMicOn;
             localStream.getAudioTracks()[0].enabled = isMicOn;
@@ -287,7 +398,6 @@
             btn.style.background = isMicOn ? "#444" : "#ff4747";
         }
 
-        // ВМИК / ВИМК КАМЕРИ
         function toggleCam() {
             isCamOn = !isCamOn;
             localStream.getVideoTracks()[0].enabled = isCamOn;
@@ -296,11 +406,8 @@
             btn.style.background = isCamOn ? "#444" : "#ff4747";
         }
 
-        // ЗАВЕРШИТИ ДЗВІНОК
         function leaveCall() {
-            if (localStream) {
-                localStream.getTracks().forEach(track => track.stop());
-            }
+            if (localStream) localStream.getTracks().forEach(track => track.stop());
             if (peer) peer.destroy();
             window.location.hash = "";
             location.reload();
