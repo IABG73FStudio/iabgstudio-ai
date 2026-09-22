@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IABG Meet - Відеодзвінки</title>
     
-    <!-- Бібліотека PeerJS для глобального зв'язку -->
+    <!-- Бібліотека PeerJS -->
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
     <style>
@@ -78,7 +78,7 @@
             min-height: 20px;
         }
 
-        /* ВІДЕО-СІТКА (ЗБІЛЬШЕНА КАМЕРА ОБЗОРУ) */
+        /* ВІДЕО-СІТКА */
         #callRoom {
             display: none;
             flex-direction: column;
@@ -88,7 +88,7 @@
         #videoGrid {
             flex: 1;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); /* Великі вікна */
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 16px;
             padding: 20px;
             background: #08090c;
@@ -105,12 +105,12 @@
             align-items: center;
             justify-content: center;
             aspect-ratio: 16 / 9;
-            min-height: 220px;
+            min-height: 200px;
             border: 3px solid transparent;
             transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
 
-        /* ПІДСВІЧУВАННЯ БІЛИМ ПРИ РОЗМОВІ */
+        /* БІЛЕ СЯЙВО ПРИ РОЗМОВІ */
         .video-container.speaking {
             border-color: #ffffff !important;
             box-shadow: 0 0 25px 5px rgba(255, 255, 255, 0.85) !important;
@@ -132,19 +132,18 @@
             align-items: center;
             justify-content: center;
             z-index: 1;
-            transition: 0.2s;
         }
 
         .avatar-circle {
-            width: 110px;
-            height: 110px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.25);
             backdrop-filter: blur(8px);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 60px;
+            font-size: 55px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.4);
             user-select: none;
         }
@@ -220,11 +219,23 @@
     </div>
 
     <script>
+        // НАЛАШТУВАННЯ СЕРВЕРІВ GOOGLE ДЛЯ ПРОБИТТЯ РОУТЕРІВ
+        const peerConfig = {
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' },
+                    { urls: 'stun:stun2.l.google.com:19302' },
+                    { urls: 'stun:stun3.l.google.com:19302' },
+                    { urls: 'stun:stun4.l.google.com:19302' }
+                ]
+            }
+        };
+
         let localStream;
         let peer;
         let isMicOn = true;
         let isCamOn = true;
-        let isHost = false;
         let roomIdGlobal = "";
         const calls = {};
         const dataConns = {};
@@ -246,14 +257,13 @@
             document.getElementById('errorMsg').innerText = "";
         }
 
-        // Генерування яскравого унікального кольору для аватара за ID
         function getRandomColor(id) {
             let hash = 0;
             for (let i = 0; i < id.length; i++) {
                 hash = id.charCodeAt(i) + ((hash << 5) - hash);
             }
             const h = Math.abs(hash) % 360;
-            return `hsl(${h}, 70%, 45%)`;
+            return `hsl(${h}, 65%, 40%)`;
         }
 
         async function getMedia() {
@@ -266,16 +276,15 @@
             }
         }
 
-        // СТВОРЕННЯ КІМНАТИ (ГОСПОДАР)
+        // 1. СТВОРЕННЯ КІМНАТИ (ГОСПОДАР)
         async function createRoom() {
             clearError();
             if (!await getMedia()) return;
 
-            isHost = true;
             roomIdGlobal = 'meet-' + Math.random().toString(36).substring(2, 8);
             window.location.hash = roomIdGlobal;
 
-            peer = new Peer(roomIdGlobal);
+            peer = new Peer(roomIdGlobal, peerConfig);
 
             peer.on('open', (id) => {
                 showCallScreen();
@@ -283,13 +292,19 @@
                 addVideoStream('local', localStream, 'Ви (Господар)');
             });
 
-            // Приймаємо дата-з'єднання для синхронізації списку людей
+            // Господар приймає дата-з'єднання та розсилає список усім
             peer.on('connection', (conn) => {
                 conn.on('open', () => {
                     dataConns[conn.peer] = conn;
-                    // Відправляємо новому список усіх інших людей
-                    conn.send({ type: 'PEER_LIST', peers: Array.from(roomPeers) });
                     roomPeers.add(conn.peer);
+                    broadcastPeerList(); // Розсилаємо оновлений список усім!
+                });
+
+                conn.on('close', () => {
+                    delete dataConns[conn.peer];
+                    roomPeers.delete(conn.peer);
+                    removeVideoStream(conn.peer);
+                    broadcastPeerList();
                 });
             });
 
@@ -298,10 +313,20 @@
                 handleIncomingCall(call);
             });
 
-            peer.on('error', (err) => showError("❌ Помилка створення кімнати: " + err.type));
+            peer.on('error', (err) => showError("❌ Помилка сервера: " + err.type));
         }
 
-        // ПРИЄДНАННЯ ДО КІМНАТИ
+        // Розсилка всім учасникам актуального списку людей у кімнаті
+        function broadcastPeerList() {
+            const list = Array.from(roomPeers);
+            Object.values(dataConns).forEach(conn => {
+                if (conn.open) {
+                    conn.send({ type: 'PEER_LIST', peers: list });
+                }
+            });
+        }
+
+        // 2. ПРИЄДНАННЯ ДО КІМНАТИ (УЧАСНИКИ)
         function joinByInput() {
             clearError();
             const rId = document.getElementById('roomInput').value.trim();
@@ -314,12 +339,11 @@
             if (!await getMedia()) return;
 
             roomIdGlobal = rId;
-            peer = new Peer();
+            peer = new Peer(peerConfig);
 
             peer.on('open', (myId) => {
                 let connected = false;
 
-                // Підключаємося до господаря через дата-канал для отримання списку всіх у кімнаті
                 const conn = peer.connect(roomIdGlobal);
                 
                 conn.on('open', () => {
@@ -328,9 +352,9 @@
                     addVideoStream('local', localStream, 'Ви');
                 });
 
+                // Коли від господаря приходить новий список людей
                 conn.on('data', (data) => {
                     if (data.type === 'PEER_LIST') {
-                        // Телефонуємо кожному учаснику в кімнаті (Full Mesh - всі бачать всіх)
                         data.peers.forEach(targetPeerId => {
                             if (targetPeerId !== myId && !calls[targetPeerId]) {
                                 const call = peer.call(targetPeerId, localStream);
@@ -354,12 +378,12 @@
                 }, 4000);
             });
 
-            peer.on('error', (err) => showError("❌ Кімнату з таким кодом не знайдено!"));
+            peer.on('error', (err) => showError("❌ Не вдалося підключитися до кімнати!"));
         }
 
-        // ОБРОБКА ДЗВІНКУ ВІД БУДЬ-ЯКОГО УЧАСНИКА
         function handleIncomingCall(call, fallbackId) {
             const peerId = call.peer || fallbackId;
+            if (!peerId) return;
             calls[peerId] = call;
 
             call.on('stream', (remoteStream) => {
@@ -369,7 +393,7 @@
             call.on('close', () => removeVideoStream(peerId));
         }
 
-        // ДОДАВАННЯ ВІДЕО ТА АВАТАРКИ ЧОЛОВІЧКА
+        // ДОДАВАННЯ ВІДЕО
         function addVideoStream(peerId, stream, labelText) {
             if (document.getElementById('container-' + peerId)) return;
 
@@ -378,14 +402,12 @@
             container.className = 'video-container';
             container.id = 'container-' + peerId;
 
-            // Аватарка (чоловічок на кольоровому фоні)
             const avatar = document.createElement('div');
             avatar.className = 'avatar-placeholder';
             avatar.id = 'avatar-' + peerId;
             avatar.style.background = getRandomColor(peerId);
             avatar.innerHTML = `<div class="avatar-circle">👤</div>`;
 
-            // Відеопотік
             const video = document.createElement('video');
             video.id = 'video-' + peerId;
             video.srcObject = stream;
@@ -402,12 +424,10 @@
             container.appendChild(label);
             grid.appendChild(container);
 
-            // Детектор камери та голосу
             checkCameraState(stream, peerId);
             setupVoiceDetection(stream, container.id);
         }
 
-        // СЛУХАЧ СТАНУ КАМЕРИ (ВМИК / ВИМК)
         function checkCameraState(stream, peerId) {
             const videoTrack = stream.getVideoTracks()[0];
             const videoEl = document.getElementById('video-' + peerId);
@@ -423,15 +443,10 @@
             };
 
             updateVisibility();
-
-            videoTrack.onmute = updateVisibility;
-            videoTrack.onunmute = updateVisibility;
-            
-            // Перевірка кожні 500мс
-            setInterval(updateVisibility, 500);
+            setInterval(updateVisibility, 400);
         }
 
-        // ДЕТЕКТОР ГОЛОСУ (БІЛЕ СЯЙВО ПРИ РОЗМОВІ)
+        // ДЕТЕКТОР ГОЛОСУ (БІЛЕ СЯЙВО)
         function setupVoiceDetection(stream, containerId) {
             try {
                 if (stream.getAudioTracks().length === 0) return;
@@ -453,7 +468,7 @@
                     for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
                     let average = sum / dataArray.length;
 
-                    if (average > 16) {
+                    if (average > 15) {
                         container.classList.add('speaking');
                     } else {
                         container.classList.remove('speaking');
@@ -470,6 +485,7 @@
         function removeVideoStream(peerId) {
             const container = document.getElementById('container-' + peerId);
             if (container) container.remove();
+            delete calls[peerId];
         }
 
         function showCallScreen() {
