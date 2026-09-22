@@ -88,7 +88,7 @@
         #videoGrid {
             flex: 1;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 16px;
             padding: 20px;
             background: #08090c;
@@ -105,7 +105,7 @@
             align-items: center;
             justify-content: center;
             aspect-ratio: 16 / 9;
-            min-height: 200px;
+            min-height: 180px;
             border: 3px solid transparent;
             transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
@@ -135,15 +135,15 @@
         }
 
         .avatar-circle {
-            width: 100px;
-            height: 100px;
+            width: 90px;
+            height: 90px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.25);
             backdrop-filter: blur(8px);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 55px;
+            font-size: 50px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.4);
             user-select: none;
         }
@@ -219,21 +219,20 @@
     </div>
 
     <script>
-        // НАЛАШТУВАННЯ СЕРВЕРІВ GOOGLE ДЛЯ ПРОБИТТЯ РОУТЕРІВ
         const peerConfig = {
             config: {
                 iceServers: [
                     { urls: 'stun:stun.l.google.com:19302' },
                     { urls: 'stun:stun1.l.google.com:19302' },
                     { urls: 'stun:stun2.l.google.com:19302' },
-                    { urls: 'stun:stun3.l.google.com:19302' },
-                    { urls: 'stun:stun4.l.google.com:19302' }
+                    { urls: 'stun:stun3.l.google.com:19302' }
                 ]
             }
         };
 
         let localStream;
         let peer;
+        let myPeerId = "";
         let isMicOn = true;
         let isCamOn = true;
         let roomIdGlobal = "";
@@ -248,6 +247,8 @@
                 joinRoom(hashRoom);
             }
         };
+
+        window.onbeforeunload = () => leaveCall();
 
         function showError(msg) {
             document.getElementById('errorMsg').innerText = msg;
@@ -276,7 +277,44 @@
             }
         }
 
-        // 1. СТВОРЕННЯ КІМНАТИ (ГОСПОДАР)
+        // ВІДПРАВКА СИГНАЛУ ВСІМ УЧАСНИКАМ
+        function broadcastData(data) {
+            Object.values(dataConns).forEach(conn => {
+                if (conn && conn.open) {
+                    conn.send(data);
+                }
+            });
+        }
+
+        function setupDataConnection(conn) {
+            conn.on('open', () => {
+                dataConns[conn.peer] = conn;
+                // Відправляємо наш стан камери новому учаснику
+                conn.send({ type: 'CAM_STATE', peerId: myPeerId, enabled: isCamOn });
+            });
+
+            conn.on('data', (data) => {
+                if (data.type === 'PEER_LIST') {
+                    data.peers.forEach(targetPeerId => {
+                        if (targetPeerId !== myPeerId && !calls[targetPeerId]) {
+                            const call = peer.call(targetPeerId, localStream);
+                            handleIncomingCall(call, targetPeerId);
+                        }
+                    });
+                } else if (data.type === 'CAM_STATE') {
+                    setCameraVisibility(data.peerId, data.enabled);
+                } else if (data.type === 'LEAVE') {
+                    removeVideoStream(data.peerId);
+                }
+            });
+
+            conn.on('close', () => {
+                removeVideoStream(conn.peer);
+                delete dataConns[conn.peer];
+            });
+        }
+
+        // 1. СТВОРЕННЯ КІМНАТИ
         async function createRoom() {
             clearError();
             if (!await getMedia()) return;
@@ -287,23 +325,20 @@
             peer = new Peer(roomIdGlobal, peerConfig);
 
             peer.on('open', (id) => {
+                myPeerId = id;
                 showCallScreen();
                 roomPeers.add(id);
                 addVideoStream('local', localStream, 'Ви (Господар)');
             });
 
-            // Господар приймає дата-з'єднання та розсилає список усім
             peer.on('connection', (conn) => {
+                setupDataConnection(conn);
                 conn.on('open', () => {
-                    dataConns[conn.peer] = conn;
                     roomPeers.add(conn.peer);
-                    broadcastPeerList(); // Розсилаємо оновлений список усім!
+                    broadcastPeerList();
                 });
-
                 conn.on('close', () => {
-                    delete dataConns[conn.peer];
                     roomPeers.delete(conn.peer);
-                    removeVideoStream(conn.peer);
                     broadcastPeerList();
                 });
             });
@@ -316,17 +351,12 @@
             peer.on('error', (err) => showError("❌ Помилка сервера: " + err.type));
         }
 
-        // Розсилка всім учасникам актуального списку людей у кімнаті
         function broadcastPeerList() {
             const list = Array.from(roomPeers);
-            Object.values(dataConns).forEach(conn => {
-                if (conn.open) {
-                    conn.send({ type: 'PEER_LIST', peers: list });
-                }
-            });
+            broadcastData({ type: 'PEER_LIST', peers: list });
         }
 
-        // 2. ПРИЄДНАННЯ ДО КІМНАТИ (УЧАСНИКИ)
+        // 2. ПРИЄДНАННЯ ДО КІМНАТИ
         function joinByInput() {
             clearError();
             const rId = document.getElementById('roomInput').value.trim();
@@ -341,27 +371,21 @@
             roomIdGlobal = rId;
             peer = new Peer(peerConfig);
 
-            peer.on('open', (myId) => {
+            peer.on('open', (id) => {
+                myPeerId = id;
                 let connected = false;
 
                 const conn = peer.connect(roomIdGlobal);
-                
+                setupDataConnection(conn);
+
                 conn.on('open', () => {
                     connected = true;
                     showCallScreen();
                     addVideoStream('local', localStream, 'Ви');
                 });
 
-                // Коли від господаря приходить новий список людей
-                conn.on('data', (data) => {
-                    if (data.type === 'PEER_LIST') {
-                        data.peers.forEach(targetPeerId => {
-                            if (targetPeerId !== myId && !calls[targetPeerId]) {
-                                const call = peer.call(targetPeerId, localStream);
-                                handleIncomingCall(call, targetPeerId);
-                            }
-                        });
-                    }
+                peer.on('connection', (incomingConn) => {
+                    setupDataConnection(incomingConn);
                 });
 
                 peer.on('call', (call) => {
@@ -371,19 +395,22 @@
 
                 setTimeout(() => {
                     if (!connected) {
-                        showError("❌ Помилка: Кімнату не знайдено або код невірний!");
+                        showError("❌ Помилка: Кімнату не знайдено!");
                         if (localStream) localStream.getTracks().forEach(t => t.stop());
                         peer.destroy();
                     }
                 }, 4000);
             });
 
-            peer.on('error', (err) => showError("❌ Не вдалося підключитися до кімнати!"));
+            peer.on('error', () => showError("❌ Не вдалося підключитися!"));
         }
 
         function handleIncomingCall(call, fallbackId) {
             const peerId = call.peer || fallbackId;
             if (!peerId) return;
+
+            // Якщо такий виклик вже існує — закриваємо старий, щоб не плодити дублі
+            if (calls[peerId]) calls[peerId].close();
             calls[peerId] = call;
 
             call.on('stream', (remoteStream) => {
@@ -393,9 +420,10 @@
             call.on('close', () => removeVideoStream(peerId));
         }
 
-        // ДОДАВАННЯ ВІДЕО
+        // ДОДАВАННЯ ВІДЕО ТА АВАТАРКИ
         function addVideoStream(peerId, stream, labelText) {
-            if (document.getElementById('container-' + peerId)) return;
+            // Прибираємо старий дублікат, якщо він був
+            removeVideoStream(peerId);
 
             const grid = document.getElementById('videoGrid');
             const container = document.createElement('div');
@@ -413,7 +441,7 @@
             video.srcObject = stream;
             video.autoplay = true;
             video.playsInline = true;
-            if (peerId === 'local') video.muted = true;
+            if (peerId === 'local' || peerId === myPeerId) video.muted = true;
 
             const label = document.createElement('div');
             label.className = 'user-label';
@@ -424,26 +452,22 @@
             container.appendChild(label);
             grid.appendChild(container);
 
-            checkCameraState(stream, peerId);
             setupVoiceDetection(stream, container.id);
+
+            // Слухаємо автоматичний mute/unmute треку камери
+            const vTrack = stream.getVideoTracks()[0];
+            if (vTrack) {
+                vTrack.onmute = () => setCameraVisibility(peerId, false);
+                vTrack.onunmute = () => setCameraVisibility(peerId, true);
+            }
         }
 
-        function checkCameraState(stream, peerId) {
-            const videoTrack = stream.getVideoTracks()[0];
-            const videoEl = document.getElementById('video-' + peerId);
-
-            if (!videoTrack) return;
-
-            const updateVisibility = () => {
-                if (videoTrack.enabled) {
-                    videoEl.style.display = 'block';
-                } else {
-                    videoEl.style.display = 'none';
-                }
-            };
-
-            updateVisibility();
-            setInterval(updateVisibility, 400);
+        function setCameraVisibility(peerId, isVisible) {
+            const targetId = (peerId === myPeerId) ? 'local' : peerId;
+            const videoEl = document.getElementById('video-' + targetId);
+            if (videoEl) {
+                videoEl.style.display = isVisible ? 'block' : 'none';
+            }
         }
 
         // ДЕТЕКТОР ГОЛОСУ (БІЛЕ СЯЙВО)
@@ -485,7 +509,9 @@
         function removeVideoStream(peerId) {
             const container = document.getElementById('container-' + peerId);
             if (container) container.remove();
-            delete calls[peerId];
+            if (calls[peerId]) {
+                delete calls[peerId];
+            }
         }
 
         function showCallScreen() {
@@ -510,10 +536,8 @@
             isCamOn = !isCamOn;
             localStream.getVideoTracks()[0].enabled = isCamOn;
 
-            const localVideo = document.getElementById('video-local');
-            if (localVideo) {
-                localVideo.style.display = isCamOn ? 'block' : 'none';
-            }
+            setCameraVisibility('local', isCamOn);
+            broadcastData({ type: 'CAM_STATE', peerId: myPeerId, enabled: isCamOn });
 
             const btn = document.getElementById('camBtn');
             btn.innerText = isCamOn ? "📹 Камера" : "📷 Камера (Вимк)";
@@ -521,6 +545,7 @@
         }
 
         function leaveCall() {
+            broadcastData({ type: 'LEAVE', peerId: myPeerId });
             if (localStream) localStream.getTracks().forEach(track => track.stop());
             if (peer) peer.destroy();
             window.location.hash = "";
