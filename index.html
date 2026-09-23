@@ -16,12 +16,8 @@
     --danger: #e5484d;
     --text: #e8eaed;
     --muted: #8b91a0;
-    --tile: 260px;
   }
-  html, body {
-    height: 100%;
-    overflow: hidden;
-  }
+  html, body { height: 100%; overflow: hidden; }
   body {
     font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
     background: var(--bg);
@@ -179,11 +175,7 @@
   }
   .joinRow button:hover { background: var(--accent2); }
 
-  /* инвайт-ссылка внутри карточки Друзья */
-  .inviteBox {
-    margin-top: 12px;
-    display: flex; gap: 6px;
-  }
+  .inviteBox { margin-top: 12px; display: flex; gap: 6px; }
   .inviteBox input {
     flex: 1; min-width: 0;
     padding: 8px 10px;
@@ -221,43 +213,48 @@
     font-size: 14px;
     gap: 10px;
     flex-wrap: wrap;
+    flex-shrink: 0;
   }
   #confTop .roomId { color: var(--muted); }
   #confTop .roomId b { color: var(--text); font-family: monospace; }
   #confTop .actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
+  /* СЦЕНА — без прокрутки, всё влезает */
   #stage {
     flex: 1;
     display: grid;
-    gap: 10px;
-    padding: 12px;
-    overflow-y: auto;
-    align-content: start;
-    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    overflow: hidden;   /* ← нет прокрутки */
+    min-height: 0;
   }
-  #stage.mosaic {
-    grid-template-columns: repeat(auto-fit, minmax(var(--tile), 1fr));
+  /* Мозаика 30+ — авто-колонки, до 30+ плиток */
+  #stage.mosaic30 {
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    grid-auto-rows: 1fr;
   }
-  #stage.spotlight {
-    grid-template-columns: minmax(0, 1fr);
+  /* Мозаика 9 — жёстко 3x3 */
+  #stage.mosaic9 {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
   }
 
   .tile {
     position: relative;
-    width: 100%;
-    aspect-ratio: 16/9;
+    width: 100%; height: 100%;
     background: #0a0a0a;
-    border-radius: 12px;
+    border-radius: 10px;
     overflow: hidden;
     border: 2px solid transparent;
     transition: .2s;
     animation: tileIn .3s ease;
+    min-height: 0;
   }
   @keyframes tileIn {
     from { opacity: 0; transform: scale(.95); }
     to { opacity: 1; transform: scale(1); }
   }
-  .tile.speaking { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(74,125,255,.3); }
+  .tile.speaking { border-color: var(--accent); }
   .tile video {
     width: 100%; height: 100%; object-fit: cover;
     display: block;
@@ -268,57 +265,69 @@
     display: flex; align-items: center; justify-content: center;
     background: linear-gradient(135deg, var(--purple), #4a3db8);
     color: #fff;
-    font-size: 80px;
+    font-size: 48px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: -2px;
     text-shadow: 0 4px 20px rgba(0,0,0,.3);
   }
   .tile .label {
-    position: absolute; bottom: 8px; left: 8px;
+    position: absolute; bottom: 6px; left: 6px;
     background: rgba(0,0,0,.65);
-    padding: 4px 10px; border-radius: 8px;
-    font-size: 12px; display: flex; align-items: center; gap: 6px;
+    padding: 3px 8px; border-radius: 6px;
+    font-size: 11px; display: flex; align-items: center; gap: 5px;
     backdrop-filter: blur(6px);
-    max-width: calc(100% - 16px);
+    max-width: calc(100% - 12px);
   }
   .tile .label .nm {
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .tile .micIc { font-size: 12px; }
+  .tile .micIc { font-size: 11px; }
   .tile .micIc.off { color: var(--danger); }
   .tile .hostBadge {
-    position: absolute; top: 8px; left: 8px;
+    position: absolute; top: 6px; left: 6px;
     background: var(--accent); color: #fff;
-    padding: 2px 8px; border-radius: 6px;
-    font-size: 11px; font-weight: 600;
+    padding: 2px 6px; border-radius: 5px;
+    font-size: 10px; font-weight: 600;
   }
+  /* "+N ещё" — плитка-заглушка */
+  .tile.more {
+    background: linear-gradient(135deg, #2a2f3d, #1a1d24);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    color: var(--muted);
+    font-size: 24px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .tile.more:hover { background: linear-gradient(135deg, #333a4a, #232733); }
+  .tile.more small { font-size: 12px; font-weight: 400; margin-top: 4px; }
 
   /* ---------- НИЖНЯЯ ПАНЕЛЬ ---------- */
   #confBar {
-    padding: 12px;
+    padding: 10px;
     background: rgba(26,29,36,.85);
     backdrop-filter: blur(12px);
     display: flex; align-items: center; justify-content: center;
     gap: 10px;
     border-top: 1px solid rgba(255,255,255,.06);
     flex-wrap: wrap;
+    flex-shrink: 0;
   }
   .cbtn {
-    width: 52px; height: 52px;
+    width: 50px; height: 50px;
     border-radius: 50%;
     background: var(--panel2);
     border: none; color: var(--text);
-    font-size: 20px; cursor: pointer;
+    font-size: 19px; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     transition: .15s;
   }
   .cbtn:hover { background: #2e3341; transform: scale(1.05); }
   .cbtn:active { transform: scale(.95); }
   .cbtn.off { background: var(--danger); color: #fff; }
-  .cbtn.leave { background: var(--danger); width: 66px; border-radius: 26px; }
+  .cbtn.leave { background: var(--danger); width: 62px; border-radius: 25px; }
   .cbtn.leave:hover { background: #c93b3f; }
-  .cbtn.wide { width: auto; padding: 0 16px; border-radius: 26px; gap: 8px; font-size: 14px; height: 40px; }
+  .cbtn.wide { width: auto; padding: 0 16px; border-radius: 25px; gap: 8px; font-size: 14px; height: 38px; }
 
   /* ---------- ЧАТ ---------- */
   #chat {
@@ -437,25 +446,23 @@
   }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  /* скроллбары */
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #2e3341; border-radius: 4px; }
   ::-webkit-scrollbar-thumb:hover { background: #3a4252; }
 
   @media (max-width: 600px) {
-    :root { --tile: 150px; }
     .nameCard { padding: 28px 22px; }
     #chat { width: 100vw; }
-    .tile .camOff { font-size: 52px; }
-    .cbtn { width: 46px; height: 46px; font-size: 18px; }
-    .cbtn.leave { width: 58px; }
+    .tile .camOff { font-size: 32px; }
+    .cbtn { width: 44px; height: 44px; font-size: 17px; }
+    .cbtn.leave { width: 54px; }
+    .tile .label { font-size: 10px; padding: 2px 6px; }
   }
 </style>
 </head>
 <body>
 
-<!-- ================= ФОН ================= -->
 <div class="bg"></div>
 
 <!-- ================= ЭКРАН ИМЕНИ ================= -->
@@ -521,12 +528,12 @@
   <div id="confTop">
     <div class="roomId">Комната: <b id="roomLabel">—</b></div>
     <div class="actions">
-      <button class="cbtn wide" onclick="toggleMosaic()" id="layoutBtn">▦ Мозаика</button>
+      <button class="cbtn wide" onclick="toggleMosaic9()" id="layoutBtn">▦ Мозаика 30+</button>
       <button class="cbtn wide" onclick="copyInvite()">🔗 Пригласить</button>
     </div>
   </div>
 
-  <div id="stage" class="mosaic"></div>
+  <div id="stage" class="mosaic30"></div>
 
   <div id="confBar">
     <button class="cbtn" id="btnMic" onclick="toggleMic()" title="Микрофон">🎤</button>
@@ -550,10 +557,8 @@
   </div>
 </div>
 
-<!-- ================= КОНТЕКСТНОЕ МЕНЮ ================= -->
 <div id="ctx"></div>
 
-<!-- ================= УСТРОЙСТВА ================= -->
 <div id="devices">
   <div class="devCard">
     <h2>Устройства</h2>
@@ -567,7 +572,6 @@
   </div>
 </div>
 
-<!-- ================= TOAST ================= -->
 <div id="toast"></div>
 
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -586,12 +590,14 @@ let peer = null;
 const conns = {};
 const calls = {};
 const meta = {};
+// порядок входа: массив peerId в порядке появления
+let joinOrder = [];
 let micOn = true, camOn = true;
-let layout = 'mosaic';
+let layout = 'mosaic30'; // mosaic30 | mosaic9
 let chatOpen = false;
 let blockedChat = false;
 
-/* ---------- ЗВУКИ (WebAudio, без файлов) ---------- */
+/* ---------- ЗВУКИ ---------- */
 const AudioFX = (() => {
   let ctx = null;
   function ensure() {
@@ -636,7 +642,9 @@ function toast(text) {
   t._t = setTimeout(() => t.classList.remove('show'), 2200);
 }
 function initials(name) {
-  return (name || '?').trim().slice(0, 1).toUpperCase();
+  // первая буква имени (не фамилии)
+  const parts = String(name || '?').trim().split(/\s+/);
+  return (parts[0] || '?').slice(0, 1).toUpperCase();
 }
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -695,24 +703,18 @@ function createAndInvite() {
 function updateFriendInvite() {
   const box = $('friendInvite');
   if (!box) return;
-  if (room) {
-    box.value = location.origin + location.pathname + '?room=' + room;
-  } else {
-    box.value = '';
-    box.placeholder = 'Сначала создай комнату';
-  }
+  if (room) box.value = location.origin + location.pathname + '?room=' + room;
+  else { box.value = ''; box.placeholder = 'Сначала создай комнату'; }
 }
 function copyFriendInvite() {
   if (!room) { AudioFX.error(); return toast('Сначала создай комнату'); }
-  const url = location.origin + location.pathname + '?room=' + room;
-  navigator.clipboard.writeText(url);
+  navigator.clipboard.writeText(location.origin + location.pathname + '?room=' + room);
   AudioFX.click();
   toast('Ссылка скопирована');
 }
 function copyInvite() {
   if (!room) return;
-  const url = location.origin + location.pathname + '?room=' + room;
-  navigator.clipboard.writeText(url);
+  navigator.clipboard.writeText(location.origin + location.pathname + '?room=' + room);
   AudioFX.click();
   toast('Ссылка скопирована');
 }
@@ -744,6 +746,7 @@ async function startConference(roomId, host) {
   }
 
   meta['me'] = { name: myName, mic: true, cam: true, isHost };
+  joinOrder = ['me'];
   addTile('me', localStream, myName, true);
 
   const hostId = 'iabg-' + room + '-host';
@@ -786,16 +789,15 @@ async function startConference(roomId, host) {
   }
 
   if (micOn) updateMicIcon('me', true);
+  applyLayout();
 }
 
-/* ---------- ВХОДЯЩИЕ ---------- */
 function onIncomingConn(conn) { setupConn(conn); }
 function onIncomingCall(call) {
   call.answer(localStream);
   bindCall(call);
 }
 
-/* ---------- DATA CONNECTION ---------- */
 function setupConn(conn) {
   conns[conn.peer] = conn;
 
@@ -822,9 +824,10 @@ function setupConn(conn) {
     delete conns[conn.peer];
     delete calls[conn.peer];
     delete meta[conn.peer];
+    joinOrder = joinOrder.filter(id => id !== conn.peer);
     addSystemMsg(nm + ' вышел');
     AudioFX.leave();
-    sortTiles();
+    applyLayout();
   });
 }
 
@@ -837,10 +840,11 @@ function handleMsg(fromId, msg) {
       meta[fromId].mic = msg.mic;
       meta[fromId].cam = msg.cam;
       meta[fromId].isHost = msg.isHost;
+      if (!joinOrder.includes(fromId)) joinOrder.push(fromId);
       updateTileLabel(fromId);
       addSystemMsg(msg.name + ' присоединился');
       AudioFX.join();
-      sortTiles();
+      applyLayout();
       break;
 
     case 'peers':
@@ -895,12 +899,11 @@ function broadcast(msg) {
   Object.values(conns).forEach(c => { try { c.send(msg); } catch(e){} });
 }
 
-/* ---------- MEDIA ---------- */
 function bindCall(call) {
   calls[call.peer] = call;
   call.on('stream', remote => {
     addTile(call.peer, remote, meta[call.peer]?.name || 'Участник');
-    sortTiles();
+    applyLayout();
   });
   call.on('close', () => {
     removeTile(call.peer);
@@ -942,26 +945,81 @@ function addTile(id, stream, name, muted=false) {
     const b = t.querySelector('.hostBadge');
     if (b) b.style.display = 'block';
   }
-  sortTiles();
+  applyLayout();
 }
 
 function removeTile(id) {
   document.getElementById('t-' + id)?.remove();
 }
 
-/* Сортировка: я всегда первый, остальные по имени */
-function sortTiles() {
+/* ---------- LAYOUT: мозаика 30+ / мозаика 9 ---------- */
+function applyLayout() {
   const stage = $('stage');
-  const tiles = Array.from(stage.children);
-  tiles.sort((a, b) => {
-    const ida = a.dataset.peer, idb = b.dataset.peer;
-    if (ida === 'me') return -1;
-    if (idb === 'me') return 1;
-    const na = (meta[ida]?.name || '').toLowerCase();
-    const nb = (meta[idb]?.name || '').toLowerCase();
-    return na.localeCompare(nb);
+  // порядок: me, затем по joinOrder
+  const ordered = ['me', ...joinOrder.filter(id => id !== 'me')]
+    .filter(id => document.getElementById('t-' + id));
+  // пересортируем DOM
+  ordered.forEach(id => {
+    const el = document.getElementById('t-' + id);
+    if (el) stage.appendChild(el);
   });
-  tiles.forEach(t => stage.appendChild(t));
+
+  // убираем старую плитку "+N"
+  stage.querySelector('.tile.more')?.remove();
+
+  if (layout === 'mosaic9') {
+    const max = 9;
+    const tiles = ordered.filter(id => id !== 'me' || true);
+    // me + остальные = все
+    const all = ordered;
+    if (all.length > max) {
+      // показываем первые max-1, последняя — "+N"
+      const show = all.slice(0, max - 1);
+      const hidden = all.length - (max - 1);
+      // скрываем лишние
+      all.forEach(id => {
+        const el = document.getElementById('t-' + id);
+        if (el) el.style.display = show.includes(id) ? '' : 'none';
+      });
+      // добавляем "+N"
+      const more = document.createElement('div');
+      more.className = 'tile more';
+      more.innerHTML = `+${hidden}<small>участников</small>`;
+      more.onclick = () => { layout = 'mosaic30'; applyLayout(); $('layoutBtn').textContent = '▦ Мозаика 30+'; };
+      stage.appendChild(more);
+    } else {
+      all.forEach(id => {
+        const el = document.getElementById('t-' + id);
+        if (el) el.style.display = '';
+      });
+    }
+  } else {
+    // mosaic30 — показываем всех
+    ordered.forEach(id => {
+      const el = document.getElementById('t-' + id);
+      if (el) el.style.display = '';
+    });
+    // авто-колонки в зависимости от количества
+    const n = ordered.length;
+    let cols = 1;
+    if (n === 1) cols = 1;
+    else if (n === 2) cols = 2;
+    else if (n <= 4) cols = 2;
+    else if (n <= 9) cols = 3;
+    else if (n <= 16) cols = 4;
+    else if (n <= 25) cols = 5;
+    else cols = 6;
+    stage.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    const rows = Math.ceil(n / cols);
+    stage.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+  }
+}
+
+function toggleMosaic9() {
+  layout = layout === 'mosaic9' ? 'mosaic30' : 'mosaic9';
+  $('layoutBtn').textContent = layout === 'mosaic9' ? '▦ Мозаика 9' : '▦ Мозаика 30+';
+  AudioFX.click();
+  applyLayout();
 }
 
 function updateTileLabel(id) {
@@ -1022,12 +1080,6 @@ function toggleChat() {
   $('chat').classList.toggle('open', chatOpen);
   AudioFX.click();
 }
-function toggleMosaic() {
-  layout = layout === 'mosaic' ? 'spotlight' : 'mosaic';
-  $('stage').className = layout;
-  $('layoutBtn').textContent = layout === 'mosaic' ? '▦ Мозаика' : '🔲 Один';
-  AudioFX.click();
-}
 function leaveRoom() {
   AudioFX.leave();
   Object.values(calls).forEach(c => c.close());
@@ -1080,7 +1132,6 @@ function showCtx(x, y, targetId) {
     b.onclick = () => { it.fn(); ctx.style.display = 'none'; };
     ctx.appendChild(b);
   });
-  // не вылезать за экран
   const w = 220, h = items.length * 42 + 12;
   ctx.style.left = Math.min(x, window.innerWidth - w - 8) + 'px';
   ctx.style.top = Math.min(y, window.innerHeight - h - 8) + 'px';
@@ -1137,7 +1188,6 @@ function closeDevices() { $('devices').classList.remove('open'); }
 /* ---------- СТАРТ ---------- */
 if (myName) enterMenu();
 
-/* Разблокировка AudioContext по первому клику (требование браузеров) */
 document.addEventListener('click', function unlock() {
   try {
     const c = new (window.AudioContext || window.webkitAudioContext)();
@@ -1146,6 +1196,8 @@ document.addEventListener('click', function unlock() {
   } catch(e){}
   document.removeEventListener('click', unlock);
 }, { once: true });
+
+window.addEventListener('resize', () => { if (room) applyLayout(); });
 </script>
 </body>
 </html>
