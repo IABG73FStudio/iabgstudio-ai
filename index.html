@@ -141,6 +141,7 @@
             position: relative;
         }
 
+        /* Звичайна сітка сітки відео */
         #videoGrid {
             flex: 1;
             display: grid;
@@ -151,6 +152,35 @@
             justify-content: center;
             overflow-y: auto;
             position: relative;
+        }
+
+        /* Режим трансляції: головний екран зліва, панель камер справа */
+        #mainLayout.screen-sharing-mode {
+            display: flex;
+            flex-direction: row;
+        }
+
+        #mainLayout.screen-sharing-mode #videoGrid {
+            flex: 1;
+            display: flex;
+            padding: 12px;
+            background: #090a0f;
+            overflow: hidden;
+        }
+
+        /* Бокова панель камер при трансляції */
+        #screenshareSidebar {
+            display: none;
+            width: 280px;
+            background: #161922;
+            border-left: 1px solid #2d3343;
+            flex-direction: column;
+            gap: 10px;
+            padding: 12px;
+            overflow-y: auto;
+        }
+        #mainLayout.screen-sharing-mode #screenshareSidebar {
+            display: flex;
         }
 
         .video-container {
@@ -169,6 +199,20 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
 
+        /* Камери у бічній панелі під час трансляції мають фіксовану висоту */
+        #screenshareSidebar .video-container {
+            width: 100%;
+            height: 150px;
+            flex-shrink: 0;
+        }
+
+        /* Головний контейнер трансляції */
+        #videoGrid .video-container.is-screen {
+            width: 100%;
+            height: 100%;
+            border-color: #3b82f6;
+        }
+
         video {
             width: 100%;
             height: 100%;
@@ -177,6 +221,12 @@
             inset: 0;
             z-index: 2;
             background: #161922;
+        }
+
+        /* Якщо це трансляція — показуємо відео як contain, щоб не обрізати краї */
+        .video-container.is-screen video {
+            object-fit: contain;
+            background: #000;
         }
 
         .avatar-placeholder {
@@ -207,6 +257,13 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             user-select: none;
             margin-bottom: 8px;
+        }
+        
+        #screenshareSidebar .avatar-circle {
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            margin-bottom: 4px;
         }
 
         .user-label {
@@ -437,8 +494,13 @@
     <!-- КІМНАТА ДЗВІНКУ -->
     <div id="callRoom">
         <div id="mainLayout">
+            <!-- Головне поле для сітки або поточної трансляції -->
             <div id="videoGrid"></div>
 
+            <!-- Бічна панель для камер під час трансляції екрана -->
+            <div id="screenshareSidebar"></div>
+
+            <!-- Бічна панель чату -->
             <div id="chatSidebar" class="hidden">
                 <div class="chat-header">
                     <span>💬 Чат конференції</span>
@@ -888,7 +950,6 @@
         }
 
         function addVideoStream(pId, stream, name) {
-            const grid = document.getElementById('videoGrid');
             if (document.getElementById('container-' + pId)) return;
 
             const container = document.createElement('div');
@@ -925,7 +986,13 @@
             container.appendChild(avatarDiv);
             container.appendChild(label);
             container.appendChild(handBadge);
-            grid.appendChild(container);
+
+            // Розподіл куди ставити контейнер
+            if (isScreenSharing) {
+                document.getElementById('screenshareSidebar').appendChild(container);
+            } else {
+                document.getElementById('videoGrid').appendChild(container);
+            }
         }
 
         function updateAvatarState(pId, isCamActive) {
@@ -995,6 +1062,10 @@
 
         async function toggleScreenShare() {
             const btn = document.getElementById('screenBtn');
+            const mainLayout = document.getElementById('mainLayout');
+            const videoGrid = document.getElementById('videoGrid');
+            const screenshareSidebar = document.getElementById('screenshareSidebar');
+
             if (!isScreenSharing) {
                 try {
                     screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
@@ -1002,14 +1073,36 @@
                     btn.innerText = "💻 Зупинити екран";
                     btn.classList.add('btn-red');
 
-                    const screenTrack = screenStream.getVideoTracks()[0];
-                    
-                    // Показуємо свій екран локально
-                    const myVideo = document.getElementById('video-' + myPeerId);
-                    if (myVideo) myVideo.srcObject = screenStream;
-                    updateAvatarState(myPeerId, true);
+                    mainLayout.classList.add('screen-sharing-mode');
 
-                    // Оновлюємо потік для всіх підключених учасників
+                    // Переносимо всі контейнери (камери) у праву панель
+                    const containers = Array.from(document.querySelectorAll('.video-container'));
+                    containers.forEach(c => {
+                        c.classList.remove('is-screen');
+                        screenshareSidebar.appendChild(c);
+                    });
+
+                    // Створюємо головний вікно для екрана і ставимо його вліво
+                    const screenContainer = document.createElement('div');
+                    screenContainer.className = 'video-container is-screen';
+                    screenContainer.id = 'container-screen-main';
+
+                    const screenVideo = document.createElement('video');
+                    screenVideo.id = 'video-screen-main';
+                    screenVideo.autoplay = true;
+                    screenVideo.playsInline = true;
+                    screenVideo.srcObject = screenStream;
+                    screenVideo.muted = true;
+
+                    const screenLabel = document.createElement('div');
+                    screenLabel.className = 'user-label';
+                    screenLabel.innerText = "💻 Ваша трансляція";
+
+                    screenContainer.appendChild(screenVideo);
+                    screenContainer.appendChild(screenLabel);
+                    videoGrid.appendChild(screenContainer);
+
+                    const screenTrack = screenStream.getVideoTracks()[0];
                     updatePeerTracks(screenTrack);
 
                     screenTrack.onended = () => {
@@ -1027,19 +1120,32 @@
             if (!isScreenSharing) return;
             isScreenSharing = false;
             const btn = document.getElementById('screenBtn');
+            const mainLayout = document.getElementById('mainLayout');
+            const videoGrid = document.getElementById('videoGrid');
+            const screenshareSidebar = document.getElementById('screenshareSidebar');
+
             btn.innerText = "💻 Екран";
             btn.classList.remove('btn-red');
+            mainLayout.classList.remove('screen-sharing-mode');
+
+            // Видаляємо головне вікно трансляції
+            const screenMain = document.getElementById('container-screen-main');
+            if (screenMain) screenMain.remove();
+
+            // Повертаємо всі камери назад у загальну сітку
+            const containers = Array.from(screenshareSidebar.children);
+            containers.forEach(c => {
+                videoGrid.appendChild(c);
+            });
+            screenshareSidebar.innerHTML = '';
 
             if (screenStream) {
                 screenStream.getTracks().forEach(t => t.stop());
                 screenStream = null;
             }
 
-            // Повертаємо камеру
             if (localStream) {
                 const videoTrack = localStream.getVideoTracks()[0];
-                const myVideo = document.getElementById('video-' + myPeerId);
-                if (myVideo) myVideo.srcObject = localStream;
                 updatePeerTracks(videoTrack);
                 updateAvatarState(myPeerId, isCamOn);
             }
