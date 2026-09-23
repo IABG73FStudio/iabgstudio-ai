@@ -155,7 +155,7 @@
 
         .video-container {
             position: relative;
-            background: #1e222d;
+            background: #161922;
             border-radius: 12px;
             overflow: hidden;
             display: flex;
@@ -173,8 +173,10 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            position: relative;
+            position: absolute;
+            inset: 0;
             z-index: 2;
+            background: #161922;
         }
 
         .avatar-placeholder {
@@ -184,8 +186,12 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 1;
+            z-index: 3;
             background: #161922;
+        }
+
+        .avatar-placeholder.hidden {
+            display: none !important;
         }
 
         .avatar-circle {
@@ -213,7 +219,7 @@
             border-radius: 6px;
             font-size: 12px;
             font-weight: 500;
-            z-index: 3;
+            z-index: 5;
             max-width: 80%;
             white-space: nowrap;
             overflow: hidden;
@@ -232,7 +238,7 @@
             padding: 4px 8px;
             border-radius: 6px;
             font-size: 14px;
-            z-index: 4;
+            z-index: 5;
             display: none;
             box-shadow: 0 2px 6px rgba(0,0,0,0.3);
         }
@@ -449,6 +455,7 @@
         <div class="controls">
             <button class="ctrl-btn" id="micBtn" onclick="toggleMic()">🎤 Мікрофон</button>
             <button class="ctrl-btn" id="camBtn" onclick="toggleCam()">📹 Камера</button>
+            <button class="ctrl-btn" id="screenBtn" onclick="toggleScreenShare()">💻 Екран</button>
             <button class="ctrl-btn" id="handBtn" onclick="toggleHand()">✋ Рука</button>
             <button class="ctrl-btn" onclick="openSettings()">⚙️ Пристрої</button>
             <button class="ctrl-btn btn-primary" onclick="toggleChat()">💬 Чат</button>
@@ -486,6 +493,8 @@
         };
 
         let localStream;
+        let screenStream = null;
+        let isScreenSharing = false;
         let peer;
         let myPeerId = "";
         let myName = "Гість";
@@ -571,29 +580,34 @@
         }
 
         async function populateDeviceSelects() {
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            const micSelect = document.getElementById('micSelect');
-            const camSelect = document.getElementById('camSelect');
-            const speakerSelect = document.getElementById('speakerSelect');
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const micSelect = document.getElementById('micSelect');
+                const camSelect = document.getElementById('camSelect');
+                const speakerSelect = document.getElementById('speakerSelect');
 
-            micSelect.innerHTML = '';
-            camSelect.innerHTML = '';
-            if (speakerSelect) speakerSelect.innerHTML = '';
+                if (micSelect) micSelect.innerHTML = '';
+                if (camSelect) camSelect.innerHTML = '';
+                if (speakerSelect) speakerSelect.innerHTML = '';
 
-            devices.forEach(device => {
-                const opt = document.createElement('option');
-                opt.value = device.deviceId;
-                opt.text = device.label || `${device.kind} (${device.deviceId.substring(0, 5)})`;
+                devices.forEach(device => {
+                    const opt = document.createElement('option');
+                    opt.value = device.deviceId;
+                    opt.text = device.label || `${device.kind} (${device.deviceId.substring(0, 5)})`;
 
-                if (device.kind === 'audioinput') micSelect.appendChild(opt);
-                else if (device.kind === 'videoinput') camSelect.appendChild(opt);
-                else if (device.kind === 'audiooutput' && speakerSelect) speakerSelect.appendChild(opt);
-            });
+                    if (device.kind === 'audioinput' && micSelect) micSelect.appendChild(opt);
+                    else if (device.kind === 'videoinput' && camSelect) camSelect.appendChild(opt);
+                    else if (device.kind === 'audiooutput' && speakerSelect) speakerSelect.appendChild(opt);
+                });
+            } catch (e) {}
         }
 
-        async function getMedia() {
+        async function getMedia(customAudioId, customVideoId) {
             try {
-                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+                const audioConstraint = customAudioId ? { deviceId: { exact: customAudioId } } : true;
+                const videoConstraint = customVideoId ? { deviceId: { exact: customVideoId } } : true;
+
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraint, video: videoConstraint });
                 localStream.getAudioTracks()[0].enabled = isMicOn;
                 localStream.getVideoTracks()[0].enabled = isCamOn;
                 return true;
@@ -620,7 +634,6 @@
             roomIdGlobal = 'iabg-' + Math.random().toString(36).substring(2, 8);
             window.location.hash = roomIdGlobal;
 
-            // Запам'ятовуємо в браузері, що цей пристрій — організатор цієї кімнати
             localStorage.setItem('iabg_host_' + roomIdGlobal, 'true');
 
             initPeerServer(roomIdGlobal);
@@ -649,16 +662,15 @@
             myName = getUserNameInput();
             if (!await getMedia()) return;
 
-            // Перевіряємо, чи цей користувач уже був організатором цієї кімнати раніше
             const wasHostBefore = localStorage.getItem('iabg_host_' + roomIdGlobal) === 'true';
 
             if (wasHostBefore) {
                 isHost = true;
+                window.location.hash = roomIdGlobal;
                 initPeerServer(roomIdGlobal);
                 return;
             }
 
-            // Якщо він гість — відкриваємо вікно очікування та конектимось до хоста
             document.getElementById('waitingModal').style.display = 'flex';
             peer = new Peer(peerConfig);
 
@@ -708,6 +720,7 @@
                 
                 showCallScreen();
                 addVideoStream(myPeerId, localStream, userNames[myPeerId]);
+                updateAvatarState(myPeerId, isCamOn);
             });
 
             peer.on('connection', (conn) => {
@@ -726,7 +739,6 @@
 
             peer.on('error', (err) => {
                 if (err.type === 'unavailable-id') {
-                    // Якщо ID вже зайнятий, значить хост уже є, пробуємо зайти як гість
                     isHost = false;
                     localStorage.removeItem('iabg_host_' + roomIdGlobal);
                     if (peer) peer.destroy();
@@ -753,15 +765,15 @@
                 broadcastFromHost(data, conn.peer);
             } else if (data.type === 'TOGGLE_MIC') {
                 userMicStates[conn.peer] = data.state;
-                updateMicIndicator(conn.peer, data.state);
                 broadcastFromHost(data, conn.peer);
             } else if (data.type === 'TOGGLE_CAM') {
                 userCamStates[conn.peer] = data.state;
-                userCamStates[conn.peer] ? removeAvatar(conn.peer) : showAvatar(conn.peer);
+                updateAvatarState(conn.peer, data.state);
                 broadcastFromHost(data, conn.peer);
             } else if (data.type === 'TOGGLE_HAND') {
                 userHands[conn.peer] = data.state;
-                updateHandIndicator(conn.peer, data.state);
+                const container = document.getElementById('container-' + conn.peer);
+                if (container) container.classList.toggle('hand-raised', data.state);
                 broadcastFromHost(data, conn.peer);
             }
         }
@@ -789,7 +801,7 @@
             handleCallStream(call);
 
             addVideoStream(gPeerId, null, userNames[gPeerId]);
-            if (!userCamStates[gPeerId]) showAvatar(gPeerId);
+            updateAvatarState(gPeerId, userCamStates[gPeerId]);
 
             playSound('join');
             broadcastFromHost({
@@ -823,7 +835,7 @@
 
                 userColors[myPeerId] = userColors[myPeerId] || getRandomColor(myPeerId);
                 addVideoStream(myPeerId, localStream, myName + " (Ви)");
-                if (!isCamOn) showAvatar(myPeerId);
+                updateAvatarState(myPeerId, isCamOn);
 
                 Object.keys(data.users).forEach(pId => {
                     if (pId !== myPeerId) {
@@ -832,7 +844,7 @@
                         userMicStates[pId] = data.micStates[pId];
                         userColors[pId] = data.colors[pId];
                         addVideoStream(pId, null, userNames[pId]);
-                        if (!userCamStates[pId]) showAvatar(pId);
+                        updateAvatarState(pId, userCamStates[pId]);
                     }
                 });
                 playSound('join');
@@ -846,12 +858,19 @@
                 userMicStates[data.peerId] = data.micState;
                 userColors[data.peerId] = data.color;
                 addVideoStream(data.peerId, null, data.name);
-                if (!data.camState) showAvatar(data.peerId);
+                updateAvatarState(data.peerId, data.camState);
                 playSound('join');
             } else if (data.type === 'USER_LEFT') {
                 handleUserLeave(data.peerId);
             } else if (data.type === 'CHAT_MSG') {
                 appendChatMessage(data.name, data.text, false);
+            } else if (data.type === 'TOGGLE_CAM') {
+                userCamStates[data.peerId] = data.state;
+                updateAvatarState(data.peerId, data.state);
+            } else if (data.type === 'TOGGLE_HAND') {
+                userHands[data.peerId] = data.state;
+                const container = document.getElementById('container-' + data.peerId);
+                if (container) container.classList.toggle('hand-raised', data.state);
             }
         }
 
@@ -883,6 +902,15 @@
             if (stream) video.srcObject = stream;
             if (pId === myPeerId) video.muted = true;
 
+            const nameStr = userNames[pId] || name || "Г";
+            const firstLetter = nameStr.charAt(0).toUpperCase();
+            const color = userColors[pId] || '#3b82f6';
+
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = 'avatar-placeholder';
+            avatarDiv.id = 'avatar-' + pId;
+            avatarDiv.innerHTML = `<div class="avatar-circle" style="background-color: ${color};">${firstLetter}</div>`;
+
             const label = document.createElement('div');
             label.className = 'user-label';
             label.id = `label-${pId}`;
@@ -894,36 +922,21 @@
             handBadge.innerText = '✋';
 
             container.appendChild(video);
+            container.appendChild(avatarDiv);
             container.appendChild(label);
             container.appendChild(handBadge);
             grid.appendChild(container);
         }
 
-        function showAvatar(pId) {
-            const container = document.getElementById('container-' + pId);
-            if (!container) return;
-            if (document.getElementById('avatar-' + pId)) return;
-
-            const name = userNames[pId] || "Г";
-            const firstLetter = name.charAt(0).toUpperCase();
-            const color = userColors[pId] || '#3b82f6';
-
-            const avatarDiv = document.createElement('div');
-            avatarDiv.className = 'avatar-placeholder';
-            avatarDiv.id = 'avatar-' + pId;
-
-            const circle = document.createElement('div');
-            circle.className = 'avatar-circle';
-            circle.style.backgroundColor = color;
-            circle.innerText = firstLetter;
-
-            avatarDiv.appendChild(circle);
-            container.appendChild(avatarDiv);
-        }
-
-        function removeAvatar(pId) {
+        function updateAvatarState(pId, isCamActive) {
             const avatar = document.getElementById('avatar-' + pId);
-            if (avatar) avatar.remove();
+            if (avatar) {
+                if (isCamActive) {
+                    avatar.classList.add('hidden');
+                } else {
+                    avatar.classList.remove('hidden');
+                }
+            }
         }
 
         function handleUserLeave(pId) {
@@ -932,6 +945,7 @@
             delete clientConns[pId];
             delete calls[pId];
             delete userNames[pId];
+            delete userColors[pId];
             playSound('leave');
         }
 
@@ -943,7 +957,9 @@
 
         function toggleMic() {
             isMicOn = !isMicOn;
-            if (localStream) localStream.getAudioTracks()[0].enabled = isMicOn;
+            if (localStream) {
+                localStream.getAudioTracks().forEach(t => t.enabled = isMicOn);
+            }
             const btn = document.getElementById('micBtn');
             btn.innerText = isMicOn ? "🎤 Мікрофон" : "🔇 Вимкнено";
             btn.classList.toggle('btn-red', !isMicOn);
@@ -956,19 +972,76 @@
         }
 
         function toggleCam() {
+            if (isScreenSharing) {
+                alert("Спочатку вимкніть трансляцію екрана!");
+                return;
+            }
             isCamOn = !isCamOn;
-            if (localStream) localStream.getVideoTracks()[0].enabled = isCamOn;
+            if (localStream) {
+                localStream.getVideoTracks().forEach(t => t.enabled = isCamOn);
+            }
             const btn = document.getElementById('camBtn');
             btn.innerText = isCamOn ? "📹 Камера" : "📷 Вимкнено";
             btn.classList.toggle('btn-red', !isCamOn);
 
-            if (isCamOn) removeAvatar(myPeerId);
-            else showAvatar(myPeerId);
+            updateAvatarState(myPeerId, isCamOn);
 
             if (!isHost && hostConn && hostConn.open) {
                 hostConn.send({ type: 'TOGGLE_CAM', state: isCamOn });
             } else if (isHost) {
                 broadcastFromHost({ type: 'TOGGLE_CAM', state: isCamOn, peerId: myPeerId });
+            }
+        }
+
+        async function toggleScreenShare() {
+            const btn = document.getElementById('screenBtn');
+            if (!isScreenSharing) {
+                try {
+                    screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+                    isScreenSharing = true;
+                    btn.innerText = "💻 Зупинити екран";
+                    btn.classList.add('btn-red');
+
+                    const screenTrack = screenStream.getVideoTracks()[0];
+                    
+                    // Показуємо свій екран локально
+                    const myVideo = document.getElementById('video-' + myPeerId);
+                    if (myVideo) myVideo.srcObject = screenStream;
+                    updateAvatarState(myPeerId, true);
+
+                    // Оновлюємо потік для всіх підключених учасників
+                    updatePeerTracks(screenTrack);
+
+                    screenTrack.onended = () => {
+                        stopScreenShare();
+                    };
+                } catch (e) {
+                    console.error(e);
+                }
+            } else {
+                stopScreenShare();
+            }
+        }
+
+        function stopScreenShare() {
+            if (!isScreenSharing) return;
+            isScreenSharing = false;
+            const btn = document.getElementById('screenBtn');
+            btn.innerText = "💻 Екран";
+            btn.classList.remove('btn-red');
+
+            if (screenStream) {
+                screenStream.getTracks().forEach(t => t.stop());
+                screenStream = null;
+            }
+
+            // Повертаємо камеру
+            if (localStream) {
+                const videoTrack = localStream.getVideoTracks()[0];
+                const myVideo = document.getElementById('video-' + myPeerId);
+                if (myVideo) myVideo.srcObject = localStream;
+                updatePeerTracks(videoTrack);
+                updateAvatarState(myPeerId, isCamOn);
             }
         }
 
@@ -978,6 +1051,13 @@
             if (container) container.classList.toggle('hand-raised', isHandRaised);
             const btn = document.getElementById('handBtn');
             btn.classList.toggle('btn-primary', isHandRaised);
+
+            const msgObj = { type: 'TOGGLE_HAND', state: isHandRaised };
+            if (isHost) {
+                broadcastFromHost(msgObj);
+            } else if (hostConn && hostConn.open) {
+                hostConn.send(msgObj);
+            }
         }
 
         function toggleChat() {
@@ -1010,6 +1090,57 @@
             box.scrollTop = box.scrollHeight;
         }
 
+        async function changeAudioInput() {
+            const deviceId = document.getElementById('micSelect').value;
+            const camId = document.getElementById('camSelect').value;
+            await getMedia(deviceId, camId);
+            updatePeerTracks();
+        }
+
+        async function changeVideoInput() {
+            if (isScreenSharing) return;
+            const deviceId = document.getElementById('camSelect').value;
+            const micId = document.getElementById('micSelect').value;
+            await getMedia(micId, deviceId);
+
+            const myVideo = document.getElementById('video-' + myPeerId);
+            if (myVideo) myVideo.srcObject = localStream;
+            updatePeerTracks();
+            updateAvatarState(myPeerId, isCamOn);
+        }
+
+        async function changeAudioOutput() {
+            const speakerId = document.getElementById('speakerSelect').value;
+            const videos = document.querySelectorAll('video');
+            for (let v of videos) {
+                if (typeof v.setSinkId === 'function') {
+                    try { await v.setSinkId(speakerId); } catch (e) {}
+                }
+            }
+        }
+
+        function updatePeerTracks(customVideoTrack = null) {
+            const activeVideoTrack = customVideoTrack || (localStream ? localStream.getVideoTracks()[0] : null);
+            const activeAudioTrack = localStream ? localStream.getAudioTracks()[0] : null;
+
+            Object.keys(calls).forEach(pId => {
+                const call = calls[pId];
+                if (call && call.peerConnection) {
+                    const senders = call.peerConnection.getSenders();
+                    senders.forEach(sender => {
+                        if (sender.track) {
+                            if (sender.track.kind === 'audio' && activeAudioTrack) {
+                                sender.replaceTrack(activeAudioTrack);
+                            }
+                            if (sender.track.kind === 'video' && activeVideoTrack) {
+                                sender.replaceTrack(activeVideoTrack);
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
         function copyRoomLink() {
             const link = window.location.href;
             navigator.clipboard.writeText(link).then(() => {
@@ -1022,6 +1153,7 @@
 
         function leaveCall() {
             if (localStream) localStream.getTracks().forEach(t => t.stop());
+            if (screenStream) screenStream.getTracks().forEach(t => t.stop());
             if (peer) peer.destroy();
             window.location.reload();
         }
