@@ -177,21 +177,22 @@
             position: relative;
         }
 
+        /* Звичайна сітка, коли немає екрана */
         #videoGrid {
             flex: 1;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            grid-auto-rows: minmax(240px, 1fr);
+            display: flex;
+            flex-wrap: wrap;
             gap: 16px;
             padding: 20px;
             background: #12141c;
             align-items: center;
-            justify-items: center;
+            justify-content: center;
             overflow-y: auto;
             position: relative;
             transition: all 0.3s ease;
         }
 
+        /* Режим трансляції: зліва екран, справа панель учасників */
         #mainLayout.screen-sharing-mode {
             display: flex;
             flex-direction: row;
@@ -200,7 +201,7 @@
         #mainLayout.screen-sharing-mode #videoGrid {
             flex: 1;
             display: flex;
-            padding: 12px;
+            padding: 16px;
             background: #090a0f;
             overflow: hidden;
             align-items: center;
@@ -209,12 +210,12 @@
 
         #screenshareSidebar {
             display: none;
-            width: 280px;
+            width: 300px;
             background: #161922;
             border-left: 1px solid #2d3343;
             flex-direction: column;
             gap: 12px;
-            padding: 12px;
+            padding: 14px;
             overflow-y: auto;
             max-height: 100%;
             flex-shrink: 0;
@@ -224,6 +225,7 @@
             display: flex;
         }
 
+        /* Фіксований розмір контейнерів камер, щоб вони не зменшувались нескінченно */
         .video-container {
             position: relative;
             background: #161922;
@@ -232,9 +234,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 100%;
-            height: 100%;
-            max-height: 100%;
+            width: 300px;
+            height: 220px;
+            flex-shrink: 0;
             border: 2px solid #2d3343;
             box-shadow: 0 6px 20px rgba(0,0,0,0.45);
             cursor: pointer;
@@ -257,20 +259,18 @@
             z-index: 50 !important;
             width: calc(100% - 20px) !important;
             height: calc(100% - 20px) !important;
-            max-height: none !important;
         }
 
+        /* У сайдбарі камери трохи компактніші за висотою, але фіксовані */
         #screenshareSidebar .video-container {
             width: 100%;
-            height: 150px;
-            min-height: 150px;
-            flex-shrink: 0;
+            height: 160px;
         }
 
+        /* Коли контейнер показує демонстрацію екрана — розтягуємо його на весь лівий блок */
         #videoGrid .video-container.is-screen {
             width: 100%;
             height: 100%;
-            min-height: 0;
             border-color: #3b82f6;
             animation: pulseGlow 2s infinite;
         }
@@ -309,14 +309,14 @@
         }
 
         .avatar-circle {
-            width: 95px;
-            height: 95px;
+            width: 85px;
+            height: 85px;
             border-radius: 50%;
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 44px;
+            font-size: 40px;
             font-weight: bold;
             box-shadow: 0 6px 20px rgba(0,0,0,0.5);
             user-select: none;
@@ -326,14 +326,14 @@
 
         .user-label {
             position: absolute;
-            bottom: 12px;
-            left: 12px;
+            bottom: 10px;
+            left: 10px;
             background: rgba(15, 16, 21, 0.85);
             backdrop-filter: blur(5px);
             color: #e4e6eb;
-            padding: 6px 12px;
+            padding: 5px 10px;
             border-radius: 8px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 500;
             z-index: 5;
             max-width: 80%;
@@ -342,33 +342,32 @@
             text-overflow: ellipsis;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             animation: slideUp 0.3s ease;
         }
 
         .status-badge {
-            font-size: 12px;
+            font-size: 11px;
             background: rgba(0,0,0,0.4);
-            padding: 2px 6px;
-            border-radius: 5px;
+            padding: 2px 5px;
+            border-radius: 4px;
             transition: all 0.3s ease;
         }
         .status-badge.muted { color: #ef4444; background: rgba(239, 68, 68, 0.15); }
 
         .hand-badge {
             position: absolute;
-            top: 12px;
-            right: 12px;
+            top: 10px;
+            right: 10px;
             background: #f59e0b;
             color: #fff;
-            padding: 6px 10px;
+            padding: 5px 8px;
             border-radius: 8px;
-            font-size: 15px;
+            font-size: 14px;
             z-index: 5;
             display: none;
             box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
-            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1), bounceSlow 0.8s infinite alternate;
         }
         .video-container.hand-raised .hand-badge { display: block; }
 
@@ -433,7 +432,6 @@
             border-radius: 10px;
             font-size: 13px;
             word-break: break-word;
-            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
@@ -509,7 +507,6 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.7);
             max-height: 90vh;
             overflow-y: auto;
-            animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .modal-body label {
@@ -531,7 +528,6 @@
             border-top: 1px solid #2d3343;
             overflow-x: auto;
             white-space: nowrap;
-            -webkit-overflow-scrolling: touch;
             box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
         }
 
@@ -549,9 +545,8 @@
 
         .ctrl-btn:hover { background: #374151; transform: translateY(-2px); }
         .btn-red { background: #ef4444 !important; color: #fff !important; }
-        .btn-red:hover { background: #dc2626 !important; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4); }
+        .btn-red:hover { background: #dc2626 !important; }
         .btn-primary { background: #3b82f6 !important; color: #fff !important; }
-        .btn-primary:hover { background: #2563eb !important; }
 
         @media (max-width: 768px) {
             #chatSidebar {
@@ -565,24 +560,23 @@
             }
             #screenshareSidebar {
                 width: 100%;
-                height: 120px;
+                height: 130px;
                 flex-direction: row;
                 overflow-x: auto;
                 overflow-y: hidden;
                 border-left: none;
                 border-top: 1px solid #2d3343;
             }
-            .controls {
-                height: 68px;
-                padding: 0 6px;
-                justify-content: flex-start;
+            .video-container {
+                width: 240px;
+                height: 160px;
             }
         }
     </style>
 </head>
 <body>
 
-    <!-- ЕКРАН ВХОДУ (ЛОБІ) -->
+    <!-- ЛОБІ -->
     <div id="lobby">
         <div class="card">
             <h1>IABG Meet 🚀</h1>
@@ -601,7 +595,7 @@
         </div>
     </div>
 
-    <!-- ВІКНО ПРИЙНЯТТЯ ДЛЯ ХОСТА -->
+    <!-- МОДАЛКА ХОСТА -->
     <div id="incomingModal">
         <div class="incoming-card">
             <div class="phone-ring-icon">👋</div>
@@ -613,23 +607,23 @@
         </div>
     </div>
 
-    <!-- ВІКНО ОЧІКУВАННЯ ДЛЯ ГОСТЯ -->
+    <!-- МОДАЛКА ОЧІКУВАННЯ -->
     <div id="waitingModal">
         <div class="incoming-card">
             <div class="phone-ring-icon">⏳</div>
             <h2 style="margin-top:0; color:#fff; font-size:20px;">Очікування</h2>
-            <p style="color:#9ca3af; font-size:13px; margin-bottom:18px;">Організатор розглядає ваш запит на вхід...</p>
+            <p style="color:#9ca3af; font-size:13px; margin-bottom:18px;">Організатор розглядає ваш запит...</p>
             <button class="btn-red" style="padding: 10px; font-size:14px;" onclick="cancelWaiting()">Скасувати</button>
         </div>
     </div>
 
-    <!-- КОНТЕКСТНЕ МІНІ-МЕНЮ -->
+    <!-- КОНТЕКСТНЕ МЕНЮ -->
     <div id="contextMenu">
         <div class="ctx-item" onclick="ctxToggleMute()">🔇 Вимкнути звук</div>
         <div class="ctx-item danger" onclick="ctxKickUser()">❌ Викинути з кімнати</div>
     </div>
 
-    <!-- КІМНАТА ДЗВІНКУ -->
+    <!-- КІМНАТА -->
     <div id="callRoom">
         <div id="mainLayout">
             <div id="videoGrid"></div>
@@ -638,10 +632,10 @@
             <div id="chatSidebar" class="hidden">
                 <div class="chat-header">
                     <span>💬 Чат конференції</span>
-                    <button class="close-chat-btn" id="closeChatBtn" onclick="toggleChat()">✕</button>
+                    <button class="close-chat-btn" onclick="toggleChat()">✕</button>
                 </div>
                 <div id="chatMessages"></div>
-                <div class="chat-input-box" id="chatInputBox">
+                <div class="chat-input-box">
                     <input type="text" id="msgInput" placeholder="Повідомлення..." onkeydown="if(event.key==='Enter') sendChatMessage()">
                     <button class="btn-primary" onclick="sendChatMessage()">➤</button>
                 </div>
@@ -654,13 +648,13 @@
             <button class="ctrl-btn" id="screenBtn" onclick="toggleScreenShare()">💻 Екран</button>
             <button class="ctrl-btn" id="handBtn" onclick="toggleHand()">✋ Рука</button>
             <button class="ctrl-btn" onclick="openSettings()">⚙️ Наст.</button>
-            <button class="ctrl-btn btn-primary" id="toggleChatBtn" onclick="toggleChat()">💬 Чат</button>
+            <button class="ctrl-btn btn-primary" onclick="toggleChat()">💬 Чат</button>
             <button class="ctrl-btn" onclick="copyRoomLink()">🔗 Посил.</button>
             <button class="ctrl-btn btn-red" onclick="leaveCall()">📞 Вихід</button>
         </div>
     </div>
 
-    <!-- МОДАЛЬНЕ ВІКНО ПРИСТРОЇВ -->
+    <!-- НАЛАШТУВАННЯ -->
     <div id="settingsModal">
         <div class="modal-body">
             <h2 style="margin-top:0; color:#3b82f6; font-size:18px;">⚙️ Вибір обладнання</h2>
@@ -726,56 +720,21 @@
                 const now = audioCtx.currentTime;
 
                 if (type === 'join') {
-                    osc.type = 'sine';
                     osc.frequency.setValueAtTime(440, now);
                     osc.frequency.setValueAtTime(659.25, now + 0.12);
                     gain.gain.setValueAtTime(0.08, now);
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-                    osc.start(now); osc.stop(now + 0.35);
                 } else if (type === 'leave') {
-                    osc.type = 'sine';
                     osc.frequency.setValueAtTime(523.25, now);
                     osc.frequency.setValueAtTime(392, now + 0.12);
                     gain.gain.setValueAtTime(0.08, now);
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-                    osc.start(now); osc.stop(now + 0.3);
                 } else if (type === 'msg') {
-                    osc.type = 'triangle';
                     osc.frequency.setValueAtTime(880, now);
                     gain.gain.setValueAtTime(0.05, now);
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-                    osc.start(now); osc.stop(now + 0.15);
-                } else if (type === 'mic_on') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(587.33, now);
-                    gain.gain.setValueAtTime(0.06, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-                    osc.start(now); osc.stop(now + 0.15);
-                } else if (type === 'mic_off') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(392, now);
-                    gain.gain.setValueAtTime(0.06, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-                    osc.start(now); osc.stop(now + 0.15);
-                } else if (type === 'cam_on') {
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(659.25, now);
-                    gain.gain.setValueAtTime(0.06, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-                    osc.start(now); osc.stop(now + 0.18);
-                } else if (type === 'cam_off') {
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(440, now);
-                    gain.gain.setValueAtTime(0.06, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-                    osc.start(now); osc.stop(now + 0.18);
-                } else if (type === 'hand') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(783.99, now);
-                    gain.gain.setValueAtTime(0.06, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-                    osc.start(now); osc.stop(now + 0.2);
                 }
+                osc.start(now); osc.stop(now + 0.35);
             } catch (e) {}
         }
 
@@ -785,7 +744,6 @@
             if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
                 await populateDeviceSelects();
             }
-
             window.addEventListener('click', () => {
                 document.getElementById('contextMenu').style.display = 'none';
             });
@@ -991,13 +949,8 @@
             } else if (data.type === 'FORCE_MUTE_ME') {
                 if (isMicOn) toggleMic();
             } else if (data.type === 'KICK_ME') {
-                alert("❌ Вас виключили з конференції організатором.");
+                alert("❌ Вас виключили з конференції.");
                 leaveCall();
-            } else if (data.type === 'TOGGLE_CHAT_STATE') {
-                const chatSidebar = document.getElementById('chatSidebar');
-                if (!chatSidebar.classList.contains('hidden')) {
-                    chatSidebar.classList.add('hidden');
-                }
             }
         }
 
@@ -1116,10 +1069,8 @@
             } else if (data.type === 'FORCE_MUTE_ME') {
                 if (isMicOn) toggleMic();
             } else if (data.type === 'KICK_ME') {
-                alert("❌ Вас виключили з конференції організатором.");
+                alert("❌ Вас виключили з конференції.");
                 leaveCall();
-            } else if (data.type === 'TOGGLE_CHAT_STATE') {
-                document.getElementById('chatSidebar').classList.add('hidden');
             }
         }
 
@@ -1156,21 +1107,6 @@
                 menu.style.left = `${e.pageX}px`;
                 menu.style.top = `${e.pageY}px`;
             });
-
-            let touchTimer;
-            container.addEventListener('touchstart', (e) => {
-                if (!isHost || pId === myPeerId) return;
-                touchTimer = setTimeout(() => {
-                    selectedPeerForMenu = pId;
-                    const touch = e.touches[0];
-                    const menu = document.getElementById('contextMenu');
-                    menu.style.display = 'block';
-                    menu.style.left = `${touch.pageX}px`;
-                    menu.style.top = `${touch.pageY}px`;
-                }, 600);
-            });
-            container.addEventListener('touchend', () => clearTimeout(touchTimer));
-            container.addEventListener('touchmove', () => clearTimeout(touchTimer));
 
             const video = document.createElement('video');
             video.id = 'video-' + pId;
@@ -1211,15 +1147,22 @@
             container.appendChild(label);
             container.appendChild(handBadge);
 
-            document.getElementById('videoGrid').appendChild(container);
+            // Розподіл: якщо йде трансляція і це ми (або той хто стрімить), чи звичайне додавання
+            if (isScreenSharing && pId === myPeerId) {
+                container.classList.add('is-screen');
+                document.getElementById('videoGrid').appendChild(container);
+            } else if (isScreenSharing) {
+                document.getElementById('screenshareSidebar').appendChild(container);
+            } else {
+                document.getElementById('videoGrid').appendChild(container);
+            }
         }
 
         function toggleFullscreenContainer(container) {
+            if (container.classList.contains('is-screen')) return; // Екран і так на весь лівий блок
             const alreadyFull = container.classList.contains('fullscreen-mode');
             document.querySelectorAll('.video-container').forEach(c => c.classList.remove('fullscreen-mode'));
-            if (!alreadyFull) {
-                container.classList.add('fullscreen-mode');
-            }
+            if (!alreadyFull) container.classList.add('fullscreen-mode');
         }
 
         function ctxToggleMute() {
@@ -1267,7 +1210,6 @@
             delete calls[pId];
             delete userNames[pId];
             delete userColors[pId];
-            playSound('leave');
         }
 
         function showCallScreen() {
@@ -1286,7 +1228,6 @@
 
             userMicStates[myPeerId] = isMicOn;
             updateUserStatuses(myPeerId);
-            playSound(isMicOn ? 'mic_on' : 'mic_off');
 
             const msgObj = { type: 'TOGGLE_MIC', state: isMicOn, peerId: myPeerId };
             if (isHost) broadcastToAll(msgObj);
@@ -1304,7 +1245,6 @@
 
             userCamStates[myPeerId] = isCamOn;
             updateAvatarState(myPeerId, isCamOn);
-            playSound(isCamOn ? 'cam_on' : 'cam_off');
 
             const msgObj = { type: 'TOGGLE_CAM', state: isCamOn, peerId: myPeerId };
             if (isHost) broadcastToAll(msgObj);
@@ -1315,6 +1255,8 @@
             const btn = document.getElementById('screenBtn');
             const myContainer = document.getElementById('container-' + myPeerId);
             const myVideo = document.getElementById('video-' + myPeerId);
+            const mainLayout = document.getElementById('mainLayout');
+            const sidebar = document.getElementById('screenshareSidebar');
 
             if (!isScreenSharing) {
                 try {
@@ -1323,12 +1265,21 @@
                     btn.innerText = "💻 Зупинити";
                     btn.classList.add('btn-red');
 
-                    if (myContainer) myContainer.classList.add('is-screen');
-                    if (myVideo) myVideo.srcObject = screenStream;
+                    // Активуємо режим: екран зліва, всі камери переносяться праворуч у сайдбар
+                    mainLayout.classList.add('screen-sharing-mode');
+                    if (myContainer) {
+                        myContainer.classList.add('is-screen');
+                        sidebar.appendChild(myContainer); // Переносимо себе у праву колонку, а зліва залишається лише екран
+                    }
 
+                    // Переносимо і всі інші камери учасників у праву колонку
+                    document.querySelectorAll('.video-container').forEach(c => {
+                        if (c.id !== 'container-' + myPeerId) sidebar.appendChild(c);
+                    });
+
+                    if (myVideo) myVideo.srcObject = screenStream;
                     const screenTrack = screenStream.getVideoTracks()[0];
                     
-                    // Замінюємо відео-трек «на льоту» у всіх активних дзвінках без їх перезапуску
                     Object.values(calls).forEach(call => {
                         const sender = call.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
                         if (sender) sender.replaceTrack(screenTrack);
@@ -1349,11 +1300,21 @@
             const btn = document.getElementById('screenBtn');
             const myContainer = document.getElementById('container-' + myPeerId);
             const myVideo = document.getElementById('video-' + myPeerId);
+            const mainLayout = document.getElementById('mainLayout');
+            const videoGrid = document.getElementById('videoGrid');
 
             btn.innerText = "💻 Екран";
             btn.classList.remove('btn-red');
 
-            if (myContainer) myContainer.classList.remove('is-screen');
+            mainLayout.classList.remove('screen-sharing-mode');
+
+            if (myContainer) {
+                myContainer.classList.remove('is-screen');
+                videoGrid.appendChild(myContainer); // Повертаємо у звичайну сітку
+            }
+
+            // Повертаємо камери інших учасників у загальну сітку
+            document.querySelectorAll('.video-container').forEach(c => videoGrid.appendChild(c));
 
             if (screenStream) {
                 screenStream.getTracks().forEach(t => t.stop());
@@ -1380,7 +1341,6 @@
             if (container) container.classList.toggle('hand-raised', isHandRaised);
             const btn = document.getElementById('handBtn');
             btn.classList.toggle('btn-primary', isHandRaised);
-            playSound('hand');
 
             const msgObj = { type: 'TOGGLE_HAND', state: isHandRaised, peerId: myPeerId };
             if (isHost) broadcastToAll(msgObj);
@@ -1388,13 +1348,7 @@
         }
 
         function toggleChat() {
-            const chatSidebar = document.getElementById('chatSidebar');
-            const isHidden = chatSidebar.classList.contains('hidden');
-            chatSidebar.classList.toggle('hidden');
-
-            if (isHost && !isHidden) {
-                broadcastToAll({ type: 'TOGGLE_CHAT_STATE' });
-            }
+            document.getElementById('chatSidebar').classList.toggle('hidden');
         }
 
         function sendChatMessage() {
