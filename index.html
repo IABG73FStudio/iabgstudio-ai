@@ -482,7 +482,7 @@
         </div>
     </div>
 
-    <!-- КОНТЕКСТНЕ МЕНЮ ДЛЯ МОДЕРАЦІЇ -->
+    <!-- КОНТЕКСТНЕ МЕНЮ ДЛЯ МОДЕРАЦІЇ (ТІЛЬКИ ДЛЯ ХОСТА) -->
     <div id="contextMenu">
         <div class="menu-item" id="ctxMute" onclick="ctxActionMute()">Вимкнути звук</div>
         <div class="menu-item" id="ctxChat" onclick="ctxActionChat()">Заборонити чат</div>
@@ -566,7 +566,7 @@
         const userCamStates = {}; 
         const userNames = {}; 
         const userHands = {};
-        const userColors = {}; // Рандомні кольори для аватарів
+        const userColors = {}; 
         let activeSpeakerOrder = [];
 
         let pendingGuestConn = null;
@@ -740,35 +740,10 @@
             roomIdGlobal = 'iabg-' + Math.random().toString(36).substring(2, 8);
             window.location.hash = roomIdGlobal;
 
-            peer = new Peer(roomIdGlobal, peerConfig);
+            // Зберігаємо ID організатора в localStorage для цієї кімнати, щоб система його пам'ятала
+            localStorage.setItem('iabg_host_' + roomIdGlobal, 'true');
 
-            peer.on('open', (id) => {
-                myPeerId = id;
-                userColors[myPeerId] = getRandomColor(myPeerId);
-                userCamStates[myPeerId] = isCamOn;
-                userNames[myPeerId] = myName + " (Організатор)";
-                registerUser(myPeerId);
-
-                showCallScreen();
-                addVideoStream(myPeerId, localStream, userNames[myPeerId]);
-            });
-
-            peer.on('connection', (conn) => {
-                conn.on('open', () => {});
-                conn.on('data', (data) => handleHostIncomingData(data, conn));
-                conn.on('close', () => {
-                    if (clientConns[conn.peer]) {
-                        handleUserLeave(conn.peer);
-                    }
-                });
-            });
-
-            peer.on('call', (call) => {
-                call.answer(localStream);
-                handleCallStream(call);
-            });
-
-            peer.on('error', (err) => showError("❌ Помилка кімнати: " + err.type));
+            initPeerServer(roomIdGlobal);
         }
 
         async function joinRoomRequest() {
@@ -794,6 +769,17 @@
             myName = getUserNameInput();
             if (!await getMedia()) return;
 
+            // Перевіряємо, чи цей користувач був організатором цієї кімнати (за збереженим ключем)
+            const wasHostBefore = localStorage.getItem('iabg_host_' + roomIdGlobal) === 'true';
+
+            if (wasHostBefore) {
+                // Якщо він був хостом і повертається у свою кімнату — пробуємо зайняти фіксований ID кімнати
+                isHost = true;
+                initPeerServer(roomIdGlobal);
+                return;
+            }
+
+            // Інакше заходимо як гість через очікування
             document.getElementById('waitingModal').style.display = 'flex';
 
             peer = new Peer(peerConfig);
@@ -810,9 +796,7 @@
                 });
 
                 hostConn.on('data', (data) => handleGuestIncomingData(data));
-                hostConn.on('close', () => {
-                    // Якщо закрився зв'язок з хостом, але кімната живе — не вибиваємо клієнта повністю, просто сповіщаємо
-                });
+                hostConn.on('close', () => {});
 
                 peer.on('call', (call) => {
                     call.answer(localStream);
@@ -822,7 +806,67 @@
 
             peer.on('error', () => {
                 document.getElementById('waitingModal').style.display = 'none';
-                showError("❌ Не вдалося з'єднатися з кімнатою! Перевірте код.");
+                showError("❌ Не вдалося з'єднатися з кімнатою! Можливо, організатор ще не створив її.");
+            });
+        }
+
+        function initPeerServer(targetId) {
+            peer = new Peer(targetId, peerConfig);
+
+            peer.on('open', (id) => {
+                myPeerId = id;
+                isHost = true;
+                localStorage.setItem('iabg_host_' + roomIdGlobal, 'true');
+                userColors[myPeerId] = getRandomColor(myPeerId);
+                userCamStates[myPeerId] = isCamOn;
+                userNames[myPeerId] = myName + " (Організатор)";
+                registerUser(myPeerId);
+
+                showCallScreen();
+                addVideoStream(myPeerId, localStream, userNames[myPeerId]);
+            });
+
+            peer.on('connection', (conn) => {
+                conn.on('open', () => {});
+                conn.on('data', (data) => handleHostIncomingData(data, conn));
+                conn.on('close', () => {
+                    if (clientConns[conn.peer]) {
+                        handleUserLeave(conn.peer);
+                    }
+                });
+            });
+
+            peer.on('call', (call) => {
+                call.answer(localStream);
+                handleCallStream(call);
+            });
+
+            peer.on('error', (err) => {
+                if (err.type === 'unavailable-id') {
+                    // Якщо кімната вже існує, а ми намагаємося зайти під її ID — значить організатор вже є, заходимо як гості!
+                    isHost = false;
+                    localStorage.removeItem('iabg_host_' + roomIdGlobal);
+                    if (peer) peer.destroy();
+                    
+                    // Перезапускаємо процес приєднання як звичайний гість
+                    document.getElementById('waitingModal').style.display = 'flex';
+                    peer = new Peer(peerConfig);
+                    peer.on('open', (id) => {
+                        myPeerId = id;
+                        userColors[myPeerId] = getRandomColor(myPeerId);
+                        hostConn = peer.connect(roomIdGlobal);
+                        hostConn.on('open', () => {
+                            hostConn.send({ type: 'JOIN_REQ', peerId: myPeerId, name: myName, camState: isCamOn, color: userColors[myPeerId] });
+                        });
+                        hostConn.on('data', (data) => handleGuestIncomingData(data));
+                        peer.on('call', (call) => {
+                            call.answer(localStream);
+                            handleCallStream(call);
+                        });
+                    });
+                } else {
+                    showError("❌ Помилка кімнати: " + err.type);
+                }
             });
         }
 
@@ -869,10 +913,8 @@
             userColors[gId] = gColor || getRandomColor(gId);
             registerUser(gId);
 
-            // Хост дзвонить новому гостю для відеозв'язку
             callPeer(gId);
 
-            // Передаємо новому гостю актуальну інформацію про всіх наявних користувачів
             pendingGuestConn.send({
                 type: 'JOIN_APPROVED',
                 peers: Object.keys(userNames),
@@ -1021,6 +1063,7 @@
                     container.classList.add('my-overlay');
                 }
 
+                // Клік правою кнопкою миші відкриває меню модерації ВИКЛЮЧНО для організатора
                 container.oncontextmenu = (e) => {
                     e.preventDefault();
                     if (isHost && peerId !== myPeerId) {
@@ -1047,7 +1090,6 @@
                 avatarDiv.style.display = userCamStates[peerId] === false ? 'flex' : 'none';
                 
                 const userColor = userColors[peerId] || getRandomColor(peerId);
-                // Іконка чоловічка у вигляді SVG з унікальним кольором
                 avatarDiv.innerHTML = `
                     <div class="avatar-circle" style="background: ${userColor};">
                         <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1352,7 +1394,6 @@
         function leaveCall() {
             const leaveMsg = { type: 'LEAVE', peerId: myPeerId };
             if (isHost) {
-                // Якщо виходить хост, просто сповіщаємо всіх, але не руйнуємо зв'язки між рештою учасників
                 broadcastFromHost(leaveMsg);
             } else if (hostConn && hostConn.open) {
                 hostConn.send(leaveMsg);
