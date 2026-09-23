@@ -250,6 +250,9 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .hand-badge {
@@ -564,6 +567,7 @@
         const clientConns = {}; 
         const calls = {}; 
         const userCamStates = {}; 
+        const userMicStates = {};
         const userNames = {}; 
         const userHands = {};
         const userColors = {}; 
@@ -693,6 +697,10 @@
                 if (localStream) localStream.getTracks().forEach(track => track.stop());
                 localStream = newStream;
 
+                // Синхронізуємо стан потоку зі збереженими прапорцями
+                localStream.getAudioTracks()[0].enabled = isMicOn;
+                localStream.getVideoTracks()[0].enabled = isCamOn;
+
                 const activeAudioTrack = localStream.getAudioTracks()[0];
                 const activeVideoTrack = localStream.getVideoTracks()[0];
                 
@@ -740,7 +748,6 @@
             roomIdGlobal = 'iabg-' + Math.random().toString(36).substring(2, 8);
             window.location.hash = roomIdGlobal;
 
-            // Зберігаємо ID організатора в localStorage для цієї кімнати, щоб система його пам'ятала
             localStorage.setItem('iabg_host_' + roomIdGlobal, 'true');
 
             initPeerServer(roomIdGlobal);
@@ -769,17 +776,14 @@
             myName = getUserNameInput();
             if (!await getMedia()) return;
 
-            // Перевіряємо, чи цей користувач був організатором цієї кімнати (за збереженим ключем)
             const wasHostBefore = localStorage.getItem('iabg_host_' + roomIdGlobal) === 'true';
 
             if (wasHostBefore) {
-                // Якщо він був хостом і повертається у свою кімнату — пробуємо зайняти фіксований ID кімнати
                 isHost = true;
                 initPeerServer(roomIdGlobal);
                 return;
             }
 
-            // Інакше заходимо як гість через очікування
             document.getElementById('waitingModal').style.display = 'flex';
 
             peer = new Peer(peerConfig);
@@ -792,7 +796,14 @@
                 hostConn = peer.connect(roomIdGlobal);
                 
                 hostConn.on('open', () => {
-                    hostConn.send({ type: 'JOIN_REQ', peerId: myPeerId, name: myName, camState: isCamOn, color: userColors[myPeerId] });
+                    hostConn.send({ 
+                        type: 'JOIN_REQ', 
+                        peerId: myPeerId, 
+                        name: myName, 
+                        camState: isCamOn, 
+                        micState: isMicOn,
+                        color: userColors[myPeerId] 
+                    });
                 });
 
                 hostConn.on('data', (data) => handleGuestIncomingData(data));
@@ -819,6 +830,7 @@
                 localStorage.setItem('iabg_host_' + roomIdGlobal, 'true');
                 userColors[myPeerId] = getRandomColor(myPeerId);
                 userCamStates[myPeerId] = isCamOn;
+                userMicStates[myPeerId] = isMicOn;
                 userNames[myPeerId] = myName + " (Організатор)";
                 registerUser(myPeerId);
 
@@ -843,12 +855,10 @@
 
             peer.on('error', (err) => {
                 if (err.type === 'unavailable-id') {
-                    // Якщо кімната вже існує, а ми намагаємося зайти під її ID — значить організатор вже є, заходимо як гості!
                     isHost = false;
                     localStorage.removeItem('iabg_host_' + roomIdGlobal);
                     if (peer) peer.destroy();
                     
-                    // Перезапускаємо процес приєднання як звичайний гість
                     document.getElementById('waitingModal').style.display = 'flex';
                     peer = new Peer(peerConfig);
                     peer.on('open', (id) => {
@@ -856,7 +866,14 @@
                         userColors[myPeerId] = getRandomColor(myPeerId);
                         hostConn = peer.connect(roomIdGlobal);
                         hostConn.on('open', () => {
-                            hostConn.send({ type: 'JOIN_REQ', peerId: myPeerId, name: myName, camState: isCamOn, color: userColors[myPeerId] });
+                            hostConn.send({ 
+                                type: 'JOIN_REQ', 
+                                peerId: myPeerId, 
+                                name: myName, 
+                                camState: isCamOn, 
+                                micState: isMicOn,
+                                color: userColors[myPeerId] 
+                            });
                         });
                         hostConn.on('data', (data) => handleGuestIncomingData(data));
                         peer.on('call', (call) => {
@@ -885,6 +902,10 @@
                 userCamStates[data.peerId] = data.enabled;
                 setCamDisplay(data.peerId, data.enabled);
                 broadcastFromHost(data, data.peerId);
+            } else if (data.type === 'MIC_STATE') {
+                userMicStates[data.peerId] = data.enabled;
+                setMicDisplay(data.peerId, data.enabled);
+                broadcastFromHost(data, data.peerId);
             } else if (data.type === 'HAND_STATE') {
                 userHands[data.peerId] = data.raised;
                 setHandDisplay(data.peerId, data.raised);
@@ -905,11 +926,13 @@
             const gId = pendingGuestInfo.peerId;
             const gName = pendingGuestInfo.name;
             const gCam = pendingGuestInfo.camState;
+            const gMic = pendingGuestInfo.micState;
             const gColor = pendingGuestInfo.color;
 
             clientConns[gId] = pendingGuestConn;
             userNames[gId] = gName;
             userCamStates[gId] = gCam !== undefined ? gCam : true;
+            userMicStates[gId] = gMic !== undefined ? gMic : true;
             userColors[gId] = gColor || getRandomColor(gId);
             registerUser(gId);
 
@@ -920,12 +943,20 @@
                 peers: Object.keys(userNames),
                 names: userNames,
                 camStates: userCamStates,
+                micStates: userMicStates,
                 hands: userHands,
                 colors: userColors,
                 chatDisabled: isChatDisabled
             });
 
-            broadcastFromHost({ type: 'USER_JOINED', peerId: gId, name: gName, camState: userCamStates[gId], color: userColors[gId] }, gId);
+            broadcastFromHost({ 
+                type: 'USER_JOINED', 
+                peerId: gId, 
+                name: gName, 
+                camState: userCamStates[gId], 
+                micState: userMicStates[gId],
+                color: userColors[gId] 
+            }, gId);
             playSound('join');
 
             pendingGuestConn = null;
@@ -945,11 +976,13 @@
             if (data.type === 'JOIN_APPROVED') {
                 document.getElementById('waitingModal').style.display = 'none';
                 userCamStates[myPeerId] = isCamOn;
+                userMicStates[myPeerId] = isMicOn;
                 userNames[myPeerId] = myName;
                 registerUser(myPeerId);
 
                 Object.assign(userNames, data.names);
                 Object.assign(userCamStates, data.camStates);
+                Object.assign(userMicStates, data.micStates);
                 Object.assign(userHands, data.hands);
                 Object.assign(userColors, data.colors);
                 isChatDisabled = data.chatDisabled;
@@ -974,6 +1007,7 @@
             } else if (data.type === 'USER_JOINED') {
                 userNames[data.peerId] = data.name;
                 userCamStates[data.peerId] = data.camState;
+                userMicStates[data.peerId] = data.micState !== undefined ? data.micState : true;
                 userColors[data.peerId] = data.color || getRandomColor(data.peerId);
                 registerUser(data.peerId);
                 playSound('join');
@@ -981,6 +1015,10 @@
             } else if (data.type === 'CAM_STATE') {
                 userCamStates[data.peerId] = data.enabled;
                 setCamDisplay(data.peerId, data.enabled);
+
+            } else if (data.type === 'MIC_STATE') {
+                userMicStates[data.peerId] = data.enabled;
+                setMicDisplay(data.peerId, data.enabled);
 
             } else if (data.type === 'HAND_STATE') {
                 userHands[data.peerId] = data.raised;
@@ -1007,6 +1045,7 @@
             } else if (data.type === 'LEAVE') {
                 removeVideoStream(data.peerId);
                 delete userCamStates[data.peerId];
+                delete userMicStates[data.peerId];
                 delete userNames[data.peerId];
                 delete userHands[data.peerId];
                 delete userColors[data.peerId];
@@ -1018,6 +1057,9 @@
         function registerUser(peerId) {
             if (!userColors[peerId]) {
                 userColors[peerId] = getRandomColor(peerId);
+            }
+            if (userMicStates[peerId] === undefined) {
+                userMicStates[peerId] = true;
             }
             if (!activeSpeakerOrder.includes(peerId)) {
                 activeSpeakerOrder.push(peerId);
@@ -1063,7 +1105,6 @@
                     container.classList.add('my-overlay');
                 }
 
-                // Клік правою кнопкою миші відкриває меню модерації ВИКЛЮЧНО для організатора
                 container.oncontextmenu = (e) => {
                     e.preventDefault();
                     if (isHost && peerId !== myPeerId) {
@@ -1087,7 +1128,7 @@
                 const avatarDiv = document.createElement('div');
                 avatarDiv.id = 'avatar-' + peerId;
                 avatarDiv.className = 'avatar-placeholder';
-                avatarDiv.style.display = userCamStates[peerId] === false ? 'flex' : 'none';
+                avatarDiv.style.display = (userCamStates[peerId] === false) ? 'flex' : 'none';
                 
                 const userColor = userColors[peerId] || getRandomColor(peerId);
                 avatarDiv.innerHTML = `
@@ -1100,8 +1141,11 @@
                 `;
 
                 const label = document.createElement('div');
+                label.id = 'label-' + peerId;
                 label.className = 'user-label';
-                label.innerText = labelText;
+                
+                const isMicActive = userMicStates[peerId] !== false;
+                label.innerHTML = `<span>${labelText}</span> <span id="mic-icon-${peerId}">${isMicActive ? '🎤' : '🔇'}</span>`;
 
                 const handBadge = document.createElement('div');
                 handBadge.id = 'hand-' + peerId;
@@ -1119,6 +1163,11 @@
                 const video = document.getElementById('video-' + peerId);
                 if (video && video.srcObject !== stream) {
                     video.srcObject = stream;
+                }
+                const label = document.getElementById('label-' + peerId);
+                if (label) {
+                    const isMicActive = userMicStates[peerId] !== false;
+                    label.innerHTML = `<span>${labelText}</span> <span id="mic-icon-${peerId}">${isMicActive ? '🎤' : '🔇'}</span>`;
                 }
             }
         }
@@ -1138,8 +1187,17 @@
         }
 
         function setCamDisplay(peerId, enabled) {
+            userCamStates[peerId] = enabled;
             const avatarDiv = document.getElementById('avatar-' + peerId);
             if (avatarDiv) avatarDiv.style.display = enabled ? 'none' : 'flex';
+        }
+
+        function setMicDisplay(peerId, enabled) {
+            userMicStates[peerId] = enabled;
+            const micIconSpan = document.getElementById('mic-icon-' + peerId);
+            if (micIconSpan) {
+                micIconSpan.innerText = enabled ? '🎤' : '🔇';
+            }
         }
 
         function setHandDisplay(peerId, raised) {
@@ -1183,6 +1241,14 @@
                     btn.classList.add('btn-red');
                     document.getElementById('videoGrid').classList.add('mic-muted-border');
                 }
+                
+                setMicDisplay(myPeerId, isMicOn);
+                userMicStates[myPeerId] = isMicOn;
+
+                const stateMsg = { type: 'MIC_STATE', peerId: myPeerId, enabled: isMicOn };
+                if (isHost) broadcastFromHost(stateMsg);
+                else if (hostConn && hostConn.open) hostConn.send(stateMsg);
+
                 playSound('click');
             }
         }
@@ -1201,6 +1267,7 @@
                     btn.innerText = "📷 Увімк. камеру";
                     btn.classList.add('btn-red');
                 }
+                
                 setCamDisplay(myPeerId, isCamOn);
                 userCamStates[myPeerId] = isCamOn;
                 
@@ -1376,6 +1443,7 @@
         function handleUserLeave(peerId) {
             removeVideoStream(peerId);
             delete userCamStates[peerId];
+            delete userMicStates[peerId];
             delete userNames[peerId];
             delete userHands[peerId];
             delete userColors[peerId];
