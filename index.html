@@ -10,6 +10,29 @@
 
     <style>
         * { box-sizing: border-box; }
+        
+        /* Загальні анімації */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+
+        @keyframes bounceSlow {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-10px); }
+        }
+
         body {
             margin: 0;
             padding: 0;
@@ -20,6 +43,7 @@
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
+            animation: fadeIn 0.5s ease-out;
         }
 
         #lobby {
@@ -34,30 +58,37 @@
 
         .card {
             background: #181b24;
-            padding: 24px;
-            border-radius: 16px;
-            box-shadow: 0 10px 35px rgba(0,0,0,0.5);
+            padding: 28px;
+            border-radius: 20px;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.6);
             max-width: 420px;
             width: 100%;
             text-align: center;
             border: 1px solid #2d3343;
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.3s ease;
         }
 
-        h1 { margin-top: 0; color: #3b82f6; font-size: 24px; }
+        h1 { margin-top: 0; color: #3b82f6; font-size: 26px; }
         p { color: #9ca3af; font-size: 14px; }
 
         input, button, select {
             width: 100%;
             padding: 12px 14px;
             margin: 8px 0;
-            border-radius: 8px;
+            border-radius: 10px;
             border: 1px solid #374151;
             font-size: 15px;
             outline: none;
+            transition: all 0.25s ease;
         }
 
         input, select { background: #1f2937; color: #fff; text-align: left; }
-        input:focus, select:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.25); }
+        input:focus, select:focus { 
+            border-color: #3b82f6; 
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.3); 
+            transform: translateY(-1px);
+        }
 
         button {
             background: #3b82f6;
@@ -65,12 +96,13 @@
             font-weight: 600;
             border: none;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        button:hover { background: #2563eb; }
+        button:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
+        button:active { transform: translateY(0); }
         .btn-join { background: #10b981; }
-        .btn-join:hover { background: #059669; }
+        .btn-join:hover { background: #059669; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); }
 
         #errorMsg {
             color: #ef4444;
@@ -78,6 +110,7 @@
             font-size: 13px;
             margin-top: 12px;
             min-height: 20px;
+            animation: fadeIn 0.3s ease;
         }
 
         /* МОДАЛЬНЕ ВІКНО ДЛЯ ХОСТА */
@@ -85,34 +118,31 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.75);
             z-index: 200;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(8px);
             padding: 16px;
+            animation: fadeIn 0.3s ease;
         }
 
         .incoming-card {
             background: #181b24;
-            padding: 24px;
-            border-radius: 20px;
+            padding: 28px;
+            border-radius: 24px;
             text-align: center;
             max-width: 360px;
             width: 100%;
             border: 1px solid #2d3343;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+            animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .phone-ring-icon {
-            font-size: 45px;
-            margin-bottom: 12px;
-            animation: bounce 1.2s infinite alternate;
-        }
-
-        @keyframes bounce {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-8px); }
+            font-size: 50px;
+            margin-bottom: 14px;
+            animation: bounceSlow 1s infinite alternate;
         }
 
         /* ЕКРАН ОЧІКУВАННЯ ДЛЯ ГОСТЯ */
@@ -124,8 +154,9 @@
             z-index: 200;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(8px);
             padding: 16px;
+            animation: fadeIn 0.3s ease;
         }
 
         #callRoom {
@@ -133,31 +164,33 @@
             flex-direction: column;
             height: 100%;
             position: relative;
+            animation: fadeIn 0.4s ease;
         }
 
         #mainLayout {
             flex: 1;
             display: flex;
-            height: calc(100vh - 70px);
+            height: calc(100vh - 75px);
             overflow: hidden;
             position: relative;
         }
 
-        /* СПРАВЖНЯ МОЗАЇКА В СТИЛІ GOOGLE MEET */
+        /* ІДЕАЛЬНА ТА ОГОДЖЕНА МОЗАЇКА (GRID) */
         #videoGrid {
             flex: 1;
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            grid-auto-rows: minmax(240px, 1fr);
             gap: 16px;
             padding: 20px;
             background: #12141c;
-            align-content: center;
-            justify-content: center;
+            align-items: center;
+            justify-items: center;
             overflow-y: auto;
             position: relative;
+            transition: all 0.3s ease;
         }
 
-        /* Режим трансляції: головний екран зліва, панель камер справа */
         #mainLayout.screen-sharing-mode {
             display: flex;
             flex-direction: row;
@@ -166,25 +199,25 @@
         #mainLayout.screen-sharing-mode #videoGrid {
             flex: 1;
             display: flex;
-            padding: 8px;
+            padding: 12px;
             background: #090a0f;
             overflow: hidden;
             align-items: center;
             justify-content: center;
         }
 
-        /* Бокова панель камер при трансляції */
         #screenshareSidebar {
             display: none;
-            width: 260px;
+            width: 280px;
             background: #161922;
             border-left: 1px solid #2d3343;
             flex-direction: column;
-            gap: 8px;
-            padding: 8px;
+            gap: 12px;
+            padding: 12px;
             overflow-y: auto;
             max-height: 100%;
             flex-shrink: 0;
+            animation: fadeIn 0.3s ease;
         }
         #mainLayout.screen-sharing-mode #screenshareSidebar {
             display: flex;
@@ -193,50 +226,42 @@
         .video-container {
             position: relative;
             background: #161922;
-            border-radius: 16px;
+            border-radius: 18px;
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
             width: 100%;
             height: 100%;
-            min-height: 220px;
             max-height: 100%;
             border: 2px solid #2d3343;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-            transition: transform 0.2s;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.45);
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
-        /* Твоє власне відео робимо помітно більшим/виділеним у мозаїці */
+        .video-container:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
+
         .video-container.is-me {
-            grid-column: span 2;
-            grid-row: span 2;
-            min-height: 380px;
             border-color: #3b82f6;
         }
 
-        /* Камери у бічній панелі під час трансляції */
         #screenshareSidebar .video-container {
             width: 100%;
-            height: 140px;
-            min-height: 140px;
+            height: 150px;
+            min-height: 150px;
             flex-shrink: 0;
         }
-        #screenshareSidebar .video-container.is-me {
-            grid-column: auto;
-            grid-row: auto;
-            min-height: 140px;
-            border-color: #3b82f6;
-        }
 
-        /* Головний контейнер трансляції */
         #videoGrid .video-container.is-screen {
-            grid-column: auto;
-            grid-row: auto;
             width: 100%;
             height: 100%;
             min-height: 0;
             border-color: #3b82f6;
+            animation: pulseGlow 2s infinite;
         }
 
         video {
@@ -247,6 +272,7 @@
             inset: 0;
             z-index: 2;
             background: #161922;
+            transition: opacity 0.3s ease;
         }
 
         .video-container.is-screen video {
@@ -263,49 +289,40 @@
             justify-content: center;
             z-index: 3;
             background: #161922;
+            transition: opacity 0.3s ease;
         }
 
         .avatar-placeholder.hidden {
-            display: none !important;
+            opacity: 0;
+            pointer-events: none;
         }
 
         .avatar-circle {
-            width: 85px;
-            height: 85px;
+            width: 95px;
+            height: 95px;
             border-radius: 50%;
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
+            font-size: 44px;
             font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
             user-select: none;
             margin-bottom: 8px;
-        }
-        
-        .video-container.is-me .avatar-circle {
-            width: 110px;
-            height: 110px;
-            font-size: 52px;
-        }
-
-        #screenshareSidebar .avatar-circle {
-            width: 42px;
-            height: 42px;
-            font-size: 20px;
-            margin-bottom: 2px;
+            animation: bounceSlow 2s infinite alternate;
         }
 
         .user-label {
             position: absolute;
-            bottom: 10px;
-            left: 10px;
+            bottom: 12px;
+            left: 12px;
             background: rgba(15, 16, 21, 0.85);
+            backdrop-filter: blur(5px);
             color: #e4e6eb;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
             font-weight: 500;
             z-index: 5;
             max-width: 80%;
@@ -314,38 +331,55 @@
             text-overflow: ellipsis;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease;
         }
+
+        .status-badge {
+            font-size: 12px;
+            background: rgba(0,0,0,0.4);
+            padding: 2px 6px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        .status-badge.muted { color: #ef4444; background: rgba(239, 68, 68, 0.15); }
 
         .hand-badge {
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 12px;
+            right: 12px;
             background: #f59e0b;
             color: #fff;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 13px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 15px;
             z-index: 5;
             display: none;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1), bounceSlow 0.8s infinite alternate;
         }
         .video-container.hand-raised .hand-badge { display: block; }
 
         #chatSidebar {
-            width: 320px;
+            width: 340px;
             background: #181b24;
             border-left: 1px solid #2d3343;
             display: flex;
             flex-direction: column;
             z-index: 20;
-            transition: transform 0.25s ease-in-out;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
         }
 
-        #chatSidebar.hidden { display: none; }
+        #chatSidebar.hidden { 
+            transform: translateX(100%);
+            opacity: 0;
+            display: none; 
+        }
 
         .chat-header {
-            padding: 12px 14px;
+            padding: 14px 16px;
             font-weight: 600;
             font-size: 14px;
             border-bottom: 1px solid #2d3343;
@@ -370,121 +404,111 @@
 
         #chatMessages {
             flex: 1;
-            padding: 12px;
+            padding: 14px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
             background: #12141c;
         }
 
         .msg-item {
             background: #1e222d;
             border: 1px solid #2d3343;
-            padding: 8px 10px;
-            border-radius: 8px;
-            font-size: 12px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 13px;
             word-break: break-word;
+            animation: slideUp 0.25s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
         .msg-item.mine { background: #1e3a8a; border-color: #1d4ed8; align-self: flex-end; }
 
         .msg-author {
-            font-size: 10px;
+            font-size: 11px;
             color: #60a5fa;
             font-weight: bold;
-            margin-bottom: 2px;
+            margin-bottom: 3px;
         }
 
         .chat-input-box {
-            padding: 10px;
+            padding: 12px;
             border-top: 1px solid #2d3343;
             display: flex;
-            gap: 6px;
+            gap: 8px;
             background: #1f2937;
         }
 
-        .chat-input-box input { margin: 0; padding: 8px; font-size: 12px; }
-        .chat-input-box button { width: auto; padding: 8px 12px; margin: 0; font-size: 12px; }
+        .chat-input-box input { margin: 0; padding: 10px; font-size: 13px; }
+        .chat-input-box button { width: auto; padding: 10px 14px; margin: 0; font-size: 13px; }
 
         #settingsModal {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.75);
             z-index: 100;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(8px);
             padding: 16px;
+            animation: fadeIn 0.3s ease;
         }
 
         .modal-body {
             background: #181b24;
-            padding: 20px;
-            border-radius: 12px;
+            padding: 24px;
+            border-radius: 16px;
             max-width: 400px;
             width: 100%;
             border: 1px solid #2d3343;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
             max-height: 90vh;
             overflow-y: auto;
+            animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .modal-body label {
             display: block;
-            margin-top: 10px;
+            margin-top: 12px;
             font-size: 12px;
             color: #9ca3af;
             text-align: left;
         }
 
         .controls {
-            height: 70px;
+            height: 75px;
             background: #181b24;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            padding: 0 10px;
+            gap: 8px;
+            padding: 0 14px;
             border-top: 1px solid #2d3343;
             overflow-x: auto;
             white-space: nowrap;
             -webkit-overflow-scrolling: touch;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.3);
         }
 
         .ctrl-btn {
             width: auto;
-            padding: 9px 12px;
+            padding: 10px 14px;
             margin: 0;
-            border-radius: 8px;
-            font-size: 12px;
+            border-radius: 10px;
+            font-size: 13px;
             flex-shrink: 0;
             background: #2d3343;
             color: #e4e6eb;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
 
-        .ctrl-btn:hover { background: #374151; }
+        .ctrl-btn:hover { background: #374151; transform: translateY(-2px); }
         .btn-red { background: #ef4444 !important; color: #fff !important; }
-        .btn-red:hover { background: #dc2626 !important; }
+        .btn-red:hover { background: #dc2626 !important; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4); }
         .btn-primary { background: #3b82f6 !important; color: #fff !important; }
         .btn-primary:hover { background: #2563eb !important; }
-
-        /* АДАПТИВНІСТЬ ДЛЯ ТЕЛЕФОНІВ ТА ПЛАНШЕТІВ */
-        @media (max-width: 1024px) {
-            .video-container.is-me {
-                grid-column: span 1;
-                grid-row: span 1;
-                min-height: 250px;
-            }
-            #screenshareSidebar {
-                width: 180px;
-            }
-            #screenshareSidebar .video-container {
-                height: 110px;
-                min-height: 110px;
-            }
-        }
 
         @media (max-width: 768px) {
             #chatSidebar {
@@ -494,42 +518,22 @@
                 height: 100%;
             }
             .close-chat-btn { display: block; }
-
-            .video-container.is-me {
-                min-height: 200px;
-            }
-
             #mainLayout.screen-sharing-mode {
                 flex-direction: column;
             }
-            #mainLayout.screen-sharing-mode #videoGrid {
-                flex: 1;
-                width: 100%;
-            }
             #screenshareSidebar {
                 width: 100%;
-                height: 110px;
+                height: 120px;
                 flex-direction: row;
                 overflow-x: auto;
                 overflow-y: hidden;
                 border-left: none;
                 border-top: 1px solid #2d3343;
-                flex-shrink: 0;
-            }
-            #screenshareSidebar .video-container {
-                width: 140px;
-                height: 94px;
-                min-height: 94px;
-                flex-shrink: 0;
             }
             .controls {
-                height: 64px;
-                padding: 0 4px;
+                height: 68px;
+                padding: 0 6px;
                 justify-content: flex-start;
-            }
-            .ctrl-btn {
-                padding: 8px 9px;
-                font-size: 11px;
             }
         }
     </style>
@@ -543,12 +547,10 @@
             <p>Введіть своє ім'я для дзвінка</p>
             
             <input type="text" id="userNameInput" placeholder="Ваше ім'я..." value="Гість">
-
-            <div style="margin: 10px 0; border-top: 1px solid #2d3343;"></div>
+            <div style="margin: 12px 0; border-top: 1px solid #2d3343;"></div>
 
             <button onclick="createRoom()">➕ Створити кімнату</button>
-            
-            <div style="margin: 6px 0; color: #6b7280; font-size: 11px;">— АБО —</div>
+            <div style="margin: 8px 0; color: #6b7280; font-size: 11px;">— АБО —</div>
             
             <input type="text" id="roomInput" placeholder="Код кімнати або посилання">
             <button class="btn-join" onclick="joinRoomRequest()">📞 Приєднатися</button>
@@ -562,9 +564,9 @@
         <div class="incoming-card">
             <div class="phone-ring-icon">👋</div>
             <h2 style="margin-top:0; color:#fff; font-size:20px;">Запит на вхід</h2>
-            <p id="incomingText" style="color:#9ca3af; font-size:13px; margin-bottom:16px;">Користувач хоче приєднатися...</p>
+            <p id="incomingText" style="color:#9ca3af; font-size:13px; margin-bottom:18px;">Користувач хоче приєднатися...</p>
             
-            <button class="btn-join" style="padding: 12px; font-size:15px; margin-bottom:6px;" onclick="hostAcceptGuest()">✅ Прийняти</button>
+            <button class="btn-join" style="padding: 12px; font-size:15px; margin-bottom:8px;" onclick="hostAcceptGuest()">✅ Прийняти</button>
             <button class="btn-red" style="padding: 12px; font-size:15px;" onclick="hostRejectGuest()">❌ Відхилити</button>
         </div>
     </div>
@@ -574,7 +576,7 @@
         <div class="incoming-card">
             <div class="phone-ring-icon">⏳</div>
             <h2 style="margin-top:0; color:#fff; font-size:20px;">Очікування</h2>
-            <p style="color:#9ca3af; font-size:13px; margin-bottom:16px;">Організатор розглядає ваш запит на вхід...</p>
+            <p style="color:#9ca3af; font-size:13px; margin-bottom:18px;">Організатор розглядає ваш запит на вхід...</p>
             <button class="btn-red" style="padding: 10px; font-size:14px;" onclick="cancelWaiting()">Скасувати</button>
         </div>
     </div>
@@ -582,13 +584,9 @@
     <!-- КІМНАТА ДЗВІНКУ -->
     <div id="callRoom">
         <div id="mainLayout">
-            <!-- Головне поле для сітки мозаїки у стилі Meet -->
             <div id="videoGrid"></div>
-
-            <!-- Бічна панель для камер під час трансляції екрана -->
             <div id="screenshareSidebar"></div>
 
-            <!-- Бічна панель чату -->
             <div id="chatSidebar" class="hidden">
                 <div class="chat-header">
                     <span>💬 Чат конференції</span>
@@ -628,7 +626,7 @@
             <label>🔊 Динаміки:</label>
             <select id="speakerSelect" onchange="changeAudioOutput()"></select>
 
-            <button class="btn-primary" style="margin-top:16px;" onclick="closeSettings()">Зберегти та закрити</button>
+            <button class="btn-primary" style="margin-top:18px;" onclick="closeSettings()">Зберегти та закрити</button>
         </div>
     </div>
 
@@ -668,6 +666,7 @@
         let pendingGuestInfo = null;
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
         function playSound(type) {
             try {
                 if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -697,15 +696,43 @@
                     gain.gain.setValueAtTime(0.05, now);
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
                     osc.start(now); osc.stop(now + 0.15);
+                } else if (type === 'mic_on') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(587.33, now);
+                    gain.gain.setValueAtTime(0.06, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                    osc.start(now); osc.stop(now + 0.15);
+                } else if (type === 'mic_off') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(392, now);
+                    gain.gain.setValueAtTime(0.06, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                    osc.start(now); osc.stop(now + 0.15);
+                } else if (type === 'cam_on') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(659.25, now);
+                    gain.gain.setValueAtTime(0.06, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+                    osc.start(now); osc.stop(now + 0.18);
+                } else if (type === 'cam_off') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(440, now);
+                    gain.gain.setValueAtTime(0.06, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+                    osc.start(now); osc.stop(now + 0.18);
+                } else if (type === 'hand') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(783.99, now);
+                    gain.gain.setValueAtTime(0.06, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                    osc.start(now); osc.stop(now + 0.2);
                 }
             } catch (e) {}
         }
 
         window.onload = async () => {
             const hashRoom = window.location.hash.substring(1);
-            if (hashRoom) {
-                document.getElementById('roomInput').value = hashRoom;
-            }
+            if (hashRoom) document.getElementById('roomInput').value = hashRoom;
             if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
                 await populateDeviceSelects();
             }
@@ -719,9 +746,7 @@
 
         function getRandomColor(str) {
             let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                hash = str.charCodeAt(i) + ((hash << 5) - hash);
-            }
+            for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
             let color = '#';
             for (let i = 0; i < 3; i++) {
                 let value = (hash >> (i * 8)) & 0xFF;
@@ -745,7 +770,6 @@
                     const opt = document.createElement('option');
                     opt.value = device.deviceId;
                     opt.text = device.label || `${device.kind} (${device.deviceId.substring(0, 5)})`;
-
                     if (device.kind === 'audioinput' && micSelect) micSelect.appendChild(opt);
                     else if (device.kind === 'videoinput' && camSelect) camSelect.appendChild(opt);
                     else if (device.kind === 'audiooutput' && speakerSelect) speakerSelect.appendChild(opt);
@@ -757,7 +781,6 @@
             try {
                 const audioConstraint = customAudioId ? { deviceId: { exact: customAudioId } } : true;
                 const videoConstraint = customVideoId ? { deviceId: { exact: customVideoId } } : true;
-
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraint, video: videoConstraint });
                 localStream.getAudioTracks()[0].enabled = isMicOn;
                 localStream.getVideoTracks()[0].enabled = isCamOn;
@@ -780,13 +803,10 @@
             clearError();
             myName = getUserNameInput();
             if (!await getMedia()) return;
-
             isHost = true;
             roomIdGlobal = 'iabg-' + Math.random().toString(36).substring(2, 8);
             window.location.hash = roomIdGlobal;
-
             localStorage.setItem('iabg_host_' + roomIdGlobal, 'true');
-
             initPeerServer(roomIdGlobal);
         }
 
@@ -795,26 +815,16 @@
             let rawInput = document.getElementById('roomInput').value.trim();
             if (!rawInput) return showError("❌ Введіть код або посилання кімнати!");
             
-            if (rawInput.includes('#')) {
-                roomIdGlobal = rawInput.split('#')[1];
-            } else if (rawInput.includes('http')) {
-                try {
-                    const url = new URL(rawInput);
-                    roomIdGlobal = url.hash.substring(1);
-                } catch(e) {
-                    roomIdGlobal = rawInput;
-                }
-            } else {
-                roomIdGlobal = rawInput;
-            }
+            if (rawInput.includes('#')) roomIdGlobal = rawInput.split('#')[1];
+            else if (rawInput.includes('http')) {
+                try { roomIdGlobal = new URL(rawInput).hash.substring(1); } catch(e) { roomIdGlobal = rawInput; }
+            } else roomIdGlobal = rawInput;
 
             if (!roomIdGlobal) return showError("❌ Невірний формат коду кімнати!");
-
             myName = getUserNameInput();
             if (!await getMedia()) return;
 
             const wasHostBefore = localStorage.getItem('iabg_host_' + roomIdGlobal) === 'true';
-
             if (wasHostBefore) {
                 isHost = true;
                 window.location.hash = roomIdGlobal;
@@ -829,21 +839,15 @@
                 myPeerId = id;
                 isHost = false;
                 userColors[myPeerId] = getRandomColor(myPeerId);
-
                 hostConn = peer.connect(roomIdGlobal);
                 activeConnections[roomIdGlobal] = hostConn;
                 
                 hostConn.on('open', () => {
                     hostConn.send({ 
-                        type: 'JOIN_REQ', 
-                        peerId: myPeerId, 
-                        name: myName, 
-                        camState: isCamOn, 
-                        micState: isMicOn,
-                        color: userColors[myPeerId] 
+                        type: 'JOIN_REQ', peerId: myPeerId, name: myName, 
+                        camState: isCamOn, micState: isMicOn, color: userColors[myPeerId] 
                     });
                 });
-
                 hostConn.on('data', (data) => handleGuestIncomingData(data));
                 hostConn.on('close', () => handleUserLeave(roomIdGlobal));
 
@@ -861,7 +865,6 @@
 
         function initPeerServer(targetId) {
             peer = new Peer(targetId, peerConfig);
-
             peer.on('open', (id) => {
                 myPeerId = id;
                 isHost = true;
@@ -879,11 +882,8 @@
             peer.on('connection', (conn) => {
                 activeConnections[conn.peer] = conn;
                 clientConns[conn.peer] = conn;
-
                 conn.on('data', (data) => handleHostIncomingData(data, conn));
-                conn.on('close', () => {
-                    handleUserLeave(conn.peer);
-                });
+                conn.on('close', () => handleUserLeave(conn.peer));
             });
 
             peer.on('call', (call) => {
@@ -897,9 +897,7 @@
                     localStorage.removeItem('iabg_host_' + roomIdGlobal);
                     if (peer) peer.destroy();
                     joinRoomRequest();
-                } else {
-                    showError("❌ Помилка кімнати: " + err.type);
-                }
+                } else showError("❌ Помилка кімнати: " + err.type);
             });
         }
 
@@ -912,17 +910,19 @@
             if (data.type === 'JOIN_REQ') {
                 pendingGuestConn = conn;
                 pendingGuestInfo = data;
-                document.getElementById('incomingText').innerText = `Користувач "${data.name}" хоче приєднатися до кімнати.`;
+                document.getElementById('incomingText').innerText = `Користувач "${data.name}" хоче приєднатися.`;
                 document.getElementById('incomingModal').style.display = 'flex';
             } else if (data.type === 'CHAT_MSG') {
                 appendChatMessage(data.name, data.text, false);
                 broadcastToAll(data, conn.peer);
             } else if (data.type === 'TOGGLE_MIC') {
                 userMicStates[conn.peer] = data.state;
+                updateUserStatuses(conn.peer);
                 broadcastToAll(data, conn.peer);
             } else if (data.type === 'TOGGLE_CAM') {
                 userCamStates[conn.peer] = data.state;
                 updateAvatarState(conn.peer, data.state);
+                updateUserStatuses(conn.peer);
                 broadcastToAll(data, conn.peer);
             } else if (data.type === 'TOGGLE_HAND') {
                 userHands[conn.peer] = data.state;
@@ -950,12 +950,8 @@
             userColors[gPeerId] = pendingGuestInfo.color || getRandomColor(gPeerId);
 
             pendingGuestConn.send({
-                type: 'JOIN_ACCEPT',
-                hostId: myPeerId,
-                users: userNames,
-                camStates: userCamStates,
-                micStates: userMicStates,
-                colors: userColors
+                type: 'JOIN_ACCEPT', hostId: myPeerId, users: userNames,
+                camStates: userCamStates, micStates: userMicStates, colors: userColors
             });
 
             const call = peer.call(gPeerId, localStream);
@@ -963,15 +959,12 @@
 
             addVideoStream(gPeerId, null, userNames[gPeerId]);
             updateAvatarState(gPeerId, userCamStates[gPeerId]);
+            updateUserStatuses(gPeerId);
 
             playSound('join');
             broadcastToAll({
-                type: 'USER_JOINED',
-                peerId: gPeerId,
-                name: userNames[gPeerId],
-                camState: userCamStates[gPeerId],
-                micState: userMicStates[gPeerId],
-                color: userColors[gPeerId]
+                type: 'USER_JOINED', peerId: gPeerId, name: userNames[gPeerId],
+                camState: userCamStates[gPeerId], micState: userMicStates[gPeerId], color: userColors[gPeerId]
             }, gPeerId);
 
             pendingGuestConn = null;
@@ -995,8 +988,11 @@
                 showCallScreen();
 
                 userColors[myPeerId] = userColors[myPeerId] || getRandomColor(myPeerId);
+                userCamStates[myPeerId] = isCamOn;
+                userMicStates[myPeerId] = isMicOn;
                 addVideoStream(myPeerId, localStream, myName + " (Ви)");
                 updateAvatarState(myPeerId, isCamOn);
+                updateUserStatuses(myPeerId);
 
                 Object.keys(data.users).forEach(pId => {
                     if (pId !== myPeerId) {
@@ -1007,6 +1003,7 @@
                         
                         addVideoStream(pId, null, userNames[pId]);
                         updateAvatarState(pId, userCamStates[pId]);
+                        updateUserStatuses(pId);
 
                         if (!calls[pId]) {
                             const call = peer.call(pId, localStream);
@@ -1018,12 +1015,11 @@
                 if (hostConn && hostConn.open) {
                     hostConn.send({ type: 'PEER_RELAY_JOIN', targetPeerId: myPeerId });
                 }
-
                 playSound('join');
             } else if (data.type === 'JOIN_REJECT') {
                 document.getElementById('waitingModal').style.display = 'none';
                 if (peer) peer.destroy();
-                showError("❌ Організатор відхилив ваш запит на вхід.");
+                showError("❌ Організатор відхилив запит.");
             } else if (data.type === 'USER_JOINED') {
                 userNames[data.peerId] = data.name;
                 userCamStates[data.peerId] = data.camState;
@@ -1032,12 +1028,12 @@
                 
                 addVideoStream(data.peerId, null, data.name);
                 updateAvatarState(data.peerId, data.camState);
+                updateUserStatuses(data.peerId);
 
                 if (!isHost && data.peerId !== myPeerId && !calls[data.peerId]) {
                     const call = peer.call(data.peerId, localStream);
                     handleCallStream(call);
                 }
-
                 playSound('join');
             } else if (data.type === 'USER_LEFT') {
                 handleUserLeave(data.peerId);
@@ -1046,8 +1042,10 @@
             } else if (data.type === 'TOGGLE_CAM') {
                 userCamStates[data.peerId] = data.state;
                 updateAvatarState(data.peerId, data.state);
+                updateUserStatuses(data.peerId);
             } else if (data.type === 'TOGGLE_MIC') {
                 userMicStates[data.peerId] = data.state;
+                updateUserStatuses(data.peerId);
             } else if (data.type === 'TOGGLE_HAND') {
                 userHands[data.peerId] = data.state;
                 const container = document.getElementById('container-' + data.peerId);
@@ -1060,17 +1058,10 @@
             call.on('stream', (remoteStream) => {
                 let videoElem = document.getElementById('video-' + call.peer);
                 let audioElem = document.getElementById('audio-' + call.peer);
-                
-                if (videoElem) {
-                    videoElem.srcObject = remoteStream;
-                }
-                if (audioElem) {
-                    audioElem.srcObject = remoteStream; 
-                }
+                if (videoElem) videoElem.srcObject = remoteStream;
+                if (audioElem) audioElem.srcObject = remoteStream; 
             });
-            call.on('close', () => {
-                handleUserLeave(call.peer);
-            });
+            call.on('close', () => handleUserLeave(call.peer));
         }
 
         function addVideoStream(pId, stream, name) {
@@ -1078,9 +1069,7 @@
 
             const container = document.createElement('div');
             container.className = 'video-container';
-            if (pId === myPeerId) {
-                container.classList.add('is-me');
-            }
+            if (pId === myPeerId) container.classList.add('is-me');
             container.id = 'container-' + pId;
 
             const video = document.createElement('video');
@@ -1109,7 +1098,7 @@
             const label = document.createElement('div');
             label.className = 'user-label';
             label.id = `label-${pId}`;
-            label.innerText = name;
+            label.innerHTML = `<span>${name}</span> <span class="status-badge" id="mic-status-${pId}">🎤</span>`;
 
             const handBadge = document.createElement('div');
             handBadge.className = 'hand-badge';
@@ -1127,31 +1116,24 @@
             } else {
                 document.getElementById('videoGrid').appendChild(container);
             }
-            updateSidebarVisibility();
         }
 
         function updateAvatarState(pId, isCamActive) {
             const avatar = document.getElementById('avatar-' + pId);
             if (avatar) {
-                if (isCamActive) {
-                    avatar.classList.add('hidden');
-                } else {
-                    avatar.classList.remove('hidden');
-                }
+                if (isCamActive) avatar.classList.add('hidden');
+                else avatar.classList.remove('hidden');
             }
         }
 
-        function updateSidebarVisibility() {
-            const sidebar = document.getElementById('screenshareSidebar');
-            const containers = Array.from(sidebar.children);
-            
-            containers.forEach((container, index) => {
-                if (index >= 5) {
-                    container.style.display = 'none'; 
-                } else {
-                    container.style.display = 'flex'; 
-                }
-            });
+        function updateUserStatuses(pId) {
+            const badge = document.getElementById(`mic-status-${pId}`);
+            if (badge) {
+                const micOn = userMicStates[pId] !== false;
+                badge.innerText = micOn ? "🎤" : "🔇";
+                if (!micOn) badge.classList.add('muted');
+                else badge.classList.remove('muted');
+            }
         }
 
         function handleUserLeave(pId) {
@@ -1163,7 +1145,6 @@
             delete userNames[pId];
             delete userColors[pId];
             playSound('leave');
-            updateSidebarVisibility();
         }
 
         function showCallScreen() {
@@ -1174,19 +1155,19 @@
 
         function toggleMic() {
             isMicOn = !isMicOn;
-            if (localStream) {
-                localStream.getAudioTracks().forEach(t => t.enabled = isMicOn);
-            }
+            if (localStream) localStream.getAudioTracks().forEach(t => t.enabled = isMicOn);
+            
             const btn = document.getElementById('micBtn');
             btn.innerText = isMicOn ? "🎤 Мікр" : "🔇 Викл";
             btn.classList.toggle('btn-red', !isMicOn);
 
+            userMicStates[myPeerId] = isMicOn;
+            updateUserStatuses(myPeerId);
+            playSound(isMicOn ? 'mic_on' : 'mic_off');
+
             const msgObj = { type: 'TOGGLE_MIC', state: isMicOn, peerId: myPeerId };
-            if (isHost) {
-                broadcastToAll(msgObj);
-            } else if (hostConn && hostConn.open) {
-                hostConn.send(msgObj);
-            }
+            if (isHost) broadcastToAll(msgObj);
+            else if (hostConn && hostConn.open) hostConn.send(msgObj);
         }
 
         function toggleCam() {
@@ -1198,14 +1179,13 @@
             btn.innerText = isCamOn ? "📹 Камера" : "📷 Викл";
             btn.classList.toggle('btn-red', !isCamOn);
 
+            userCamStates[myPeerId] = isCamOn;
             updateAvatarState(myPeerId, isCamOn);
+            playSound(isCamOn ? 'cam_on' : 'cam_off');
 
             const msgObj = { type: 'TOGGLE_CAM', state: isCamOn, peerId: myPeerId };
-            if (isHost) {
-                broadcastToAll(msgObj);
-            } else if (hostConn && hostConn.open) {
-                hostConn.send(msgObj);
-            }
+            if (isHost) broadcastToAll(msgObj);
+            else if (hostConn && hostConn.open) hostConn.send(msgObj);
         }
 
         async function toggleScreenShare() {
@@ -1220,15 +1200,10 @@
                     isScreenSharing = true;
                     btn.innerText = "💻 Зупинити";
                     btn.classList.add('btn-red');
-
                     mainLayout.classList.add('screen-sharing-mode');
 
                     const containers = Array.from(document.querySelectorAll('.video-container'));
-                    containers.forEach(c => {
-                        c.classList.remove('is-screen');
-                        screenshareSidebar.appendChild(c);
-                    });
-                    updateSidebarVisibility();
+                    containers.forEach(c => screenshareSidebar.appendChild(c));
 
                     const screenContainer = document.createElement('div');
                     screenContainer.className = 'video-container is-screen';
@@ -1243,7 +1218,7 @@
 
                     const screenLabel = document.createElement('div');
                     screenLabel.className = 'user-label';
-                    screenLabel.innerText = "💻 Ваша трансляція";
+                    screenLabel.innerText = "💻 Трансляція екрану";
 
                     screenContainer.appendChild(screenVideo);
                     screenContainer.appendChild(screenLabel);
@@ -1252,12 +1227,8 @@
                     const screenTrack = screenStream.getVideoTracks()[0];
                     updatePeerTracks(screenTrack);
 
-                    screenTrack.onended = () => {
-                        stopScreenShare();
-                    };
-                } catch (e) {
-                    console.error(e);
-                }
+                    screenTrack.onended = () => stopScreenShare();
+                } catch (e) {}
             } else {
                 stopScreenShare();
             }
@@ -1279,10 +1250,7 @@
             if (screenMain) screenMain.remove();
 
             const containers = Array.from(screenshareSidebar.children);
-            containers.forEach(c => {
-                c.style.display = 'flex'; 
-                videoGrid.appendChild(c);
-            });
+            containers.forEach(c => videoGrid.appendChild(c));
             screenshareSidebar.innerHTML = '';
 
             if (screenStream) {
@@ -1304,18 +1272,14 @@
             if (container) container.classList.toggle('hand-raised', isHandRaised);
             const btn = document.getElementById('handBtn');
             btn.classList.toggle('btn-primary', isHandRaised);
+            playSound('hand');
 
             const msgObj = { type: 'TOGGLE_HAND', state: isHandRaised, peerId: myPeerId };
-            if (isHost) {
-                broadcastToAll(msgObj);
-            } else if (hostConn && hostConn.open) {
-                hostConn.send(msgObj);
-            }
+            if (isHost) broadcastToAll(msgObj);
+            else if (hostConn && hostConn.open) hostConn.send(msgObj);
         }
 
-        function toggleChat() {
-            document.getElementById('chatSidebar').classList.toggle('hidden');
-        }
+        function toggleChat() { document.getElementById('chatSidebar').classList.toggle('hidden'); }
 
         function sendChatMessage() {
             const input = document.getElementById('msgInput');
@@ -1327,11 +1291,8 @@
             playSound('msg');
 
             const msgObj = { type: 'CHAT_MSG', name: myName, text: text };
-            if (isHost) {
-                broadcastToAll(msgObj);
-            } else if (hostConn && hostConn.open) {
-                hostConn.send(msgObj);
-            }
+            if (isHost) broadcastToAll(msgObj);
+            else if (hostConn && hostConn.open) hostConn.send(msgObj);
         }
 
         function appendChatMessage(author, text, isMine) {
@@ -1344,24 +1305,15 @@
         }
 
         async function changeAudioInput() {
-            const deviceId = document.getElementById('micSelect').value;
-            const camId = document.getElementById('camSelect').value;
-            await getMedia(deviceId, camId);
+            await getMedia(document.getElementById('micSelect').value, document.getElementById('camSelect').value);
             updatePeerTracks();
         }
 
         async function changeVideoInput() {
             if (isScreenSharing) return;
-            const deviceId = document.getElementById('camSelect').value;
-            const micId = document.getElementById('micSelect').value;
-            await getMedia(micId, deviceId);
-
+            await getMedia(document.getElementById('micSelect').value, document.getElementById('camSelect').value);
             const myVideo = document.getElementById('video-' + myPeerId);
             if (myVideo) myVideo.srcObject = localStream;
-            
-            const myAudio = document.getElementById('audio-' + myPeerId);
-            if (myAudio) myAudio.srcObject = localStream;
-
             localStream.getVideoTracks()[0].enabled = isCamOn;
             updatePeerTracks();
             updateAvatarState(myPeerId, isCamOn);
@@ -1369,8 +1321,7 @@
 
         async function changeAudioOutput() {
             const speakerId = document.getElementById('speakerSelect').value;
-            const audios = document.querySelectorAll('audio, video');
-            for (let el of audios) {
+            for (let el of document.querySelectorAll('audio, video')) {
                 if (typeof el.setSinkId === 'function') {
                     try { await el.setSinkId(speakerId); } catch (e) {}
                 }
@@ -1384,15 +1335,10 @@
             Object.keys(calls).forEach(pId => {
                 const call = calls[pId];
                 if (call && call.peerConnection) {
-                    const senders = call.peerConnection.getSenders();
-                    senders.forEach(sender => {
+                    call.peerConnection.getSenders().forEach(sender => {
                         if (sender.track) {
-                            if (sender.track.kind === 'audio' && activeAudioTrack) {
-                                sender.replaceTrack(activeAudioTrack);
-                            }
-                            if (sender.track.kind === 'video' && activeVideoTrack) {
-                                sender.replaceTrack(activeVideoTrack);
-                            }
+                            if (sender.track.kind === 'audio' && activeAudioTrack) sender.replaceTrack(activeAudioTrack);
+                            if (sender.track.kind === 'video' && activeVideoTrack) sender.replaceTrack(activeVideoTrack);
                         }
                     });
                 }
@@ -1400,10 +1346,7 @@
         }
 
         function copyRoomLink() {
-            const link = window.location.href;
-            navigator.clipboard.writeText(link).then(() => {
-                alert("🔗 Посилання на кімнату скопійовано!");
-            });
+            navigator.clipboard.writeText(window.location.href).then(() => alert("🔗 Посилання скопійовано!"));
         }
 
         function openSettings() { document.getElementById('settingsModal').style.display = 'flex'; }
