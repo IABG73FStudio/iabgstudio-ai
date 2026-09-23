@@ -143,13 +143,13 @@
             position: relative;
         }
 
-        /* СПРАВЖНЯ СІТКА МОЗАЇКИ (СЕРЕДИНА) */
+        /* СПРАВЖНЯ МОЗАЇКА В СТИЛІ GOOGLE MEET */
         #videoGrid {
             flex: 1;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 12px;
-            padding: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 16px;
+            padding: 20px;
             background: #12141c;
             align-content: center;
             justify-content: center;
@@ -176,7 +176,7 @@
         /* Бокова панель камер при трансляції */
         #screenshareSidebar {
             display: none;
-            width: 240px;
+            width: 260px;
             background: #161922;
             border-left: 1px solid #2d3343;
             flex-direction: column;
@@ -193,29 +193,46 @@
         .video-container {
             position: relative;
             background: #161922;
-            border-radius: 12px;
+            border-radius: 16px;
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
             width: 100%;
             height: 100%;
-            min-height: 200px;
+            min-height: 220px;
             max-height: 100%;
             border: 2px solid #2d3343;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            transition: transform 0.2s;
+        }
+
+        /* Твоє власне відео робимо помітно більшим/виділеним у мозаїці */
+        .video-container.is-me {
+            grid-column: span 2;
+            grid-row: span 2;
+            min-height: 380px;
+            border-color: #3b82f6;
         }
 
         /* Камери у бічній панелі під час трансляції */
         #screenshareSidebar .video-container {
             width: 100%;
-            height: 130px;
-            min-height: 130px;
+            height: 140px;
+            min-height: 140px;
             flex-shrink: 0;
+        }
+        #screenshareSidebar .video-container.is-me {
+            grid-column: auto;
+            grid-row: auto;
+            min-height: 140px;
+            border-color: #3b82f6;
         }
 
         /* Головний контейнер трансляції */
         #videoGrid .video-container.is-screen {
+            grid-column: auto;
+            grid-row: auto;
             width: 100%;
             height: 100%;
             min-height: 0;
@@ -253,20 +270,26 @@
         }
 
         .avatar-circle {
-            width: 75px;
-            height: 75px;
+            width: 85px;
+            height: 85px;
             border-radius: 50%;
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 36px;
+            font-size: 40px;
             font-weight: bold;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             user-select: none;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
         
+        .video-container.is-me .avatar-circle {
+            width: 110px;
+            height: 110px;
+            font-size: 52px;
+        }
+
         #screenshareSidebar .avatar-circle {
             width: 42px;
             height: 42px;
@@ -276,13 +299,13 @@
 
         .user-label {
             position: absolute;
-            bottom: 8px;
-            left: 8px;
+            bottom: 10px;
+            left: 10px;
             background: rgba(15, 16, 21, 0.85);
             color: #e4e6eb;
-            padding: 3px 8px;
+            padding: 4px 10px;
             border-radius: 6px;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 500;
             z-index: 5;
             max-width: 80%;
@@ -296,13 +319,13 @@
 
         .hand-badge {
             position: absolute;
-            top: 8px;
-            right: 8px;
+            top: 10px;
+            right: 10px;
             background: #f59e0b;
             color: #fff;
-            padding: 3px 6px;
+            padding: 4px 8px;
             border-radius: 6px;
-            font-size: 12px;
+            font-size: 13px;
             z-index: 5;
             display: none;
             box-shadow: 0 2px 6px rgba(0,0,0,0.3);
@@ -310,7 +333,7 @@
         .video-container.hand-raised .hand-badge { display: block; }
 
         #chatSidebar {
-            width: 300px;
+            width: 320px;
             background: #181b24;
             border-left: 1px solid #2d3343;
             display: flex;
@@ -422,8 +445,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 4px;
-            padding: 0 6px;
+            gap: 6px;
+            padding: 0 10px;
             border-top: 1px solid #2d3343;
             overflow-x: auto;
             white-space: nowrap;
@@ -432,10 +455,10 @@
 
         .ctrl-btn {
             width: auto;
-            padding: 8px 10px;
+            padding: 9px 12px;
             margin: 0;
-            border-radius: 6px;
-            font-size: 11px;
+            border-radius: 8px;
+            font-size: 12px;
             flex-shrink: 0;
             background: #2d3343;
             color: #e4e6eb;
@@ -449,6 +472,11 @@
 
         /* АДАПТИВНІСТЬ ДЛЯ ТЕЛЕФОНІВ ТА ПЛАНШЕТІВ */
         @media (max-width: 1024px) {
+            .video-container.is-me {
+                grid-column: span 1;
+                grid-row: span 1;
+                min-height: 250px;
+            }
             #screenshareSidebar {
                 width: 180px;
             }
@@ -466,6 +494,10 @@
                 height: 100%;
             }
             .close-chat-btn { display: block; }
+
+            .video-container.is-me {
+                min-height: 200px;
+            }
 
             #mainLayout.screen-sharing-mode {
                 flex-direction: column;
@@ -496,8 +528,8 @@
                 justify-content: flex-start;
             }
             .ctrl-btn {
-                padding: 8px 8px;
-                font-size: 10px;
+                padding: 8px 9px;
+                font-size: 11px;
             }
         }
     </style>
@@ -550,7 +582,7 @@
     <!-- КІМНАТА ДЗВІНКУ -->
     <div id="callRoom">
         <div id="mainLayout">
-            <!-- Головне поле для сітки мозаїки або поточної трансляції -->
+            <!-- Головне поле для сітки мозаїки у стилі Meet -->
             <div id="videoGrid"></div>
 
             <!-- Бічна панель для камер під час трансляції екрана -->
@@ -898,7 +930,6 @@
                 if (container) container.classList.toggle('hand-raised', data.state);
                 broadcastToAll(data, conn.peer);
             } else if (data.type === 'PEER_RELAY_JOIN') {
-                // Мережевий міст для повноцінного зв'язку учасників між собою
                 const targetPeerId = data.targetPeerId;
                 if (targetPeerId && targetPeerId !== myPeerId && !calls[targetPeerId]) {
                     const call = peer.call(targetPeerId, localStream);
@@ -918,7 +949,6 @@
             userMicStates[gPeerId] = pendingGuestInfo.micState;
             userColors[gPeerId] = pendingGuestInfo.color || getRandomColor(gPeerId);
 
-            // Передаємо новому гостю повний список поточних учасників
             pendingGuestConn.send({
                 type: 'JOIN_ACCEPT',
                 hostId: myPeerId,
@@ -968,7 +998,6 @@
                 addVideoStream(myPeerId, localStream, myName + " (Ви)");
                 updateAvatarState(myPeerId, isCamOn);
 
-                // Підключаємось до організатора та інших учасників
                 Object.keys(data.users).forEach(pId => {
                     if (pId !== myPeerId) {
                         userNames[pId] = data.users[pId];
@@ -979,7 +1008,6 @@
                         addVideoStream(pId, null, userNames[pId]);
                         updateAvatarState(pId, userCamStates[pId]);
 
-                        // Здвоєний дзвінок для стабільного зв'язку
                         if (!calls[pId]) {
                             const call = peer.call(pId, localStream);
                             handleCallStream(call);
@@ -987,7 +1015,6 @@
                     }
                 });
 
-                // Повідомляємо хост, щоб з'єднати цього учасника з рештою
                 if (hostConn && hostConn.open) {
                     hostConn.send({ type: 'PEER_RELAY_JOIN', targetPeerId: myPeerId });
                 }
@@ -1006,7 +1033,6 @@
                 addVideoStream(data.peerId, null, data.name);
                 updateAvatarState(data.peerId, data.camState);
 
-                // Гость автоматично дзвонить новому учаснику для зв'язку "всі з усіма"
                 if (!isHost && data.peerId !== myPeerId && !calls[data.peerId]) {
                     const call = peer.call(data.peerId, localStream);
                     handleCallStream(call);
@@ -1052,6 +1078,9 @@
 
             const container = document.createElement('div');
             container.className = 'video-container';
+            if (pId === myPeerId) {
+                container.classList.add('is-me');
+            }
             container.id = 'container-' + pId;
 
             const video = document.createElement('video');
@@ -1160,7 +1189,6 @@
             }
         }
 
-        // ОКРЕМО ВИМИКАННЯ СВОЄЇ КАМЕРИ (БЕЗ ВПЛИВУ НА ТРАНСЛЯЦІЮ ЕКРАНА)
         function toggleCam() {
             isCamOn = !isCamOn;
             if (localStream && !isScreenSharing) {
