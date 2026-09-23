@@ -167,10 +167,6 @@
             transition: all 0.2s ease;
         }
 
-        .video-container.overflow-hidden-user {
-            display: none !important;
-        }
-
         /* РЕЖИМ ФОКУСУ */
         #videoGrid.pinned-active .video-container {
             display: none !important;
@@ -794,6 +790,12 @@
                 showCallScreen();
                 addVideoStream(myPeerId, localStream, myName + " (Ви)");
 
+                // Перевірка, щоб не підключатися самому до себе, якщо ввели власний ID кімнати
+                if (myPeerId === roomIdGlobal) {
+                    showError("❌ Не можна підключитися до самого себе як гість!");
+                    return;
+                }
+
                 hostConn = peer.connect(roomIdGlobal);
                 hostConn.on('open', () => {
                     hostConn.send({ type: 'JOIN_REQ', peerId: myPeerId, name: myName });
@@ -898,7 +900,7 @@
         }
 
         function callPeer(peerId) {
-            if (calls[peerId]) return;
+            if (calls[peerId] || peerId === myPeerId) return;
             const call = peer.call(peerId, localStream);
             if (call) {
                 calls[peerId] = call;
@@ -911,6 +913,7 @@
         }
 
         function handleCallStream(call) {
+            if (call.peer === myPeerId) return;
             calls[call.peer] = call;
             call.on('stream', (remoteStream) => {
                 addVideoStream(call.peer, remoteStream, userNames[call.peer] || "Учасник");
@@ -1250,7 +1253,7 @@
                 clientConns[targetPeerForMenu].send(msg);
                 setTimeout(() => handleUserLeave(targetPeerForMenu), 500);
             }
-            document.getElementById('contextMenu').style.display = 'none';
+            document.getElementById('contextMenu'].style.display = 'none';
         }
 
         function handleUserLeave(peerId) {
