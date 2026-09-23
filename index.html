@@ -141,14 +141,15 @@
             position: relative;
         }
 
-        /* Звичайна сітка сітки відео */
+        /* Звичайна сітка мозаїки відео (коли немає трансляції) */
         #videoGrid {
             flex: 1;
             display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 12px;
             padding: 16px;
             background: #12141c;
-            align-items: center;
+            align-content: center;
             justify-content: center;
             overflow-y: auto;
             position: relative;
@@ -166,6 +167,8 @@
             padding: 12px;
             background: #090a0f;
             overflow: hidden;
+            align-items: center;
+            justify-content: center;
         }
 
         /* Бокова панель камер при трансляції */
@@ -178,6 +181,7 @@
             gap: 10px;
             padding: 12px;
             overflow-y: auto;
+            max-height: 100%;
         }
         #mainLayout.screen-sharing-mode #screenshareSidebar {
             display: flex;
@@ -193,8 +197,7 @@
             justify-content: center;
             width: 100%;
             height: 100%;
-            min-width: 0;
-            min-height: 0;
+            min-height: 200px;
             border: 2px solid #2d3343;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
@@ -203,6 +206,7 @@
         #screenshareSidebar .video-container {
             width: 100%;
             height: 150px;
+            min-height: 150px;
             flex-shrink: 0;
         }
 
@@ -210,6 +214,7 @@
         #videoGrid .video-container.is-screen {
             width: 100%;
             height: 100%;
+            min-height: 0;
             border-color: #3b82f6;
         }
 
@@ -494,7 +499,7 @@
     <!-- КІМНАТА ДЗВІНКУ -->
     <div id="callRoom">
         <div id="mainLayout">
-            <!-- Головне поле для сітки або поточної трансляції -->
+            <!-- Головне поле для мозаїки або поточної трансляції -->
             <div id="videoGrid"></div>
 
             <!-- Бічна панель для камер під час трансляції екрана -->
@@ -940,8 +945,13 @@
             calls[call.peer] = call;
             call.on('stream', (remoteStream) => {
                 let videoElem = document.getElementById('video-' + call.peer);
+                let audioElem = document.getElementById('audio-' + call.peer);
+                
                 if (videoElem) {
                     videoElem.srcObject = remoteStream;
+                }
+                if (audioElem) {
+                    audioElem.srcObject = remoteStream; // Завжди чути звук, навіть якщо візуально камера схована!
                 }
             });
             call.on('close', () => {
@@ -963,6 +973,14 @@
             if (stream) video.srcObject = stream;
             if (pId === myPeerId) video.muted = true;
 
+            // Сховані аудіо-елементи для забезпечення чутності учасників, коли вони візуально приховані в бічній панелі (>5)
+            const audio = document.createElement('audio');
+            audio.id = 'audio-' + pId;
+            audio.autoplay = true;
+            audio.playsInline = true;
+            if (stream) audio.srcObject = stream;
+            if (pId === myPeerId) audio.muted = true;
+
             const nameStr = userNames[pId] || name || "Г";
             const firstLetter = nameStr.charAt(0).toUpperCase();
             const color = userColors[pId] || '#3b82f6';
@@ -983,6 +1001,7 @@
             handBadge.innerText = '✋';
 
             container.appendChild(video);
+            container.appendChild(audio);
             container.appendChild(avatarDiv);
             container.appendChild(label);
             container.appendChild(handBadge);
@@ -993,6 +1012,7 @@
             } else {
                 document.getElementById('videoGrid').appendChild(container);
             }
+            updateSidebarVisibility();
         }
 
         function updateAvatarState(pId, isCamActive) {
@@ -1006,6 +1026,20 @@
             }
         }
 
+        // Логіка показу тільки перших 5 камер візуально, інші ховаються візуально, але залишаються чутними
+        function updateSidebarVisibility() {
+            const sidebar = document.getElementById('screenshareSidebar');
+            const containers = Array.from(sidebar.children);
+            
+            containers.forEach((container, index) => {
+                if (index >= 5) {
+                    container.style.display = 'none'; // Візуально ховаємо
+                } else {
+                    container.style.display = 'flex'; // Повертаємо видимість першим 5
+                }
+            });
+        }
+
         function handleUserLeave(pId) {
             const container = document.getElementById('container-' + pId);
             if (container) container.remove();
@@ -1014,6 +1048,7 @@
             delete userNames[pId];
             delete userColors[pId];
             playSound('leave');
+            updateSidebarVisibility();
         }
 
         function showCallScreen() {
@@ -1081,8 +1116,9 @@
                         c.classList.remove('is-screen');
                         screenshareSidebar.appendChild(c);
                     });
+                    updateSidebarVisibility();
 
-                    // Створюємо головний вікно для екрана і ставимо його вліво
+                    // Створюємо головне вікно для екрана і ставимо його вліво
                     const screenContainer = document.createElement('div');
                     screenContainer.className = 'video-container is-screen';
                     screenContainer.id = 'container-screen-main';
@@ -1132,9 +1168,10 @@
             const screenMain = document.getElementById('container-screen-main');
             if (screenMain) screenMain.remove();
 
-            // Повертаємо всі камери назад у загальну сітку
+            // Повертаємо всі камери назад у загальну сітку (мозаїку)
             const containers = Array.from(screenshareSidebar.children);
             containers.forEach(c => {
+                c.style.display = 'flex'; // Скидаємо обмеження видимості для сітки
                 videoGrid.appendChild(c);
             });
             screenshareSidebar.innerHTML = '';
@@ -1211,16 +1248,20 @@
 
             const myVideo = document.getElementById('video-' + myPeerId);
             if (myVideo) myVideo.srcObject = localStream;
+            
+            const myAudio = document.getElementById('audio-' + myPeerId);
+            if (myAudio) myAudio.srcObject = localStream;
+
             updatePeerTracks();
             updateAvatarState(myPeerId, isCamOn);
         }
 
         async function changeAudioOutput() {
             const speakerId = document.getElementById('speakerSelect').value;
-            const videos = document.querySelectorAll('video');
-            for (let v of videos) {
-                if (typeof v.setSinkId === 'function') {
-                    try { await v.setSinkId(speakerId); } catch (e) {}
+            const audios = document.querySelectorAll('audio, video');
+            for (let el of audios) {
+                if (typeof el.setSinkId === 'function') {
+                    try { await el.setSinkId(speakerId); } catch (e) {}
                 }
             }
         }
