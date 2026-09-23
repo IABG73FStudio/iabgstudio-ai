@@ -52,7 +52,6 @@
     to { transform: translate(-60px,-90px); }
   }
 
-  /* ---------- ЭКРАН ИМЕНИ ---------- */
   #nameScreen {
     position: fixed; inset: 0;
     display: flex; align-items: center; justify-content: center;
@@ -89,7 +88,6 @@
   }
   .nameCard button:hover { background: var(--accent2); transform: translateY(-1px); }
 
-  /* ---------- МЕНЮ ---------- */
   #menu {
     display: none; height: 100vh;
     padding: 30px 20px; overflow-y: auto;
@@ -106,7 +104,6 @@
   .logo { font-size: 26px; font-weight: 700; letter-spacing: -.5px; }
   .logo span { color: var(--accent); }
 
-  /* Кнопка "Начать" */
   .startBtn {
     display: flex; align-items: center; gap: 8px;
     padding: 10px 18px;
@@ -203,7 +200,6 @@
   }
   .joinRow button:hover { background: var(--accent2); }
 
-  /* ---------- МОДАЛКА ДРУЗЕЙ ---------- */
   #friendsModal {
     position: fixed; inset: 0; z-index: 250;
     background: rgba(0,0,0,.7); backdrop-filter: blur(6px);
@@ -263,7 +259,6 @@
   .friendsCard .foot .invite:hover { background: #6b4de0; }
   .friendsCard .foot .invite:disabled { background: #3a3550; cursor: not-allowed; opacity: .6; }
 
-  /* ---------- КОНФЕРЕНЦИЯ ---------- */
   #conf {
     display: none; position: fixed; inset: 0;
     flex-direction: column; z-index: 20;
@@ -591,7 +586,6 @@
 
 <div class="bg"></div>
 
-<!-- ================= ЭКРАН ИМЕНИ ================= -->
 <div id="nameScreen">
   <div class="nameCard">
     <h1>IABG <span>Meet</span></h1>
@@ -601,7 +595,6 @@
   </div>
 </div>
 
-<!-- ================= МЕНЮ ================= -->
 <div id="menu">
   <div class="menuWrap">
     <div class="menuHead">
@@ -627,7 +620,6 @@
     </div>
 
     <div class="grid">
-      <!-- Войти по ID -->
       <div class="card" style="cursor:default;" onclick="event.stopPropagation()">
         <div class="ic">🔑</div>
         <h3 id="t_joinTitle">Войти по ID</h3>
@@ -638,14 +630,12 @@
         </div>
       </div>
 
-      <!-- Друзья -->
       <div class="card" onclick="openFriends()">
         <div class="ic">👥</div>
         <h3 id="t_friendsTitle">Друзья</h3>
         <p id="t_friendsDesc">Список друзей и инвайты</p>
       </div>
 
-      <!-- 6 кнопок РАБОТА В ПРОГРЕССЕ -->
       <div class="card wip">
         <div class="wipBadge" id="t_wip1">В РАЗРАБОТКЕ</div>
         <div class="ic">📅</div>
@@ -686,7 +676,6 @@
   </div>
 </div>
 
-<!-- ================= МОДАЛКА ДРУЗЕЙ ================= -->
 <div id="friendsModal" onclick="if(event.target===this)closeFriends()">
   <div class="friendsCard">
     <div class="head">
@@ -705,7 +694,6 @@
   </div>
 </div>
 
-<!-- ================= ЭКРАН ОЖИДАНИЯ ================= -->
 <div id="waiting">
   <div class="spinner"></div>
   <h2 id="t_waitTitle">Заявка отправлена</h2>
@@ -713,7 +701,6 @@
   <button onclick="cancelWaiting()" id="t_waitCancel">Отменить</button>
 </div>
 
-<!-- ================= КОНФЕРЕНЦИЯ ================= -->
 <div id="conf">
   <div id="confTop">
     <div class="roomId"><span id="t_roomLabel">Комната:</span> <b id="roomLabel">—</b></div>
@@ -734,7 +721,6 @@
   </div>
 </div>
 
-<!-- ================= ПАНЕЛЬ ЗАЯВОК ================= -->
 <div id="lobbyPanel">
   <div class="head">
     <span><span id="t_lobbyTitle">Заявки на вход</span> <span class="count" id="lobbyCount">0</span></span>
@@ -746,7 +732,6 @@
   </div>
 </div>
 
-<!-- ================= ЧАТ ================= -->
 <div id="chat">
   <div class="head">
     <span id="t_chatTitle">Чат конференции</span>
@@ -779,199 +764,103 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
 /* =========================================================
-   IABG Meet
+   IABG Meet — с фиксом roster (одинаковые имена у всех)
    ========================================================= */
 
-/* ---------- ЯЗЫКИ ---------- */
 const I18N = {
   ru: {
-    nameHint: 'Введи имя, чтобы продолжить',
-    namePlaceholder: 'Твоё имя',
-    nameGo: 'Продолжить',
-    change: 'сменить',
-    startText: 'Начать',
-    joinTitle: 'Войти по ID',
-    joinDesc: 'Введи код комнаты',
-    joinBtn: 'Войти',
-    friendsTitle: 'Друзья',
-    friendsDesc: 'Список друзей и инвайты',
-    wipTitle: 'РАБОТА В ПРОГРЕССЕ',
-    wipBadge: 'В РАЗРАБОТКЕ',
-    wipDesc: 'Функция в разработке',
-    friendsModalTitle: 'Друзья',
-    friendsWip: '⚠ РАБОТА В ПРОГРЕССЕ',
+    nameHint: 'Введи имя, чтобы продолжить', namePlaceholder: 'Твоё имя',
+    nameGo: 'Продолжить', change: 'сменить', startText: 'Начать',
+    joinTitle: 'Войти по ID', joinDesc: 'Введи код комнаты', joinBtn: 'Войти',
+    friendsTitle: 'Друзья', friendsDesc: 'Список друзей и инвайты',
+    wipTitle: 'РАБОТА В ПРОГРЕССЕ', wipBadge: 'В РАЗРАБОТКЕ', wipDesc: 'Функция в разработке',
+    friendsModalTitle: 'Друзья', friendsWip: '⚠ РАБОТА В ПРОГРЕССЕ',
     friendsTag: 'РАБОТА В ПРОГРЕССЕ',
     friendsBodyText: 'Здесь будет список друзей.<br>Пока что функция в разработке.',
     friendsInvite: '📨 Кинуть Invite',
     waitTitle: 'Заявка отправлена',
     waitDesc: 'Ждём, пока хост подтвердит твой вход в конференцию…',
-    waitCancel: 'Отменить',
-    roomLabel: 'Комната:',
-    inviteBtn: '🔗 Пригласить',
-    lobbyTitle: 'Заявки на вход',
-    acceptAll: '✓ Принять всех',
-    chatTitle: 'Чат конференции',
-    chatPlaceholder: 'Сообщение...',
-    devTitle: 'Устройства',
-    devCam: 'Камера',
-    devMic: 'Микрофон',
-    devSpk: 'Динамики',
-    devDone: 'Готово',
-    mosaic30: '▦ Мозаика 30+',
-    mosaic9: '▦ Мозаика 9',
-    toastNoMic: 'Введи имя',
-    toastCode: 'Введи код',
-    toastCopied: 'Ссылка скопирована',
-    toastOnlyHost: 'Только хост может это',
-    toastMuted: 'Участнику выключен микрофон',
-    toastBlocked: 'Чат заблокирован',
-    toastUnblocked: 'Чат разблокирован',
-    toastKicked: 'Участник кикнут',
-    toastKickedMe: 'Тебя кикнул хост',
-    toastBlockedChat: 'Хост заблокировал тебе чат',
-    toastUnblockedChat: 'Чат разблокирован',
+    waitCancel: 'Отменить', roomLabel: 'Комната:', inviteBtn: '🔗 Пригласить',
+    lobbyTitle: 'Заявки на вход', acceptAll: '✓ Принять всех',
+    chatTitle: 'Чат конференции', chatPlaceholder: 'Сообщение...',
+    devTitle: 'Устройства', devCam: 'Камера', devMic: 'Микрофон', devSpk: 'Динамики', devDone: 'Готово',
+    mosaic30: '▦ Мозаика 30+', mosaic9: '▦ Мозаика 9',
+    toastNoMic: 'Введи имя', toastCode: 'Введи код', toastCopied: 'Ссылка скопирована',
+    toastOnlyHost: 'Только хост может это', toastMuted: 'Участнику выключен микрофон',
+    toastBlocked: 'Чат заблокирован', toastUnblocked: 'Чат разблокирован',
+    toastKicked: 'Участник кикнут', toastKickedMe: 'Тебя кикнул хост',
+    toastBlockedChat: 'Хост заблокировал тебе чат', toastUnblockedChat: 'Чат разблокирован',
     toastMutedByHost: 'Хост выключил тебе микрофон',
-    toastRejected: 'Хост отклонил заявку',
-    toastApproved: 'Хост принял тебя',
-    toastNotFound: 'Комната не найдена',
-    toastClosed: 'Хост закрыл комнату',
-    toastWantsJoin: ' хочет войти',
-    toastAccepted: 'Принят: ',
-    toastRejectedUser: 'Отклонён: ',
-    toastAcceptedAll: 'Принято всех: ',
-    toastNoCam: 'Нет доступа к камере/микрофону',
-    toastDevErr: 'Не удалось получить список устройств',
+    toastRejected: 'Хост отклонил заявку', toastApproved: 'Хост принял тебя',
+    toastNotFound: 'Комната не найдена', toastClosed: 'Хост закрыл комнату',
+    toastWantsJoin: ' хочет войти', toastAccepted: 'Принят: ',
+    toastRejectedUser: 'Отклонён: ', toastAcceptedAll: 'Принято всех: ',
+    toastNoCam: 'Нет доступа к камере/микрофону', toastDevErr: 'Не удалось получить список устройств',
     sysCreated: 'Ты создал комнату. Ждём участников...',
     sysConnected: 'Подключено к комнате',
-    sysJoined: ' присоединился',
-    sysLeft: ' вышел',
-    sysWait: 'Заявка отправлена хосту...'
+    sysJoined: ' присоединился', sysLeft: ' вышел', sysWait: 'Заявка отправлена хосту...'
   },
   uk: {
-    nameHint: 'Введи ім\u2019я, щоб продовжити',
-    namePlaceholder: 'Твоє ім\u2019я',
-    nameGo: 'Продовжити',
-    change: 'змінити',
-    startText: 'Почати',
-    joinTitle: 'Увійти за ID',
-    joinDesc: 'Введи код кімнати',
-    joinBtn: 'Увійти',
-    friendsTitle: 'Друзі',
-    friendsDesc: 'Список друзів та інвайти',
-    wipTitle: 'РОБОТА В ПРОЦЕСІ',
-    wipBadge: 'В РОЗРОБЦІ',
-    wipDesc: 'Функція в розробці',
-    friendsModalTitle: 'Друзі',
-    friendsWip: '⚠ РОБОТА В ПРОЦЕСІ',
+    nameHint: 'Введи ім\u2019я, щоб продовжити', namePlaceholder: 'Твоє ім\u2019я',
+    nameGo: 'Продовжити', change: 'змінити', startText: 'Почати',
+    joinTitle: 'Увійти за ID', joinDesc: 'Введи код кімнати', joinBtn: 'Увійти',
+    friendsTitle: 'Друзі', friendsDesc: 'Список друзів та інвайти',
+    wipTitle: 'РОБОТА В ПРОЦЕСІ', wipBadge: 'В РОЗРОБЦІ', wipDesc: 'Функція в розробці',
+    friendsModalTitle: 'Друзі', friendsWip: '⚠ РОБОТА В ПРОЦЕСІ',
     friendsTag: 'РОБОТА В ПРОЦЕСІ',
     friendsBodyText: 'Тут буде список друзів.<br>Поки що функція в розробці.',
     friendsInvite: '📨 Кинути Invite',
-    waitTitle: 'Заявку надіслано',
-    waitDesc: 'Чекаємо, поки хост підтвердить твій вхід…',
-    waitCancel: 'Скасувати',
-    roomLabel: 'Кімната:',
-    inviteBtn: '🔗 Запросити',
-    lobbyTitle: 'Заявки на вхід',
-    acceptAll: '✓ Прийняти всіх',
-    chatTitle: 'Чат конференції',
-    chatPlaceholder: 'Повідомлення...',
-    devTitle: 'Пристрої',
-    devCam: 'Камера',
-    devMic: 'Мікрофон',
-    devSpk: 'Динаміки',
-    devDone: 'Готово',
-    mosaic30: '▦ Мозаїка 30+',
-    mosaic9: '▦ Мозаїка 9',
-    toastNoMic: 'Введи ім\u2019я',
-    toastCode: 'Введи код',
-    toastCopied: 'Посилання скопійовано',
-    toastOnlyHost: 'Тільки хост може це',
-    toastMuted: 'Учаснику вимкнено мікрофон',
-    toastBlocked: 'Чат заблоковано',
-    toastUnblocked: 'Чат розблоковано',
-    toastKicked: 'Учасника вигнано',
-    toastKickedMe: 'Тебе вигнав хост',
-    toastBlockedChat: 'Хост заблокував тобі чат',
-    toastUnblockedChat: 'Чат розблоковано',
+    waitTitle: 'Заявку надіслано', waitDesc: 'Чекаємо, поки хост підтвердить твій вхід…',
+    waitCancel: 'Скасувати', roomLabel: 'Кімната:', inviteBtn: '🔗 Запросити',
+    lobbyTitle: 'Заявки на вхід', acceptAll: '✓ Прийняти всіх',
+    chatTitle: 'Чат конференції', chatPlaceholder: 'Повідомлення...',
+    devTitle: 'Пристрої', devCam: 'Камера', devMic: 'Мікрофон', devSpk: 'Динаміки', devDone: 'Готово',
+    mosaic30: '▦ Мозаїка 30+', mosaic9: '▦ Мозаїка 9',
+    toastNoMic: 'Введи ім\u2019я', toastCode: 'Введи код', toastCopied: 'Посилання скопійовано',
+    toastOnlyHost: 'Тільки хост може це', toastMuted: 'Учаснику вимкнено мікрофон',
+    toastBlocked: 'Чат заблоковано', toastUnblocked: 'Чат розблоковано',
+    toastKicked: 'Учасника вигнано', toastKickedMe: 'Тебе вигнав хост',
+    toastBlockedChat: 'Хост заблокував тобі чат', toastUnblockedChat: 'Чат розблоковано',
     toastMutedByHost: 'Хост вимкнув тобі мікрофон',
-    toastRejected: 'Хост відхилив заявку',
-    toastApproved: 'Хост прийняв тебе',
-    toastNotFound: 'Кімнату не знайдено',
-    toastClosed: 'Хост закрив кімнату',
-    toastWantsJoin: ' хоче увійти',
-    toastAccepted: 'Прийнято: ',
-    toastRejectedUser: 'Відхилено: ',
-    toastAcceptedAll: 'Прийнято всіх: ',
-    toastNoCam: 'Немає доступу до камери/мікрофона',
-    toastDevErr: 'Не вдалося отримати список пристроїв',
+    toastRejected: 'Хост відхилив заявку', toastApproved: 'Хост прийняв тебе',
+    toastNotFound: 'Кімнату не знайдено', toastClosed: 'Хост закрив кімнату',
+    toastWantsJoin: ' хоче увійти', toastAccepted: 'Прийнято: ',
+    toastRejectedUser: 'Відхилено: ', toastAcceptedAll: 'Прийнято всіх: ',
+    toastNoCam: 'Немає доступу до камери/мікрофона', toastDevErr: 'Не вдалося отримати список пристроїв',
     sysCreated: 'Ти створив кімнату. Чекаємо учасників...',
     sysConnected: 'Під\u2019єднано до кімнати',
-    sysJoined: ' приєднався',
-    sysLeft: ' вийшов',
-    sysWait: 'Заявку надіслано хосту...'
+    sysJoined: ' приєднався', sysLeft: ' вийшов', sysWait: 'Заявку надіслано хосту...'
   },
   en: {
-    nameHint: 'Enter your name to continue',
-    namePlaceholder: 'Your name',
-    nameGo: 'Continue',
-    change: 'change',
-    startText: 'Start',
-    joinTitle: 'Join by ID',
-    joinDesc: 'Enter room code',
-    joinBtn: 'Join',
-    friendsTitle: 'Friends',
-    friendsDesc: 'Friends list & invites',
-    wipTitle: 'WORK IN PROGRESS',
-    wipBadge: 'IN DEVELOPMENT',
-    wipDesc: 'Feature in development',
-    friendsModalTitle: 'Friends',
-    friendsWip: '⚠ WORK IN PROGRESS',
+    nameHint: 'Enter your name to continue', namePlaceholder: 'Your name',
+    nameGo: 'Continue', change: 'change', startText: 'Start',
+    joinTitle: 'Join by ID', joinDesc: 'Enter room code', joinBtn: 'Join',
+    friendsTitle: 'Friends', friendsDesc: 'Friends list & invites',
+    wipTitle: 'WORK IN PROGRESS', wipBadge: 'IN DEVELOPMENT', wipDesc: 'Feature in development',
+    friendsModalTitle: 'Friends', friendsWip: '⚠ WORK IN PROGRESS',
     friendsTag: 'WORK IN PROGRESS',
     friendsBodyText: 'Friends list will be here.<br>Feature is in development.',
     friendsInvite: '📨 Send Invite',
-    waitTitle: 'Request sent',
-    waitDesc: 'Waiting for the host to approve your entry…',
-    waitCancel: 'Cancel',
-    roomLabel: 'Room:',
-    inviteBtn: '🔗 Invite',
-    lobbyTitle: 'Join requests',
-    acceptAll: '✓ Accept all',
-    chatTitle: 'Conference chat',
-    chatPlaceholder: 'Message...',
-    devTitle: 'Devices',
-    devCam: 'Camera',
-    devMic: 'Microphone',
-    devSpk: 'Speakers',
-    devDone: 'Done',
-    mosaic30: '▦ Mosaic 30+',
-    mosaic9: '▦ Mosaic 9',
-    toastNoMic: 'Enter your name',
-    toastCode: 'Enter the code',
-    toastCopied: 'Link copied',
-    toastOnlyHost: 'Only host can do this',
-    toastMuted: 'Participant muted',
-    toastBlocked: 'Chat blocked',
-    toastUnblocked: 'Chat unblocked',
-    toastKicked: 'Participant kicked',
-    toastKickedMe: 'You were kicked by host',
-    toastBlockedChat: 'Host blocked your chat',
-    toastUnblockedChat: 'Chat unblocked',
+    waitTitle: 'Request sent', waitDesc: 'Waiting for the host to approve your entry…',
+    waitCancel: 'Cancel', roomLabel: 'Room:', inviteBtn: '🔗 Invite',
+    lobbyTitle: 'Join requests', acceptAll: '✓ Accept all',
+    chatTitle: 'Conference chat', chatPlaceholder: 'Message...',
+    devTitle: 'Devices', devCam: 'Camera', devMic: 'Microphone', devSpk: 'Speakers', devDone: 'Done',
+    mosaic30: '▦ Mosaic 30+', mosaic9: '▦ Mosaic 9',
+    toastNoMic: 'Enter your name', toastCode: 'Enter the code', toastCopied: 'Link copied',
+    toastOnlyHost: 'Only host can do this', toastMuted: 'Participant muted',
+    toastBlocked: 'Chat blocked', toastUnblocked: 'Chat unblocked',
+    toastKicked: 'Participant kicked', toastKickedMe: 'You were kicked by host',
+    toastBlockedChat: 'Host blocked your chat', toastUnblockedChat: 'Chat unblocked',
     toastMutedByHost: 'Host muted your microphone',
-    toastRejected: 'Host rejected your request',
-    toastApproved: 'Host accepted you',
-    toastNotFound: 'Room not found',
-    toastClosed: 'Host closed the room',
-    toastWantsJoin: ' wants to join',
-    toastAccepted: 'Accepted: ',
-    toastRejectedUser: 'Rejected: ',
-    toastAcceptedAll: 'Accepted all: ',
-    toastNoCam: 'No access to camera/microphone',
-    toastDevErr: 'Failed to get device list',
+    toastRejected: 'Host rejected your request', toastApproved: 'Host accepted you',
+    toastNotFound: 'Room not found', toastClosed: 'Host closed the room',
+    toastWantsJoin: ' wants to join', toastAccepted: 'Accepted: ',
+    toastRejectedUser: 'Rejected: ', toastAcceptedAll: 'Accepted all: ',
+    toastNoCam: 'No access to camera/microphone', toastDevErr: 'Failed to get device list',
     sysCreated: 'You created the room. Waiting...',
     sysConnected: 'Connected to room',
-    sysJoined: ' joined',
-    sysLeft: ' left',
-    sysWait: 'Request sent to host...'
+    sysJoined: ' joined', sysLeft: ' left', sysWait: 'Request sent to host...'
   }
 };
 
@@ -1029,7 +918,6 @@ document.querySelectorAll('#langSwitch button').forEach(b => {
   };
 });
 
-/* ---------- ОСТАЛЬНОЕ ---------- */
 const params = new URLSearchParams(location.search);
 let room = params.get('room') || null;
 let myName = localStorage.getItem('iabg_name') || '';
@@ -1065,7 +953,6 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-/* ---------- ЗВУКИ ---------- */
 const AudioFX = (() => {
   let ctx = null;
   function ensure() {
@@ -1097,7 +984,6 @@ const AudioFX = (() => {
   };
 })();
 
-/* ---------- ЭКРАН ИМЕНИ ---------- */
 if (myName) $('nameInput').value = myName;
 $('nameGo').onclick = () => {
   const v = $('nameInput').value.trim();
@@ -1123,7 +1009,6 @@ function resetUser() {
   location.href = location.pathname;
 }
 
-/* ---------- МЕНЮ ---------- */
 function createRoom() {
   const id = Math.random().toString(36).slice(2, 8);
   AudioFX.click();
@@ -1140,13 +1025,8 @@ function copyInvite() {
   navigator.clipboard.writeText(location.origin + location.pathname + '?room=' + room);
   AudioFX.click(); toast(t('toastCopied'));
 }
-function openFriends() {
-  $('friendsModal').classList.add('open');
-  AudioFX.click();
-}
-function closeFriends() {
-  $('friendsModal').classList.remove('open');
-}
+function openFriends() { $('friendsModal').classList.add('open'); AudioFX.click(); }
+function closeFriends() { $('friendsModal').classList.remove('open'); }
 
 /* =========================================================
    КОНФЕРЕНЦИЯ
@@ -1231,6 +1111,7 @@ function setupLobbyConn(conn) {
       addSystemMsg(t('toastApproved'));
       AudioFX.join();
       setupConn(conn, true);
+      try { conn.send({ type: 'need-roster' }); } catch(e){}
       const call = peer.call(conn.peer, localStream, { metadata: { name: myName } });
       if (call) bindCall(call);
     } else if (msg.type === 'reject') {
@@ -1238,6 +1119,8 @@ function setupLobbyConn(conn) {
       AudioFX.error();
       $('waiting').classList.remove('open');
       setTimeout(leaveRoom, 800);
+    } else if (msg.type === 'roster') {
+      applyRoster(msg.roster);
     }
   });
   conn.on('close', () => {
@@ -1317,6 +1200,11 @@ function acceptPending(peerId) {
   const item = pending.get(peerId); if (!item) return;
   try {
     item.conn.send({ type: 'approve' });
+    meta[peerId] = meta[peerId] || {};
+    meta[peerId].name = item.name;
+    meta[peerId].mic = true;
+    meta[peerId].cam = true;
+    if (!joinOrder.includes(peerId)) joinOrder.push(peerId);
     setupConn(item.conn, true);
     const call = peer.call(peerId, localStream, { metadata: { name: myName } });
     if (call) bindCall(call);
@@ -1325,6 +1213,7 @@ function acceptPending(peerId) {
   renderLobby();
   toast(t('toastAccepted') + item.name);
   AudioFX.click();
+  broadcastRoster();
 }
 
 function rejectPending(peerId) {
@@ -1346,13 +1235,76 @@ function acceptAll() {
 
 function toggleLobby() { $('lobbyPanel').classList.toggle('open'); }
 
+/* ---------- ROSTER (главный фикс) ---------- */
+function buildRoster() {
+  const list = [];
+  list.push({
+    id: myId || 'me',
+    name: myName,
+    mic: micOn,
+    cam: camOn,
+    isHost: isHost
+  });
+  Object.keys(conns).forEach(pid => {
+    const m = meta[pid] || {};
+    list.push({
+      id: pid,
+      name: m.name || 'Участник',
+      mic: m.mic !== false,
+      cam: m.cam !== false,
+      isHost: !!m.isHost
+    });
+  });
+  return list;
+}
+
+function broadcastRoster() {
+  if (!isHost) return;
+  const roster = buildRoster();
+  Object.values(conns).forEach(c => {
+    try { c.send({ type: 'roster', roster }); } catch(e){}
+  });
+}
+
+function applyRoster(roster) {
+  if (!Array.isArray(roster)) return;
+  const newOrder = [];
+  roster.forEach(item => {
+    if (item.id === myId) return;
+    meta[item.id] = meta[item.id] || {};
+    meta[item.id].name = item.name;
+    meta[item.id].mic = item.mic;
+    meta[item.id].cam = item.cam;
+    meta[item.id].isHost = item.isHost;
+    newOrder.push(item.id);
+    const tile = document.getElementById('t-' + item.id);
+    if (tile) {
+      tile.querySelector('.nm').textContent = item.name;
+      tile.querySelector('.camOff').textContent = initials(item.name);
+      updateMicIcon(item.id, item.mic);
+      updateCamVisibility(item.id, item.cam);
+      if (item.isHost) {
+        const b = tile.querySelector('.hostBadge');
+        if (b) b.style.display = 'block';
+      }
+    }
+  });
+  joinOrder = ['me', ...newOrder.filter(id => id !== 'me')];
+  applyLayout();
+}
+
+function findHostConn() {
+  return Object.values(conns).find(c => c.peer && c.peer.endsWith('-host')) || null;
+}
+
 function setupConn(conn, preexisting=false) {
   conns[conn.peer] = conn;
   const onOpen = () => {
     conn.send({ type: 'hello', name: myName, mic: micOn, cam: camOn, isHost: isHost });
     if (isHost) {
       const others = Object.keys(conns).filter(id => id !== conn.peer);
-      conn.send({ type: 'peers', peers: others, hostId: myId });
+      conn.send({ type: 'peers', peers: others });
+      broadcastRoster();
     }
   };
   if (preexisting) onOpen();
@@ -1367,6 +1319,7 @@ function setupConn(conn, preexisting=false) {
     joinOrder = joinOrder.filter(id => id !== conn.peer);
     addSystemMsg(nm + t('sysLeft'));
     AudioFX.leave();
+    if (isHost) broadcastRoster();
     applyLayout();
   });
 }
@@ -1384,8 +1337,21 @@ function handleMsg(fromId, msg) {
       updateTileLabel(fromId);
       addSystemMsg(msg.name + t('sysJoined'));
       AudioFX.join();
+      if (isHost) broadcastRoster();
       applyLayout();
       break;
+
+    case 'roster':
+      applyRoster(msg.roster);
+      break;
+
+    case 'need-roster':
+      if (isHost) {
+        const c = conns[fromId];
+        if (c) try { c.send({ type: 'roster', roster: buildRoster() }); } catch(e){}
+      }
+      break;
+
     case 'peers':
       msg.peers.forEach(pid => {
         if (pid === myId || calls[pid]) return;
@@ -1395,13 +1361,16 @@ function handleMsg(fromId, msg) {
         dc.on('open', () => setupConn(dc));
       });
       break;
+
     case 'mic':
       if (meta[fromId]) meta[fromId].mic = msg.on;
       updateMicIcon(fromId, msg.on);
+      if (isHost) broadcastRoster();
       break;
     case 'cam':
       if (meta[fromId]) meta[fromId].cam = msg.on;
       updateCamVisibility(fromId, msg.on);
+      if (isHost) broadcastRoster();
       break;
     case 'chat':
       addChatMsg(meta[fromId]?.name || 'Аноним', msg.text, false);
@@ -1435,7 +1404,12 @@ function broadcast(msg) {
 function bindCall(call) {
   calls[call.peer] = call;
   call.on('stream', remote => {
-    addTile(call.peer, remote, meta[call.peer]?.name || 'Участник');
+    const nm = meta[call.peer]?.name || 'Участник';
+    addTile(call.peer, remote, nm);
+    if (!meta[call.peer]?.name && !isHost) {
+      const hostConn = findHostConn();
+      if (hostConn) try { hostConn.send({ type: 'need-roster' }); } catch(e){}
+    }
     applyLayout();
   });
   call.on('close', () => {
