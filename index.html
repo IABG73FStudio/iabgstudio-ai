@@ -22,7 +22,6 @@
             overflow: hidden;
         }
 
-        /* ЕКРАН ВХОДУ (ЛОБІ) */
         #lobby {
             display: flex;
             flex-direction: column;
@@ -81,7 +80,7 @@
             min-height: 20px;
         }
 
-        /* МОДАЛЬНЕ ВІКНО «ПРИЙНЯТИ ДЗВІНОК» */
+        /* МОДАЛЬНЕ ВІКНО ДЛЯ ХОСТА (ПРИЙНЯТИ УЧАСНИКА) */
         #incomingModal {
             display: none;
             position: fixed;
@@ -115,7 +114,18 @@
             100% { transform: translateY(-10px); }
         }
 
-        /* ОСНОВНА КІМНАТА ДЗВІНКУ */
+        /* ЕКРАН ОЧІКУВАННЯ ДЛЯ ГОСТЯ */
+        #waitingModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
         #callRoom {
             display: none;
             flex-direction: column;
@@ -131,7 +141,6 @@
             position: relative;
         }
 
-        /* МОЗАЇКА ВІДЕО */
         #videoGrid {
             flex: 1;
             display: grid;
@@ -167,7 +176,6 @@
             transition: all 0.2s ease;
         }
 
-        /* РЕЖИМ ФОКУСУ */
         #videoGrid.pinned-active .video-container {
             display: none !important;
         }
@@ -262,7 +270,6 @@
         }
         .video-container.hand-raised .hand-badge { display: block; }
 
-        /* КОНТЕКСТНЕ МЕНЮ (ПКМ) */
         #contextMenu {
             display: none;
             position: fixed;
@@ -287,7 +294,6 @@
         .menu-item.danger { color: #ef4444; }
         .menu-item.danger:hover { background: #451a03; }
 
-        /* ЧАТ */
         #chatSidebar {
             width: 320px;
             background: #181b24;
@@ -363,7 +369,6 @@
         .chat-input-box input { margin: 0; padding: 10px; font-size: 13px; }
         .chat-input-box button { width: auto; padding: 10px 16px; margin: 0; }
 
-        /* МОДАЛЬНЕ ВІКНО НАЛАШТУВАНЬ */
         #settingsModal {
             display: none;
             position: fixed;
@@ -393,7 +398,6 @@
             text-align: left;
         }
 
-        /* ПАНЕЛЬ КЕРУВАННЯ */
         .controls {
             height: 75px;
             background: #181b24;
@@ -448,26 +452,36 @@
 
             <div style="margin: 10px 0; border-top: 1px solid #2d3343;"></div>
 
-            <button onclick="prepareCreateRoom()">➕ Створити кімнату</button>
+            <button onclick="createRoom()">➕ Створити кімнату</button>
             
             <div style="margin: 8px 0; color: #6b7280; font-size: 12px;">— АБО —</div>
             
             <input type="text" id="roomInput" placeholder="Код кімнати">
-            <button class="btn-join" onclick="prepareJoinRoom()">📞 Приєднатися</button>
+            <button class="btn-join" onclick="joinRoomRequest()">📞 Приєднатися</button>
 
             <div id="errorMsg"></div>
         </div>
     </div>
 
-    <!-- ВХІДНЕ ВІКНО ВИКЛИКУ (ПРИЙНЯТИ / ВІДХИЛИТИ) -->
+    <!-- ВІКНО ПРИЙНЯТТЯ ДЛЯ ХОСТА -->
     <div id="incomingModal">
         <div class="incoming-card">
-            <div class="phone-ring-icon">📞</div>
-            <h2 style="margin-top:0; color:#fff; font-size:22px;">Вхідний дзвінок</h2>
-            <p id="incomingText" style="color:#9ca3af; font-size:14px; margin-bottom:20px;">Готові до приєднання?</p>
+            <div class="phone-ring-icon">👋</div>
+            <h2 style="margin-top:0; color:#fff; font-size:22px;">Запит на вхід</h2>
+            <p id="incomingText" style="color:#9ca3af; font-size:14px; margin-bottom:20px;">Користувач хоче приєднатися...</p>
             
-            <button class="btn-join" style="padding: 14px; font-size:16px; margin-bottom:8px;" onclick="acceptCallAndConnect()">✅ Прийняти дзвінок</button>
-            <button class="btn-red" style="padding: 14px; font-size:16px;" onclick="cancelIncomingCall()">❌ Відхилити</button>
+            <button class="btn-join" style="padding: 14px; font-size:16px; margin-bottom:8px;" onclick="hostAcceptGuest()">✅ Прийняти</button>
+            <button class="btn-red" style="padding: 14px; font-size:16px;" onclick="hostRejectGuest()">❌ Відхилити</button>
+        </div>
+    </div>
+
+    <!-- ВІКНО ОЧІКУВАННЯ ДЛЯ ГОСТЯ -->
+    <div id="waitingModal">
+        <div class="incoming-card">
+            <div class="phone-ring-icon">⏳</div>
+            <h2 style="margin-top:0; color:#fff; font-size:22px;">Очікування</h2>
+            <p style="color:#9ca3af; font-size:14px; margin-bottom:20px;">Організатор розглядає ваш запит на вхід...</p>
+            <button class="btn-red" style="padding: 12px; font-size:15px;" onclick="cancelWaiting()">Скасувати</button>
         </div>
     </div>
 
@@ -481,10 +495,8 @@
     <!-- КІМНАТА ДЗВІНКУ -->
     <div id="callRoom">
         <div id="mainLayout">
-            <!-- МОЗАЇКА ВІДЕО -->
             <div id="videoGrid"></div>
 
-            <!-- ЧАТ -->
             <div id="chatSidebar" class="hidden">
                 <div class="chat-header">
                     <span>💬 Чат конференції</span>
@@ -498,7 +510,6 @@
             </div>
         </div>
 
-        <!-- ПАНЕЛЬ КЕРУВАННЯ -->
         <div class="controls">
             <button class="ctrl-btn" id="micBtn" onclick="toggleMic()">🎤 Мікрофон</button>
             <button class="ctrl-btn" id="camBtn" onclick="toggleCam()">📹 Камера</button>
@@ -549,8 +560,6 @@
         let isHandRaised = false;
         let isChatDisabled = false;
         let roomIdGlobal = "";
-        let pendingRoomId = "";
-        let isCreatingRoom = false;
         let pinnedPeerId = null;
         let targetPeerForMenu = null;
 
@@ -561,6 +570,9 @@
         const userNames = {}; 
         const userHands = {};
         let activeSpeakerOrder = [];
+
+        let pendingGuestConn = null;
+        let pendingGuestInfo = null;
 
         // ЗВУКИ (Web Audio API)
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -621,10 +633,7 @@
 
         function showError(msg) { document.getElementById('errorMsg').innerText = msg; }
         function clearError() { document.getElementById('errorMsg').innerText = ""; }
-
-        function getUserNameInput() {
-            return document.getElementById('userNameInput').value.trim() || "Гість";
-        }
+        function getUserNameInput() { return document.getElementById('userNameInput').value.trim() || "Гість"; }
 
         async function populateDeviceSelects() {
             const devices = await navigator.mediaDevices.enumerateDevices();
@@ -710,42 +719,11 @@
             });
         }
 
-        function prepareCreateRoom() {
+        async function createRoom() {
             clearError();
             myName = getUserNameInput();
-            isCreatingRoom = true;
-            document.getElementById('incomingText').innerText = "Готові створити кімнату та почати дзвінок?";
-            document.getElementById('incomingModal').style.display = 'flex';
-        }
-
-        function prepareJoinRoom() {
-            clearError();
-            const rId = document.getElementById('roomInput').value.trim();
-            if (!rId) return showError("❌ Введіть код кімнати!");
-            
-            myName = getUserNameInput();
-            isCreatingRoom = false;
-            pendingRoomId = rId;
-            document.getElementById('incomingText').innerText = `Готові підключитися до кімнати: ${rId}?`;
-            document.getElementById('incomingModal').style.display = 'flex';
-        }
-
-        function cancelIncomingCall() {
-            document.getElementById('incomingModal').style.display = 'none';
-        }
-
-        async function acceptCallAndConnect() {
-            document.getElementById('incomingModal').style.display = 'none';
             if (!await getMedia()) return;
 
-            if (isCreatingRoom) {
-                createRoomFinal();
-            } else {
-                joinRoomFinal(pendingRoomId);
-            }
-        }
-
-        function createRoomFinal() {
             isHost = true;
             roomIdGlobal = 'meet-' + Math.random().toString(36).substring(2, 8);
             window.location.hash = roomIdGlobal;
@@ -763,9 +741,13 @@
             });
 
             peer.on('connection', (conn) => {
-                conn.on('open', () => { clientConns[conn.peer] = conn; });
-                conn.on('data', (data) => handleIncomingData(data, conn.peer));
-                conn.on('close', () => handleUserLeave(conn.peer));
+                conn.on('open', () => {});
+                conn.on('data', (data) => handleHostIncomingData(data, conn));
+                conn.on('close', () => {
+                    if (clientConns[conn.peer]) {
+                        handleUserLeave(conn.peer);
+                    }
+                });
             });
 
             peer.on('call', (call) => {
@@ -773,35 +755,44 @@
                 handleCallStream(call);
             });
 
-            peer.on('error', (err) => showError("❌ Помилка: " + err.type));
+            peer.on('error', (err) => showError("❌ Помилка кімнати: " + err.type));
         }
 
-        function joinRoomFinal(rId) {
+        async function joinRoomRequest() {
+            clearError();
+            const rId = document.getElementById('roomInput').value.trim();
+            if (!rId) return showError("❌ Введіть код кімнати!");
+            
+            myName = getUserNameInput();
+            if (!await getMedia()) return;
+
             roomIdGlobal = rId;
+            document.getElementById('waitingModal').style.display = 'flex';
+
             peer = new Peer(peerConfig);
 
             peer.on('open', (id) => {
                 myPeerId = id;
                 isHost = false;
-                userCamStates[myPeerId] = true;
-                userNames[myPeerId] = myName;
-                registerUser(myPeerId);
 
-                showCallScreen();
-                addVideoStream(myPeerId, localStream, myName + " (Ви)");
-
-                // Перевірка, щоб не підключатися самому до себе, якщо ввели власний ID кімнати
                 if (myPeerId === roomIdGlobal) {
+                    document.getElementById('waitingModal').style.display = 'none';
                     showError("❌ Не можна підключитися до самого себе як гість!");
+                    peer.destroy();
                     return;
                 }
 
                 hostConn = peer.connect(roomIdGlobal);
+                
                 hostConn.on('open', () => {
                     hostConn.send({ type: 'JOIN_REQ', peerId: myPeerId, name: myName });
                 });
 
-                hostConn.on('data', (data) => handleIncomingData(data, roomIdGlobal));
+                hostConn.on('data', (data) => handleGuestIncomingData(data));
+                hostConn.on('close', () => {
+                    alert("⚠️ Зв'язок з організатором втрачено.");
+                    leaveCall();
+                });
 
                 peer.on('call', (call) => {
                     call.answer(localStream);
@@ -809,39 +800,103 @@
                 });
             });
 
-            peer.on('error', () => showError("❌ Не вдалося приєднатися до кімнати!"));
+            peer.on('error', () => {
+                document.getElementById('waitingModal').style.display = 'none';
+                showError("❌ Не вдалося з'єднатися з кімнатою!");
+            });
         }
 
-        function handleIncomingData(data, senderPeerId) {
-            if (data.type === 'JOIN_REQ' && isHost) {
-                userNames[data.peerId] = data.name;
-                userCamStates[data.peerId] = true;
-                registerUser(data.peerId);
+        function cancelWaiting() {
+            document.getElementById('waitingModal').style.display = 'none';
+            if (peer) peer.destroy();
+        }
 
-                clientConns[data.peerId].send({
-                    type: 'ROOM_STATE',
-                    peers: Object.keys(userNames),
-                    names: userNames,
-                    camStates: userCamStates,
-                    hands: userHands,
-                    chatDisabled: isChatDisabled
-                });
+        function handleHostIncomingData(data, conn) {
+            if (data.type === 'JOIN_REQ') {
+                pendingGuestConn = conn;
+                pendingGuestInfo = data;
+                document.getElementById('incomingText').innerText = `Користувач "${data.name}" хоче приєднатися до кімнати.`;
+                document.getElementById('incomingModal').style.display = 'flex';
+            } else if (data.type === 'CAM_STATE') {
+                userCamStates[data.peerId] = data.enabled;
+                setCamDisplay(data.peerId, data.enabled);
+                broadcastFromHost(data, data.peerId);
+            } else if (data.type === 'HAND_STATE') {
+                userHands[data.peerId] = data.raised;
+                setHandDisplay(data.peerId, data.raised);
+                broadcastFromHost(data, data.peerId);
+            } else if (data.type === 'CHAT_MSG') {
+                appendChatMessage(data.senderName, data.text, false);
+                playSound('msg');
+                broadcastFromHost(data, data.peerId);
+            } else if (data.type === 'LEAVE') {
+                handleUserLeave(data.peerId);
+            }
+        }
 
-                broadcastFromHost({ type: 'USER_JOINED', peerId: data.peerId, name: data.name }, data.peerId);
-                playSound('join');
+        function hostAcceptGuest() {
+            document.getElementById('incomingModal').style.display = 'none';
+            if (!pendingGuestConn || !pendingGuestInfo) return;
 
-            } else if (data.type === 'ROOM_STATE') {
+            const gId = pendingGuestInfo.peerId;
+            const gName = pendingGuestInfo.name;
+
+            clientConns[gId] = pendingGuestConn;
+            userNames[gId] = gName;
+            userCamStates[gId] = true;
+            registerUser(gId);
+
+            pendingGuestConn.send({
+                type: 'JOIN_APPROVED',
+                peers: Object.keys(userNames),
+                names: userNames,
+                camStates: userCamStates,
+                hands: userHands,
+                chatDisabled: isChatDisabled
+            });
+
+            broadcastFromHost({ type: 'USER_JOINED', peerId: gId, name: gName }, gId);
+            playSound('join');
+
+            pendingGuestConn = null;
+            pendingGuestInfo = null;
+        }
+
+        function hostRejectGuest() {
+            document.getElementById('incomingModal').style.display = 'none';
+            if (pendingGuestConn) {
+                pendingGuestConn.send({ type: 'JOIN_REJECTED' });
+                pendingGuestConn = null;
+                pendingGuestInfo = null;
+            }
+        }
+
+        function handleGuestIncomingData(data) {
+            if (data.type === 'JOIN_APPROVED') {
+                document.getElementById('waitingModal').style.display = 'none';
+                userCamStates[myPeerId] = true;
+                userNames[myPeerId] = myName;
+                registerUser(myPeerId);
+
                 Object.assign(userNames, data.names);
                 Object.assign(userCamStates, data.camStates);
                 Object.assign(userHands, data.hands);
                 isChatDisabled = data.chatDisabled;
                 if (isChatDisabled) document.getElementById('msgInput').disabled = true;
 
+                showCallScreen();
+                addVideoStream(myPeerId, localStream, myName + " (Ви)");
+
                 data.peers.forEach(pId => {
                     registerUser(pId);
                     if (pId !== myPeerId) callPeer(pId);
                 });
                 playSound('join');
+
+            } else if (data.type === 'JOIN_REJECTED') {
+                document.getElementById('waitingModal').style.display = 'none';
+                alert("❌ Організатор відхилив ваш запит на вхід.");
+                if (peer) peer.destroy();
 
             } else if (data.type === 'USER_JOINED') {
                 userNames[data.peerId] = data.name;
@@ -852,12 +907,10 @@
             } else if (data.type === 'CAM_STATE') {
                 userCamStates[data.peerId] = data.enabled;
                 setCamDisplay(data.peerId, data.enabled);
-                if (isHost) broadcastFromHost(data, senderPeerId);
 
             } else if (data.type === 'HAND_STATE') {
                 userHands[data.peerId] = data.raised;
                 setHandDisplay(data.peerId, data.raised);
-                if (isHost) broadcastFromHost(data, senderPeerId);
 
             } else if (data.type === 'KICKED' && data.targetId === myPeerId) {
                 alert("⚠️ Вас виключено з дзвінка.");
@@ -876,7 +929,6 @@
             } else if (data.type === 'CHAT_MSG') {
                 appendChatMessage(data.senderName, data.text, false);
                 playSound('msg');
-                if (isHost) broadcastFromHost(data, senderPeerId);
 
             } else if (data.type === 'LEAVE') {
                 removeVideoStream(data.peerId);
@@ -885,11 +937,6 @@
                 delete userHands[data.peerId];
                 activeSpeakerOrder = activeSpeakerOrder.filter(id => id !== data.peerId);
                 playSound('leave');
-
-                if (isHost) {
-                    delete clientConns[data.peerId];
-                    broadcastFromHost(data, senderPeerId);
-                }
             }
         }
 
@@ -949,9 +996,7 @@
                     }
                 };
 
-                container.onclick = () => {
-                    togglePinUser(peerId);
-                };
+                container.onclick = () => togglePinUser(peerId);
 
                 const video = document.createElement('video');
                 video.id = 'video-' + peerId;
@@ -1008,9 +1053,7 @@
 
         function setCamDisplay(peerId, enabled) {
             const avatarDiv = document.getElementById('avatar-' + peerId);
-            if (avatarDiv) {
-                avatarDiv.style.display = enabled ? 'none' : 'flex';
-            }
+            if (avatarDiv) avatarDiv.style.display = enabled ? 'none' : 'flex';
         }
 
         function setHandDisplay(peerId, raised) {
@@ -1023,8 +1066,7 @@
 
         function updateMosaicLayout() {
             const grid = document.getElementById('videoGrid');
-            const containers = grid.getElementsByClassName('video-container');
-            const count = containers.length;
+            const count = grid.getElementsByClassName('video-container').length;
             if (count === 0) return;
 
             if (count === 1) {
@@ -1103,8 +1145,7 @@
         }
 
         function toggleChat() {
-            const sidebar = document.getElementById('chatSidebar');
-            sidebar.classList.toggle('hidden');
+            document.getElementById('chatSidebar').classList.toggle('hidden');
             playSound('click');
         }
 
@@ -1120,7 +1161,7 @@
             appendChatMessage(myName + " (Ви)", text, true);
             input.value = "";
 
-            const msg = { type: 'CHAT_MSG', senderName: myName, text: text };
+            const msg = { type: 'CHAT_MSG', senderName: myName, peerId: myPeerId, text: text };
             if (isHost) broadcastFromHost(msg);
             else if (hostConn && hostConn.open) hostConn.send(msg);
 
@@ -1171,18 +1212,14 @@
             try {
                 const activeVideo = document.querySelector('video:not([muted])') || document.querySelector('video');
                 if (activeVideo) {
-                    if (document.pictureInPictureElement) {
-                        await document.exitPictureInPicture();
-                    } else if (document.pictureInPictureEnabled) {
-                        await activeVideo.requestPictureInPicture();
-                    }
+                    if (document.pictureInPictureElement) await document.exitPictureInPicture();
+                    else if (document.pictureInPictureEnabled) await activeVideo.requestPictureInPicture();
                 }
             } catch (e) {}
         }
 
         function copyRoomLink() {
-            const url = window.location.href;
-            navigator.clipboard.writeText(url).then(() => {
+            navigator.clipboard.writeText(window.location.href).then(() => {
                 alert("🔗 Посилання на кімнату скопійовано в буфер обміну!");
             });
         }
@@ -1198,30 +1235,27 @@
         }
 
         async function changeAudioInput() {
-            const micSelect = document.getElementById('micSelect');
-            if (micSelect && micSelect.value) {
-                localStorage.setItem('iabg_saved_mic', micSelect.value);
+            const mic = document.getElementById('micSelect');
+            if (mic && mic.value) {
+                localStorage.setItem('iabg_saved_mic', mic.value);
                 await getMedia();
             }
         }
 
         async function changeVideoInput() {
-            const camSelect = document.getElementById('camSelect');
-            if (camSelect && camSelect.value) {
-                localStorage.setItem('iabg_saved_cam', camSelect.value);
+            const cam = document.getElementById('camSelect');
+            if (cam && cam.value) {
+                localStorage.setItem('iabg_saved_cam', cam.value);
                 await getMedia();
             }
         }
 
         function changeAudioOutput() {
-            const speakerSelect = document.getElementById('speakerSelect');
-            if (speakerSelect && speakerSelect.value) {
-                localStorage.setItem('iabg_saved_speaker', speakerSelect.value);
-                const videos = document.querySelectorAll('video');
-                videos.forEach(v => {
-                    if (typeof v.sinkId !== 'undefined') {
-                        v.setSinkId(speakerSelect.value).catch(() => {});
-                    }
+            const spk = document.getElementById('speakerSelect');
+            if (spk && spk.value) {
+                localStorage.setItem('iabg_saved_speaker', spk.value);
+                document.querySelectorAll('video').forEach(v => {
+                    if (typeof v.sinkId !== 'undefined') v.setSinkId(spk.value).catch(() => {});
                 });
             }
         }
@@ -1229,11 +1263,7 @@
         function ctxActionMute() {
             if (!isHost || !targetPeerForMenu) return;
             const msg = { type: 'FORCE_MUTE', targetId: targetPeerForMenu };
-            if (targetPeerForMenu === myPeerId) {
-                if (isMicOn) toggleMic();
-            } else if (clientConns[targetPeerForMenu]) {
-                clientConns[targetPeerForMenu].send(msg);
-            }
+            if (clientConns[targetPeerForMenu]) clientConns[targetPeerForMenu].send(msg);
             document.getElementById('contextMenu').style.display = 'none';
         }
 
@@ -1241,8 +1271,7 @@
             if (!isHost) return;
             isChatDisabled = !isChatDisabled;
             document.getElementById('msgInput').disabled = isChatDisabled;
-            const msg = { type: 'TOGGLE_CHAT_LOCK', disabled: isChatDisabled };
-            broadcastFromHost(msg);
+            broadcastFromHost({ type: 'TOGGLE_CHAT_LOCK', disabled: isChatDisabled });
             document.getElementById('contextMenu').style.display = 'none';
         }
 
@@ -1251,9 +1280,9 @@
             const msg = { type: 'KICKED', targetId: targetPeerForMenu };
             if (clientConns[targetPeerForMenu]) {
                 clientConns[targetPeerForMenu].send(msg);
-                setTimeout(() => handleUserLeave(targetPeerForMenu), 500);
+                setTimeout(() => handleUserLeave(targetPeerForMenu), 300);
             }
-            document.getElementById('contextMenu'].style.display = 'none';
+            document.getElementById('contextMenu').style.display = 'none';
         }
 
         function handleUserLeave(peerId) {
@@ -1265,7 +1294,10 @@
             playSound('leave');
 
             if (isHost) {
-                delete clientConns[peerId];
+                if (clientConns[peerId]) {
+                    clientConns[peerId].close();
+                    delete clientConns[peerId];
+                }
                 broadcastFromHost({ type: 'LEAVE', peerId: peerId });
             }
         }
@@ -1278,13 +1310,8 @@
                 hostConn.send(leaveMsg);
             }
 
-            if (localStream) {
-                localStream.getTracks().forEach(track => track.stop());
-            }
-
-            if (peer) {
-                peer.destroy();
-            }
+            if (localStream) localStream.getTracks().forEach(t => t.stop());
+            if (peer) peer.destroy();
 
             window.location.hash = '';
             window.location.reload();
