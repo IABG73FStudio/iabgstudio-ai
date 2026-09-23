@@ -251,7 +251,6 @@
             border-color: #3b82f6;
         }
 
-        /* Повноекраний режим для окремого контейнера */
         .video-container.fullscreen-mode {
             position: absolute !important;
             inset: 10px !important;
@@ -373,7 +372,6 @@
         }
         .video-container.hand-raised .hand-badge { display: block; }
 
-        /* АНІМОВАНИЙ ЧАТ */
         #chatSidebar {
             width: 340px;
             background: #181b24;
@@ -459,7 +457,6 @@
         .chat-input-box input { margin: 0; padding: 10px; font-size: 13px; }
         .chat-input-box button { width: auto; padding: 10px 14px; margin: 0; font-size: 13px; }
 
-        /* КОНТЕКСТНЕ МІНІ-МЕНЮ */
         #contextMenu {
             display: none;
             position: fixed;
@@ -626,7 +623,7 @@
         </div>
     </div>
 
-    <!-- КОНТЕКСТНЕ МІНІ-МЕНЮ (ДЛЯ ОРГАНІЗАТОРА) -->
+    <!-- КОНТЕКСТНЕ МІНІ-МЕНЮ -->
     <div id="contextMenu">
         <div class="ctx-item" onclick="ctxToggleMute()">🔇 Вимкнути звук</div>
         <div class="ctx-item danger" onclick="ctxKickUser()">❌ Викинути з кімнати</div>
@@ -988,7 +985,7 @@
             } else if (data.type === 'PEER_RELAY_JOIN') {
                 const targetPeerId = data.targetPeerId;
                 if (targetPeerId && targetPeerId !== myPeerId && !calls[targetPeerId]) {
-                    const call = peer.call(targetPeerId, isScreenSharing ? screenStream : localStream);
+                    const call = peer.call(targetPeerId, localStream);
                     handleCallStream(call);
                 }
             } else if (data.type === 'FORCE_MUTE_ME') {
@@ -1020,7 +1017,7 @@
                 camStates: userCamStates, micStates: userMicStates, colors: userColors
             });
 
-            const call = peer.call(gPeerId, isScreenSharing ? screenStream : localStream);
+            const call = peer.call(gPeerId, localStream);
             handleCallStream(call);
 
             addVideoStream(gPeerId, null, userNames[gPeerId]);
@@ -1214,11 +1211,7 @@
             container.appendChild(label);
             container.appendChild(handBadge);
 
-            if (isScreenSharing && pId !== myPeerId) {
-                document.getElementById('screenshareSidebar').appendChild(container);
-            } else {
-                document.getElementById('videoGrid').appendChild(container);
-            }
+            document.getElementById('videoGrid').appendChild(container);
         }
 
         function toggleFullscreenContainer(container) {
@@ -1320,9 +1313,8 @@
 
         async function toggleScreenShare() {
             const btn = document.getElementById('screenBtn');
-            const mainLayout = document.getElementById('mainLayout');
-            const videoGrid = document.getElementById('videoGrid');
-            const screenshareSidebar = document.getElementById('screenshareSidebar');
+            const myContainer = document.getElementById('container-' + myPeerId);
+            const myVideo = document.getElementById('video-' + myPeerId);
 
             if (!isScreenSharing) {
                 try {
@@ -1330,36 +1322,22 @@
                     isScreenSharing = true;
                     btn.innerText = "💻 Зупинити";
                     btn.classList.add('btn-red');
-                    mainLayout.classList.add('screen-sharing-mode');
 
-                    const myContainer = document.getElementById('container-' + myPeerId);
-                    if (myContainer) screenshareSidebar.appendChild(myContainer);
-
-                    const screenContainer = document.createElement('div');
-                    screenContainer.className = 'video-container is-screen';
-                    screenContainer.id = 'container-screen-main';
-
-                    const screenVideo = document.createElement('video');
-                    screenVideo.id = 'video-screen-main';
-                    screenVideo.autoplay = true;
-                    screenVideo.playsInline = true;
-                    screenVideo.srcObject = screenStream;
-                    screenVideo.muted = true;
-
-                    const screenLabel = document.createElement('div');
-                    screenLabel.className = 'user-label';
-                    screenLabel.innerText = "💻 Ваша трансляція екрану";
-
-                    screenContainer.appendChild(screenVideo);
-                    screenContainer.appendChild(screenLabel);
-                    videoGrid.appendChild(screenContainer);
-
-                    // Передаємо новий екранний потік усім учасникам через виклик
-                    updatePeerStream(screenStream);
+                    if (myContainer) myContainer.classList.add('is-screen');
+                    if (myVideo) myVideo.srcObject = screenStream;
 
                     const screenTrack = screenStream.getVideoTracks()[0];
+                    
+                    // Замінюємо відео-трек «на льоту» у всіх активних дзвінках без їх перезапуску
+                    Object.values(calls).forEach(call => {
+                        const sender = call.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+                        if (sender) sender.replaceTrack(screenTrack);
+                    });
+
                     screenTrack.onended = () => stopScreenShare();
-                } catch (e) {}
+                } catch (e) {
+                    isScreenSharing = false;
+                }
             } else {
                 stopScreenShare();
             }
@@ -1369,30 +1347,29 @@
             if (!isScreenSharing) return;
             isScreenSharing = false;
             const btn = document.getElementById('screenBtn');
-            const mainLayout = document.getElementById('mainLayout');
-            const videoGrid = document.getElementById('videoGrid');
-            const screenshareSidebar = document.getElementById('screenshareSidebar');
+            const myContainer = document.getElementById('container-' + myPeerId);
+            const myVideo = document.getElementById('video-' + myPeerId);
 
             btn.innerText = "💻 Екран";
             btn.classList.remove('btn-red');
-            mainLayout.classList.remove('screen-sharing-mode');
 
-            const screenMain = document.getElementById('container-screen-main');
-            if (screenMain) screenMain.remove();
-
-            const myContainer = document.getElementById('container-' + myPeerId);
-            if (myContainer) videoGrid.appendChild(myContainer);
-            screenshareSidebar.innerHTML = '';
+            if (myContainer) myContainer.classList.remove('is-screen');
 
             if (screenStream) {
                 screenStream.getTracks().forEach(t => t.stop());
                 screenStream = null;
             }
 
-            if (localStream) {
+            if (localStream && myVideo) {
                 const videoTrack = localStream.getVideoTracks()[0];
                 videoTrack.enabled = isCamOn;
-                updatePeerStream(localStream);
+                myVideo.srcObject = localStream;
+
+                Object.values(calls).forEach(call => {
+                    const sender = call.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+                    if (sender) sender.replaceTrack(videoTrack);
+                });
+
                 updateAvatarState(myPeerId, isCamOn);
             }
         }
@@ -1445,7 +1422,6 @@
 
         async function changeAudioInput() {
             await getMedia(document.getElementById('micSelect').value, document.getElementById('camSelect').value);
-            updatePeerStream(isScreenSharing ? screenStream : localStream);
         }
 
         async function changeVideoInput() {
@@ -1454,7 +1430,6 @@
             const myVideo = document.getElementById('video-' + myPeerId);
             if (myVideo) myVideo.srcObject = localStream;
             localStream.getVideoTracks()[0].enabled = isCamOn;
-            updatePeerStream(localStream);
             updateAvatarState(myPeerId, isCamOn);
         }
 
@@ -1465,15 +1440,6 @@
                     try { await el.setSinkId(speakerId); } catch (e) {}
                 }
             }
-        }
-
-        function updatePeerStream(streamToShare) {
-            Object.keys(calls).forEach(pId => {
-                const oldCall = calls[pId];
-                if (oldCall) oldCall.close();
-                const newCall = peer.call(pId, streamToShare);
-                handleCallStream(newCall);
-            });
         }
 
         function copyRoomLink() {
