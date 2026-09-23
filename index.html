@@ -56,14 +56,11 @@
   #nameScreen {
     position: fixed; inset: 0;
     display: flex; align-items: center; justify-content: center;
-    z-index: 100;
-    padding: 20px;
+    z-index: 100; padding: 20px;
   }
   .nameCard {
-    background: rgba(26,29,36,.85);
-    backdrop-filter: blur(20px);
-    padding: 40px;
-    border-radius: 20px;
+    background: rgba(26,29,36,.85); backdrop-filter: blur(20px);
+    padding: 40px; border-radius: 20px;
     width: 100%; max-width: 380px;
     box-shadow: 0 20px 60px rgba(0,0,0,.6);
     text-align: center;
@@ -98,13 +95,16 @@
     padding: 30px 20px; overflow-y: auto;
     position: relative; z-index: 10;
   }
-  .menuWrap { max-width: 900px; margin: 0 auto; }
+  .menuWrap { max-width: 1000px; margin: 0 auto; }
   .menuHead {
     display: flex; align-items: center; justify-content: space-between;
     margin-bottom: 32px; flex-wrap: wrap; gap: 12px;
   }
   .logo { font-size: 26px; font-weight: 700; letter-spacing: -.5px; }
   .logo span { color: var(--accent); }
+  .menuHead .right {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
   .userChip {
     display: flex; align-items: center; gap: 10px;
     background: rgba(26,29,36,.85); backdrop-filter: blur(12px);
@@ -117,9 +117,27 @@
     display: flex; align-items: center; justify-content: center;
     font-weight: 700; font-size: 13px;
   }
+  /* смена языка */
+  .langSwitch {
+    display: flex; gap: 2px;
+    background: rgba(26,29,36,.85); backdrop-filter: blur(12px);
+    padding: 4px; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.06);
+  }
+  .langSwitch button {
+    padding: 6px 12px; border: none; border-radius: 999px;
+    background: transparent; color: var(--muted);
+    cursor: pointer; font-size: 13px; font-weight: 600;
+    transition: .15s;
+  }
+  .langSwitch button:hover { color: var(--text); }
+  .langSwitch button.active {
+    background: var(--accent); color: #fff;
+  }
+
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
     gap: 16px;
   }
   .card {
@@ -128,15 +146,22 @@
     border-radius: 16px; padding: 24px;
     cursor: pointer; transition: .2s;
     animation: cardIn .4s ease backwards;
+    position: relative;
   }
-  .card:nth-child(1) { animation-delay: .05s; }
-  .card:nth-child(2) { animation-delay: .1s; }
-  .card:nth-child(3) { animation-delay: .15s; }
-  .card:nth-child(4) { animation-delay: .2s; }
   .card:hover { background: rgba(35,39,51,.9); border-color: rgba(74,125,255,.3); transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,.3); }
+  .card.wip { cursor: not-allowed; opacity: .7; }
+  .card.wip:hover { transform: none; border-color: rgba(255,255,255,.06); background: rgba(26,29,36,.75); }
   .card .ic { font-size: 28px; margin-bottom: 12px; }
   .card h3 { font-size: 16px; margin-bottom: 6px; }
   .card p { color: var(--muted); font-size: 13px; line-height: 1.5; }
+  .wipBadge {
+    position: absolute; top: 12px; right: 12px;
+    background: rgba(229,72,77,.15); color: #ff8a8d;
+    padding: 3px 8px; border-radius: 6px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: .5px;
+    border: 1px solid rgba(229,72,77,.3);
+  }
   .joinRow { display: flex; gap: 8px; margin-top: 14px; }
   .joinRow input {
     flex: 1; min-width: 0;
@@ -152,19 +177,69 @@
   }
   .joinRow button:hover { background: var(--accent2); }
 
-  .inviteBox { margin-top: 12px; display: flex; gap: 6px; }
-  .inviteBox input {
-    flex: 1; min-width: 0;
-    padding: 8px 10px; background: var(--panel2);
-    border: 1px solid #2e3341; border-radius: 8px;
-    color: var(--muted); font-size: 12px; outline: none;
+  /* ---------- МОДАЛКА ДРУЗЕЙ ---------- */
+  #friendsModal {
+    position: fixed; inset: 0; z-index: 250;
+    background: rgba(0,0,0,.7); backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center;
+    padding: 20px;
   }
-  .inviteBox button {
-    padding: 8px 12px; background: var(--purple); border: none;
-    border-radius: 8px; color: #fff; cursor: pointer; font-size: 13px;
-    font-weight: 600; white-space: nowrap;
+  #friendsModal.open { display: flex; animation: fadeIn .2s; }
+  .friendsCard {
+    background: var(--panel); padding: 28px; border-radius: 18px;
+    width: 100%; max-width: 520px;
+    border: 1px solid rgba(255,255,255,.06);
+    animation: cardIn .25s ease;
+    max-height: 80vh;
+    display: flex; flex-direction: column;
   }
-  .inviteBox button:hover { background: #6b4de0; }
+  .friendsCard .head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .friendsCard h2 { font-size: 20px; }
+  .friendsCard .close {
+    background: none; border: none; color: var(--muted);
+    font-size: 24px; cursor: pointer; line-height: 1;
+  }
+  .friendsCard .wipNote {
+    color: #ff8a8d; font-size: 12px; font-weight: 700;
+    letter-spacing: .5px; margin-bottom: 18px;
+  }
+  .friendsCard .body {
+    flex: 1; overflow-y: auto;
+    padding: 20px;
+    background: var(--panel2); border-radius: 12px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    min-height: 160px;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 12px;
+  }
+  .friendsCard .body .big { font-size: 40px; }
+  .friendsCard .body .wipTag {
+    background: rgba(229,72,77,.15); color: #ff8a8d;
+    padding: 4px 12px; border-radius: 999px;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .friendsCard .foot {
+    margin-top: 16px; display: flex; gap: 8px;
+  }
+  .friendsCard .foot button {
+    flex: 1; padding: 12px; border: none; border-radius: 10px;
+    color: #fff; font-weight: 600; cursor: pointer;
+    font-size: 14px;
+    transition: .15s;
+  }
+  .friendsCard .foot .invite {
+    background: var(--purple);
+  }
+  .friendsCard .foot .invite:hover { background: #6b4de0; }
+  .friendsCard .foot .invite:disabled {
+    background: #3a3550; cursor: not-allowed; opacity: .6;
+  }
 
   /* ---------- КОНФЕРЕНЦИЯ ---------- */
   #conf {
@@ -184,7 +259,6 @@
   #confTop .roomId b { color: var(--text); font-family: monospace; }
   #confTop .actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-  /* СЦЕНА — без прокрутки, квадратные плитки */
   #stage {
     flex: 1;
     display: grid;
@@ -199,7 +273,6 @@
   .tile {
     position: relative;
     width: 100%;
-    /* КВАДРАТ: соотношение 1:1 */
     aspect-ratio: 1 / 1;
     max-height: 100%;
     background: #0a0a0a;
@@ -227,8 +300,7 @@
     display: flex; align-items: center; justify-content: center;
     background: linear-gradient(135deg, var(--purple), #4a3db8);
     color: #fff;
-    font-size: 64px;
-    font-weight: 700;
+    font-size: 64px; font-weight: 700;
     text-transform: uppercase;
     text-shadow: 0 4px 20px rgba(0,0,0,.3);
   }
@@ -262,7 +334,6 @@
   .tile.more:hover { background: linear-gradient(135deg, #333a4a, #232733); }
   .tile.more small { font-size: 12px; font-weight: 400; margin-top: 4px; }
 
-  /* ---------- НИЖНЯЯ ПАНЕЛЬ ---------- */
   #confBar {
     padding: 10px;
     background: rgba(26,29,36,.85); backdrop-filter: blur(12px);
@@ -287,7 +358,6 @@
   .cbtn.leave:hover { background: #c93b3f; }
   .cbtn.wide { width: auto; padding: 0 16px; border-radius: 25px; gap: 8px; font-size: 14px; height: 38px; }
 
-  /* ---------- ЧАТ ---------- */
   #chat {
     position: fixed; top: 0; right: 0; bottom: 0;
     width: 340px; max-width: 100vw;
@@ -335,7 +405,6 @@
     border-radius: 8px; color: #fff; cursor: pointer; font-weight: 600;
   }
 
-  /* ---------- КОНТЕКСТНОЕ МЕНЮ ---------- */
   #ctx {
     position: fixed; z-index: 200;
     background: rgba(35,39,51,.98); backdrop-filter: blur(20px);
@@ -354,7 +423,6 @@
   #ctx button.danger { color: var(--danger); }
   #ctx button.danger:hover { background: rgba(229,72,77,.15); }
 
-  /* ---------- МОДАЛКА УСТРОЙСТВ ---------- */
   #devices {
     position: fixed; inset: 0; z-index: 300;
     background: rgba(0,0,0,.7); backdrop-filter: blur(4px);
@@ -382,7 +450,6 @@
     color: #fff; font-weight: 600; cursor: pointer;
   }
 
-  /* ---------- ЗАЯВКИ НА ВХОД (для хоста) ---------- */
   #lobbyPanel {
     position: fixed; top: 70px; right: 16px;
     width: 340px; max-width: calc(100vw - 32px);
@@ -452,7 +519,6 @@
   #lobbyPanel .foot .all { background: var(--green); color: #fff; }
   #lobbyPanel .foot .all:hover { background: #2a8f3c; }
 
-  /* Экран ожидания для гостя */
   #waiting {
     position: fixed; inset: 0; z-index: 90;
     background: rgba(11,13,18,.92); backdrop-filter: blur(20px);
@@ -478,7 +544,6 @@
   }
   #waiting button:hover { background: #2e3341; }
 
-  /* ---------- TOAST ---------- */
   #toast {
     position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px);
     background: rgba(35,39,51,.98); backdrop-filter: blur(20px);
@@ -515,9 +580,9 @@
 <div id="nameScreen">
   <div class="nameCard">
     <h1>IABG <span>Meet</span></h1>
-    <p>Введи имя, чтобы продолжить</p>
+    <p id="t_nameHint">Введи имя, чтобы продолжить</p>
     <input id="nameInput" placeholder="Твоё имя" maxlength="24" autofocus>
-    <button id="nameGo">Продолжить</button>
+    <button id="nameGo" id="t_nameGo">Продолжить</button>
   </div>
 </div>
 
@@ -526,64 +591,114 @@
   <div class="menuWrap">
     <div class="menuHead">
       <div class="logo">IABG <span>Meet</span></div>
-      <div class="userChip">
-        <div class="avatar" id="menuAvatar">?</div>
-        <span id="menuName">—</span>
-        <button onclick="resetUser()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;">сменить</button>
+      <div class="right">
+        <div class="langSwitch" id="langSwitch">
+          <button data-lang="ru" class="active">RU</button>
+          <button data-lang="uk">UA</button>
+          <button data-lang="en">EN</button>
+        </div>
+        <div class="userChip">
+          <div class="avatar" id="menuAvatar">?</div>
+          <span id="menuName">—</span>
+          <button onclick="resetUser()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;" id="t_change">сменить</button>
+        </div>
       </div>
     </div>
 
     <div class="grid">
-      <div class="card" onclick="createRoom()">
-        <div class="ic">➕</div>
-        <h3>Создать комнату</h3>
-        <p>Новая конференция. Ты — хост.</p>
-      </div>
-
+      <!-- Войти по ID -->
       <div class="card" style="cursor:default;" onclick="event.stopPropagation()">
         <div class="ic">🔑</div>
-        <h3>Войти по ID</h3>
-        <p>Введи код комнаты</p>
+        <h3 id="t_joinTitle">Войти по ID</h3>
+        <p id="t_joinDesc">Введи код комнаты</p>
         <div class="joinRow">
           <input id="joinCode" placeholder="abc123" maxlength="12" onclick="event.stopPropagation()">
-          <button onclick="event.stopPropagation();joinById()">Войти</button>
+          <button onclick="event.stopPropagation();joinById()" id="t_joinBtn">Войти</button>
         </div>
       </div>
 
-      <div class="card" onclick="createAndInvite()">
-        <div class="ic">🔗</div>
-        <h3>Пригласить</h3>
-        <p>Создать комнату и скопировать ссылку</p>
-      </div>
-
-      <div class="card" style="cursor:default;" onclick="event.stopPropagation()">
+      <!-- Друзья -->
+      <div class="card" onclick="openFriends()">
         <div class="ic">👥</div>
-        <h3>Друзья</h3>
-        <p>Ссылка-приглашение в твою комнату</p>
-        <div class="inviteBox">
-          <input id="friendInvite" readonly placeholder="Сначала создай комнату">
-          <button onclick="event.stopPropagation();copyFriendInvite()">Копировать</button>
-        </div>
+        <h3 id="t_friendsTitle">Друзья</h3>
+        <p id="t_friendsDesc">Список друзей и инвайты</p>
+      </div>
+
+      <!-- 6 кнопок РАБОТА В ПРОГРЕССЕ -->
+      <div class="card wip">
+        <div class="wipBadge" id="t_wip1">В РАЗРАБОТКЕ</div>
+        <div class="ic">📅</div>
+        <h3 id="t_wipTitle1">РАБОТА В ПРОГРЕССЕ</h3>
+        <p id="t_wipDesc1">Функция в разработке</p>
+      </div>
+      <div class="card wip">
+        <div class="wipBadge" id="t_wip2">В РАЗРАБОТКЕ</div>
+        <div class="ic">🗓️</div>
+        <h3 id="t_wipTitle2">РАБОТА В ПРОГРЕССЕ</h3>
+        <p id="t_wipDesc2">Функция в разработке</p>
+      </div>
+      <div class="card wip">
+        <div class="wipBadge" id="t_wip3">В РАЗРАБОТКЕ</div>
+        <div class="ic">📹</div>
+        <h3 id="t_wipTitle3">РАБОТА В ПРОГРЕССЕ</h3>
+        <p id="t_wipDesc3">Функция в разработке</p>
+      </div>
+      <div class="card wip">
+        <div class="wipBadge" id="t_wip4">В РАЗРАБОТКЕ</div>
+        <div class="ic">🎙️</div>
+        <h3 id="t_wipTitle4">РАБОТА В ПРОГРЕССЕ</h3>
+        <p id="t_wipDesc4">Функция в разработке</p>
+      </div>
+      <div class="card wip">
+        <div class="wipBadge" id="t_wip5">В РАЗРАБОТКЕ</div>
+        <div class="ic">🖥️</div>
+        <h3 id="t_wipTitle5">РАБОТА В ПРОГРЕССЕ</h3>
+        <p id="t_wipDesc5">Функция в разработке</p>
+      </div>
+      <div class="card wip">
+        <div class="wipBadge" id="t_wip6">В РАЗРАБОТКЕ</div>
+        <div class="ic">📁</div>
+        <h3 id="t_wipTitle6">РАБОТА В ПРОГРЕССЕ</h3>
+        <p id="t_wipDesc6">Функция в разработке</p>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ================= ЭКРАН ОЖИДАНИЯ (для гостя) ================= -->
+<!-- ================= МОДАЛКА ДРУЗЕЙ ================= -->
+<div id="friendsModal" onclick="if(event.target===this)closeFriends()">
+  <div class="friendsCard">
+    <div class="head">
+      <h2 id="t_friendsModalTitle">Друзья</h2>
+      <button class="close" onclick="closeFriends()">×</button>
+    </div>
+    <div class="wipNote" id="t_friendsWip">⚠ РАБОТА В ПРОГРЕССЕ</div>
+    <div class="body">
+      <div class="big">👥</div>
+      <div class="wipTag" id="t_friendsTag">РАБОТА В ПРОГРЕССЕ</div>
+      <div id="t_friendsBodyText">Здесь будет список друзей.<br>Пока что функция в разработке.</div>
+    </div>
+    <div class="foot">
+      <button class="invite" disabled id="t_friendsInvite">📨 Кинуть Invite</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ЭКРАН ОЖИДАНИЯ ================= -->
 <div id="waiting">
   <div class="spinner"></div>
-  <h2>Заявка отправлена</h2>
-  <p>Ждём, пока хост подтвердит твой вход в конференцию…</p>
-  <button onclick="cancelWaiting()">Отменить</button>
+  <h2 id="t_waitTitle">Заявка отправлена</h2>
+  <p id="t_waitDesc">Ждём, пока хост подтвердит твой вход в конференцию…</p>
+  <button onclick="cancelWaiting()" id="t_waitCancel">Отменить</button>
 </div>
 
 <!-- ================= КОНФЕРЕНЦИЯ ================= -->
 <div id="conf">
   <div id="confTop">
-    <div class="roomId">Комната: <b id="roomLabel">—</b></div>
+    <div class="roomId"><span id="t_roomLabel">Комната:</span> <b id="roomLabel">—</b></div>
     <div class="actions">
       <button class="cbtn wide" onclick="toggleMosaic9()" id="layoutBtn">▦ Мозаика 30+</button>
-      <button class="cbtn wide" onclick="copyInvite()">🔗 Пригласить</button>
+      <button class="cbtn wide" onclick="copyInvite()" id="t_inviteBtn">🔗 Пригласить</button>
     </div>
   </div>
 
@@ -598,22 +713,22 @@
   </div>
 </div>
 
-<!-- ================= ПАНЕЛЬ ЗАЯВОК (хост) ================= -->
+<!-- ================= ПАНЕЛЬ ЗАЯВОК ================= -->
 <div id="lobbyPanel">
   <div class="head">
-    <span>Заявки на вход <span class="count" id="lobbyCount">0</span></span>
+    <span><span id="t_lobbyTitle">Заявки на вход</span> <span class="count" id="lobbyCount">0</span></span>
     <button onclick="toggleLobby()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;">×</button>
   </div>
   <div id="lobbyList"></div>
   <div class="foot">
-    <button class="all" onclick="acceptAll()">✓ Принять всех</button>
+    <button class="all" onclick="acceptAll()" id="t_acceptAll">✓ Принять всех</button>
   </div>
 </div>
 
 <!-- ================= ЧАТ ================= -->
 <div id="chat">
   <div class="head">
-    <span>Чат конференции</span>
+    <span id="t_chatTitle">Чат конференции</span>
     <button onclick="toggleChat()">×</button>
   </div>
   <div id="chatMsgs"></div>
@@ -627,14 +742,14 @@
 
 <div id="devices">
   <div class="devCard">
-    <h2>Устройства</h2>
-    <label>Камера</label>
+    <h2 id="t_devTitle">Устройства</h2>
+    <label id="t_devCam">Камера</label>
     <select id="devCam"></select>
-    <label>Микрофон</label>
+    <label id="t_devMic">Микрофон</label>
     <select id="devMic"></select>
-    <label>Динамики</label>
+    <label id="t_devSpk">Динамики</label>
     <select id="devSpk"></select>
-    <button class="close" onclick="closeDevices()">Готово</button>
+    <button class="close" onclick="closeDevices()" id="t_devDone">Готово</button>
   </div>
 </div>
 
@@ -643,9 +758,260 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
 /* =========================================================
-   IABG Meet — с подтверждением входа хостом
+   IABG Meet — с языками и заглушками
    ========================================================= */
 
+/* ---------- ЯЗЫКИ ---------- */
+const I18N = {
+  ru: {
+    nameHint: 'Введи имя, чтобы продолжить',
+    namePlaceholder: 'Твоё имя',
+    nameGo: 'Продолжить',
+    change: 'сменить',
+    joinTitle: 'Войти по ID',
+    joinDesc: 'Введи код комнаты',
+    joinBtn: 'Войти',
+    friendsTitle: 'Друзья',
+    friendsDesc: 'Список друзей и инвайты',
+    wipTitle: 'РАБОТА В ПРОГРЕССЕ',
+    wipBadge: 'В РАЗРАБОТКЕ',
+    wipDesc: 'Функция в разработке',
+    friendsModalTitle: 'Друзья',
+    friendsWip: '⚠ РАБОТА В ПРОГРЕССЕ',
+    friendsTag: 'РАБОТА В ПРОГРЕССЕ',
+    friendsBodyText: 'Здесь будет список друзей.<br>Пока что функция в разработке.',
+    friendsInvite: '📨 Кинуть Invite',
+    waitTitle: 'Заявка отправлена',
+    waitDesc: 'Ждём, пока хост подтвердит твой вход в конференцию…',
+    waitCancel: 'Отменить',
+    roomLabel: 'Комната:',
+    inviteBtn: '🔗 Пригласить',
+    lobbyTitle: 'Заявки на вход',
+    acceptAll: '✓ Принять всех',
+    chatTitle: 'Чат конференции',
+    chatPlaceholder: 'Сообщение...',
+    devTitle: 'Устройства',
+    devCam: 'Камера',
+    devMic: 'Микрофон',
+    devSpk: 'Динамики',
+    devDone: 'Готово',
+    mosaic30: '▦ Мозаика 30+',
+    mosaic9: '▦ Мозаика 9',
+    toastNoMic: 'Введи имя',
+    toastCode: 'Введи код',
+    toastCopied: 'Ссылка скопирована',
+    toastOnlyHost: 'Только хост может это',
+    toastMuted: 'Участнику выключен микрофон',
+    toastBlocked: 'Чат заблокирован',
+    toastUnblocked: 'Чат разблокирован',
+    toastKicked: 'Участник кикнут',
+    toastKickedMe: 'Тебя кикнул хост',
+    toastBlockedChat: 'Хост заблокировал тебе чат',
+    toastUnblockedChat: 'Чат разблокирован',
+    toastMutedByHost: 'Хост выключил тебе микрофон',
+    toastRejected: 'Хост отклонил заявку',
+    toastApproved: 'Хост принял тебя',
+    toastNotFound: 'Комната не найдена',
+    toastClosed: 'Хост закрыл комнату',
+    toastWantsJoin: ' хочет войти',
+    toastAccepted: 'Принят: ',
+    toastRejectedUser: 'Отклонён: ',
+    toastAcceptedAll: 'Принято всех: ',
+    toastNoCam: 'Нет доступа к камере/микрофону',
+    toastDevErr: 'Не удалось получить список устройств',
+    sysCreated: 'Ты создал комнату. Ждём участников...',
+    sysConnected: 'Подключено к комнате',
+    sysJoined: ' присоединился',
+    sysLeft: ' вышел',
+    sysWait: 'Заявка отправлена хосту...'
+  },
+  uk: {
+    nameHint: 'Введи ім\u2019я, щоб продовжити',
+    namePlaceholder: 'Твоє ім\u2019я',
+    nameGo: 'Продовжити',
+    change: 'змінити',
+    joinTitle: 'Увійти за ID',
+    joinDesc: 'Введи код кімнати',
+    joinBtn: 'Увійти',
+    friendsTitle: 'Друзі',
+    friendsDesc: 'Список друзів та інвайти',
+    wipTitle: 'РОБОТА В ПРОЦЕСІ',
+    wipBadge: 'В РОЗРОБЦІ',
+    wipDesc: 'Функція в розробці',
+    friendsModalTitle: 'Друзі',
+    friendsWip: '⚠ РОБОТА В ПРОЦЕСІ',
+    friendsTag: 'РОБОТА В ПРОЦЕСІ',
+    friendsBodyText: 'Тут буде список друзів.<br>Поки що функція в розробці.',
+    friendsInvite: '📨 Кинути Invite',
+    waitTitle: 'Заявку надіслано',
+    waitDesc: 'Чекаємо, поки хост підтвердить твій вхід…',
+    waitCancel: 'Скасувати',
+    roomLabel: 'Кімната:',
+    inviteBtn: '🔗 Запросити',
+    lobbyTitle: 'Заявки на вхід',
+    acceptAll: '✓ Прийняти всіх',
+    chatTitle: 'Чат конференції',
+    chatPlaceholder: 'Повідомлення...',
+    devTitle: 'Пристрої',
+    devCam: 'Камера',
+    devMic: 'Мікрофон',
+    devSpk: 'Динаміки',
+    devDone: 'Готово',
+    mosaic30: '▦ Мозаїка 30+',
+    mosaic9: '▦ Мозаїка 9',
+    toastNoMic: 'Введи ім\u2019я',
+    toastCode: 'Введи код',
+    toastCopied: 'Посилання скопійовано',
+    toastOnlyHost: 'Тільки хост може це',
+    toastMuted: 'Учаснику вимкнено мікрофон',
+    toastBlocked: 'Чат заблоковано',
+    toastUnblocked: 'Чат розблоковано',
+    toastKicked: 'Учасника вигнано',
+    toastKickedMe: 'Тебе вигнав хост',
+    toastBlockedChat: 'Хост заблокував тобі чат',
+    toastUnblockedChat: 'Чат розблоковано',
+    toastMutedByHost: 'Хост вимкнув тобі мікрофон',
+    toastRejected: 'Хост відхилив заявку',
+    toastApproved: 'Хост прийняв тебе',
+    toastNotFound: 'Кімнату не знайдено',
+    toastClosed: 'Хост закрив кімнату',
+    toastWantsJoin: ' хоче увійти',
+    toastAccepted: 'Прийнято: ',
+    toastRejectedUser: 'Відхилено: ',
+    toastAcceptedAll: 'Прийнято всіх: ',
+    toastNoCam: 'Немає доступу до камери/мікрофона',
+    toastDevErr: 'Не вдалося отримати список пристроїв',
+    sysCreated: 'Ти створив кімнату. Чекаємо учасників...',
+    sysConnected: 'Під\u2019єднано до кімнати',
+    sysJoined: ' приєднався',
+    sysLeft: ' вийшов',
+    sysWait: 'Заявку надіслано хосту...'
+  },
+  en: {
+    nameHint: 'Enter your name to continue',
+    namePlaceholder: 'Your name',
+    nameGo: 'Continue',
+    change: 'change',
+    joinTitle: 'Join by ID',
+    joinDesc: 'Enter room code',
+    joinBtn: 'Join',
+    friendsTitle: 'Friends',
+    friendsDesc: 'Friends list & invites',
+    wipTitle: 'WORK IN PROGRESS',
+    wipBadge: 'IN DEVELOPMENT',
+    wipDesc: 'Feature in development',
+    friendsModalTitle: 'Friends',
+    friendsWip: '⚠ WORK IN PROGRESS',
+    friendsTag: 'WORK IN PROGRESS',
+    friendsBodyText: 'Friends list will be here.<br>Feature is in development.',
+    friendsInvite: '📨 Send Invite',
+    waitTitle: 'Request sent',
+    waitDesc: 'Waiting for the host to approve your entry…',
+    waitCancel: 'Cancel',
+    roomLabel: 'Room:',
+    inviteBtn: '🔗 Invite',
+    lobbyTitle: 'Join requests',
+    acceptAll: '✓ Accept all',
+    chatTitle: 'Conference chat',
+    chatPlaceholder: 'Message...',
+    devTitle: 'Devices',
+    devCam: 'Camera',
+    devMic: 'Microphone',
+    devSpk: 'Speakers',
+    devDone: 'Done',
+    mosaic30: '▦ Mosaic 30+',
+    mosaic9: '▦ Mosaic 9',
+    toastNoMic: 'Enter your name',
+    toastCode: 'Enter the code',
+    toastCopied: 'Link copied',
+    toastOnlyHost: 'Only host can do this',
+    toastMuted: 'Participant muted',
+    toastBlocked: 'Chat blocked',
+    toastUnblocked: 'Chat unblocked',
+    toastKicked: 'Participant kicked',
+    toastKickedMe: 'You were kicked by host',
+    toastBlockedChat: 'Host blocked your chat',
+    toastUnblockedChat: 'Chat unblocked',
+    toastMutedByHost: 'Host muted your microphone',
+    toastRejected: 'Host rejected your request',
+    toastApproved: 'Host accepted you',
+    toastNotFound: 'Room not found',
+    toastClosed: 'Host closed the room',
+    toastWantsJoin: ' wants to join',
+    toastAccepted: 'Accepted: ',
+    toastRejectedUser: 'Rejected: ',
+    toastAcceptedAll: 'Accepted all: ',
+    toastNoCam: 'No access to camera/microphone',
+    toastDevErr: 'Failed to get device list',
+    sysCreated: 'You created the room. Waiting...',
+    sysConnected: 'Connected to room',
+    sysJoined: ' joined',
+    sysLeft: ' left',
+    sysWait: 'Request sent to host...'
+  }
+};
+
+let currentLang = localStorage.getItem('iabg_lang') || 'ru';
+function t(key) { return (I18N[currentLang] && I18N[currentLang][key]) || I18N.ru[key] || key; }
+
+function applyLang() {
+  const L = I18N[currentLang];
+  // nameScreen
+  $('t_nameHint').textContent = L.nameHint;
+  $('nameInput').placeholder = L.namePlaceholder;
+  $('nameGo').textContent = L.nameGo;
+  $('t_change').textContent = L.change;
+  // menu
+  $('t_joinTitle').textContent = L.joinTitle;
+  $('t_joinDesc').textContent = L.joinDesc;
+  $('t_joinBtn').textContent = L.joinBtn;
+  $('t_friendsTitle').textContent = L.friendsTitle;
+  $('t_friendsDesc').textContent = L.friendsDesc;
+  for (let i = 1; i <= 6; i++) {
+    $('t_wipTitle' + i).textContent = L.wipTitle;
+    $('t_wipDesc' + i).textContent = L.wipDesc;
+    $('t_wip' + i).textContent = L.wipBadge;
+  }
+  // friends modal
+  $('t_friendsModalTitle').textContent = L.friendsModalTitle;
+  $('t_friendsWip').textContent = L.friendsWip;
+  $('t_friendsTag').textContent = L.friendsTag;
+  $('t_friendsBodyText').innerHTML = L.friendsBodyText;
+  $('t_friendsInvite').textContent = L.friendsInvite;
+  // waiting
+  $('t_waitTitle').textContent = L.waitTitle;
+  $('t_waitDesc').textContent = L.waitDesc;
+  $('t_waitCancel').textContent = L.waitCancel;
+  // conf
+  $('t_roomLabel').textContent = L.roomLabel;
+  $('t_inviteBtn').textContent = L.inviteBtn;
+  $('t_lobbyTitle').textContent = L.lobbyTitle;
+  $('t_acceptAll').textContent = L.acceptAll;
+  $('t_chatTitle').textContent = L.chatTitle;
+  $('chatText').placeholder = L.chatPlaceholder;
+  $('t_devTitle').textContent = L.devTitle;
+  $('t_devCam').textContent = L.devCam;
+  $('t_devMic').textContent = L.devMic;
+  $('t_devSpk').textContent = L.devSpk;
+  $('t_devDone').textContent = L.devDone;
+  // layout button
+  $('layoutBtn').textContent = layout === 'mosaic9' ? L.mosaic9 : L.mosaic30;
+  // lang buttons
+  document.querySelectorAll('#langSwitch button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === currentLang);
+  });
+}
+
+document.querySelectorAll('#langSwitch button').forEach(b => {
+  b.onclick = () => {
+    currentLang = b.dataset.lang;
+    localStorage.setItem('iabg_lang', currentLang);
+    applyLang();
+    toast(currentLang === 'ru' ? 'Язык: Русский' : currentLang === 'uk' ? 'Мова: Українська' : 'Language: English');
+  };
+});
+
+/* ---------- ОСТАЛЬНОЕ ---------- */
 const params = new URLSearchParams(location.search);
 let room = params.get('room') || null;
 let myName = localStorage.getItem('iabg_name') || '';
@@ -661,19 +1027,31 @@ let micOn = true, camOn = true;
 let layout = 'mosaic30';
 let chatOpen = false;
 let blockedChat = false;
-let waitingForApproval = false;  // гость ждёт подтверждения
-let approved = false;            // гость получил approve
-
-/* Заявки у хоста: Map peerId -> { name, conn } */
+let waitingForApproval = false;
+let approved = false;
 const pending = new Map();
+
+const $ = id => document.getElementById(id);
+function toast(text) {
+  const el = $('toast');
+  el.textContent = text;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2200);
+}
+function initials(name) {
+  const parts = String(name || '?').trim().split(/\s+/);
+  return (parts[0] || '?').slice(0, 1).toUpperCase();
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 
 /* ---------- ЗВУКИ ---------- */
 const AudioFX = (() => {
   let ctx = null;
   function ensure() {
-    if (!ctx) {
-      try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
-    }
+    if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} }
     if (ctx && ctx.state === 'suspended') ctx.resume();
     return ctx;
   }
@@ -697,32 +1075,15 @@ const AudioFX = (() => {
     micOn()   { tone({ freq: 500, dur: 0.1, type: 'square', vol: 0.05, slideTo: 700 }); },
     click()   { tone({ freq: 600, dur: 0.05, vol: 0.04 }); },
     error()   { tone({ freq: 220, dur: 0.2, type: 'sawtooth', vol: 0.06 }); },
-    knock()   { tone({ freq: 700, dur: 0.1, type: 'sine' }); setTimeout(()=>tone({freq:900, dur:0.15, type:'sine'}),120); }
+    knock()   { tone({ freq: 700, dur: 0.1 }); setTimeout(()=>tone({freq:900, dur:0.15}),120); }
   };
 })();
-
-/* ---------- УТИЛИТЫ ---------- */
-const $ = id => document.getElementById(id);
-function toast(text) {
-  const t = $('toast');
-  t.textContent = text;
-  t.classList.add('show');
-  clearTimeout(t._t);
-  t._t = setTimeout(() => t.classList.remove('show'), 2200);
-}
-function initials(name) {
-  const parts = String(name || '?').trim().split(/\s+/);
-  return (parts[0] || '?').slice(0, 1).toUpperCase();
-}
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
 
 /* ---------- ЭКРАН ИМЕНИ ---------- */
 if (myName) $('nameInput').value = myName;
 $('nameGo').onclick = () => {
   const v = $('nameInput').value.trim();
-  if (!v) { AudioFX.error(); return toast('Введи имя'); }
+  if (!v) { AudioFX.error(); return toast(t('toastNoMic')); }
   myName = v;
   localStorage.setItem('iabg_name', v);
   AudioFX.click();
@@ -737,7 +1098,6 @@ function enterMenu() {
   $('menu').style.display = 'block';
   $('menuName').textContent = myName;
   $('menuAvatar').textContent = initials(myName);
-  updateFriendInvite();
   if (room) startConference(room, false);
 }
 function resetUser() {
@@ -746,40 +1106,23 @@ function resetUser() {
 }
 
 /* ---------- МЕНЮ ---------- */
-function createRoom() {
-  const id = Math.random().toString(36).slice(2, 8);
-  AudioFX.click();
-  startConference(id, true);
-}
 function joinById() {
   const code = $('joinCode').value.trim().toLowerCase();
-  if (!code) { AudioFX.error(); return toast('Введи код'); }
+  if (!code) { AudioFX.error(); return toast(t('toastCode')); }
   AudioFX.click();
   startConference(code, false);
-}
-function createAndInvite() {
-  const id = Math.random().toString(36).slice(2, 8);
-  room = id;
-  updateFriendInvite();
-  navigator.clipboard.writeText(location.origin + location.pathname + '?room=' + id);
-  toast('Ссылка скопирована');
-  AudioFX.click();
-  startConference(id, true);
-}
-function updateFriendInvite() {
-  const box = $('friendInvite'); if (!box) return;
-  if (room) box.value = location.origin + location.pathname + '?room=' + room;
-  else { box.value = ''; box.placeholder = 'Сначала создай комнату'; }
-}
-function copyFriendInvite() {
-  if (!room) { AudioFX.error(); return toast('Сначала создай комнату'); }
-  navigator.clipboard.writeText(location.origin + location.pathname + '?room=' + room);
-  AudioFX.click(); toast('Ссылка скопирована');
 }
 function copyInvite() {
   if (!room) return;
   navigator.clipboard.writeText(location.origin + location.pathname + '?room=' + room);
-  AudioFX.click(); toast('Ссылка скопирована');
+  AudioFX.click(); toast(t('toastCopied'));
+}
+function openFriends() {
+  $('friendsModal').classList.add('open');
+  AudioFX.click();
+}
+function closeFriends() {
+  $('friendsModal').classList.remove('open');
 }
 
 /* =========================================================
@@ -791,7 +1134,6 @@ async function startConference(roomId, host) {
   $('menu').style.display = 'none';
   $('conf').style.display = 'flex';
   $('roomLabel').textContent = room;
-  updateFriendInvite();
 
   const p = new URLSearchParams(location.search);
   p.set('room', room);
@@ -803,7 +1145,7 @@ async function startConference(roomId, host) {
       audio: true
     });
   } catch (e) {
-    toast('Нет доступа к камере/микрофону');
+    toast(t('toastNoCam'));
     AudioFX.error();
     return;
   }
@@ -823,10 +1165,9 @@ async function startConference(roomId, host) {
     peer.on('connection', onIncomingConn);
     peer.on('call', onIncomingCall);
     peer.on('error', e => console.warn('host err', e));
-    addSystemMsg('Ты создал комнату. Ждём участников...');
+    addSystemMsg(t('sysCreated'));
     AudioFX.join();
   } else {
-    // ГОСТЬ — сначала заявка, конференция подождёт
     waitingForApproval = true;
     approved = false;
     $('waiting').classList.add('open');
@@ -839,12 +1180,11 @@ async function startConference(roomId, host) {
       myId = id;
       const conn = peer.connect(hostId, { reliable: true });
       conn.on('open', () => {
-        // отправляем заявку, НЕ подключаемся как обычно
         conn.send({ type: 'knock', name: myName });
         setupLobbyConn(conn);
       });
       conn.on('error', () => {
-        toast('Комната не найдена');
+        toast(t('toastNotFound'));
         AudioFX.error();
         $('waiting').classList.remove('open');
         leaveRoom();
@@ -858,24 +1198,20 @@ async function startConference(roomId, host) {
   if (micOn) updateMicIcon('me', true);
 }
 
-/* Отдельная обработка соединения в режиме "лобби" (для гостя) */
 function setupLobbyConn(conn) {
   conn.on('data', msg => {
     if (!msg || !msg.type) return;
     if (msg.type === 'approve') {
-      // Хост принял — превращаем это соединение в обычное
       approved = true;
       waitingForApproval = false;
       $('waiting').classList.remove('open');
-      addSystemMsg('Хост принял тебя');
+      addSystemMsg(t('toastApproved'));
       AudioFX.join();
-      // превращаем conn в обычное
       setupConn(conn, true);
-      // звоним хосту
       const call = peer.call(conn.peer, localStream, { metadata: { name: myName } });
       if (call) bindCall(call);
     } else if (msg.type === 'reject') {
-      toast('Хост отклонил заявку');
+      toast(t('toastRejected'));
       AudioFX.error();
       $('waiting').classList.remove('open');
       setTimeout(leaveRoom, 800);
@@ -883,7 +1219,7 @@ function setupLobbyConn(conn) {
   });
   conn.on('close', () => {
     if (waitingForApproval) {
-      toast('Хост закрыл комнату');
+      toast(t('toastClosed'));
       setTimeout(leaveRoom, 800);
     }
   });
@@ -897,22 +1233,15 @@ function cancelWaiting() {
   location.href = location.pathname + (p.toString() ? '?' + p.toString() : '');
 }
 
-/* ---------- ВХОДЯЩИЕ ---------- */
 function onIncomingConn(conn) {
-  // Хост: сюда прилетает заявка "knock" или обычное соединение
   conn.on('data', msg => {
     if (msg && msg.type === 'knock') {
-      // Это заявка на вход
-      if (isHost) {
-        addPending(conn.peer, msg.name, conn);
-      }
+      if (isHost) addPending(conn.peer, msg.name, conn);
       return;
     }
-    // иначе — обычные сообщения
     handleMsg(conn.peer, msg);
   });
   conn.on('close', () => {
-    // если это была заявка — убираем из списка
     if (pending.has(conn.peer)) {
       pending.delete(conn.peer);
       renderLobby();
@@ -921,9 +1250,7 @@ function onIncomingConn(conn) {
 }
 
 function onIncomingCall(call) {
-  // Хост принимает звонок только от одобренных
-  if (isHost && !meta[call.peer] && !approved.includes?.(call.peer)) {
-    // не одобрен — отклоняем
+  if (isHost && !meta[call.peer]) {
     try { call.close(); } catch(e){}
     return;
   }
@@ -931,23 +1258,19 @@ function onIncomingCall(call) {
   bindCall(call);
 }
 
-/* ---------- ЗАЯВКИ (хост) ---------- */
 function addPending(peerId, name, conn) {
   pending.set(peerId, { name, conn, peerId });
   AudioFX.knock();
   renderLobby();
   $('lobbyPanel').classList.add('open');
-  toast(name + ' хочет войти');
+  toast(name + t('toastWantsJoin'));
 }
 
 function renderLobby() {
   const list = $('lobbyList');
   list.innerHTML = '';
   $('lobbyCount').textContent = pending.size;
-  if (pending.size === 0) {
-    $('lobbyPanel').classList.remove('open');
-    return;
-  }
+  if (pending.size === 0) { $('lobbyPanel').classList.remove('open'); return; }
   pending.forEach((item, peerId) => {
     const d = document.createElement('div');
     d.className = 'lobbyItem';
@@ -957,8 +1280,8 @@ function renderLobby() {
         <div class="nm">${escapeHtml(item.name)}</div>
       </div>
       <div class="btns">
-        <button class="accept" title="Принять">✓</button>
-        <button class="reject" title="Отклонить">✕</button>
+        <button class="accept">✓</button>
+        <button class="reject">✕</button>
       </div>
     `;
     d.querySelector('.accept').onclick = () => acceptPending(peerId);
@@ -968,30 +1291,26 @@ function renderLobby() {
 }
 
 function acceptPending(peerId) {
-  const item = pending.get(peerId);
-  if (!item) return;
+  const item = pending.get(peerId); if (!item) return;
   try {
     item.conn.send({ type: 'approve' });
-    // превращаем это соединение в обычное
     setupConn(item.conn, true);
-    // и звоним новому участнику
     const call = peer.call(peerId, localStream, { metadata: { name: myName } });
     if (call) bindCall(call);
   } catch(e) { console.warn(e); }
   pending.delete(peerId);
   renderLobby();
-  toast('Принят: ' + item.name);
+  toast(t('toastAccepted') + item.name);
   AudioFX.click();
 }
 
 function rejectPending(peerId) {
-  const item = pending.get(peerId);
-  if (!item) return;
+  const item = pending.get(peerId); if (!item) return;
   try { item.conn.send({ type: 'reject' }); } catch(e){}
   try { item.conn.close(); } catch(e){}
   pending.delete(peerId);
   renderLobby();
-  toast('Отклонён: ' + item.name);
+  toast(t('toastRejectedUser') + item.name);
   AudioFX.error();
 }
 
@@ -999,45 +1318,31 @@ function acceptAll() {
   const ids = [...pending.keys()];
   if (ids.length === 0) return;
   ids.forEach(id => acceptPending(id));
-  toast('Принято всех: ' + ids.length);
+  toast(t('toastAcceptedAll') + ids.length);
 }
 
-function toggleLobby() {
-  $('lobbyPanel').classList.toggle('open');
-}
+function toggleLobby() { $('lobbyPanel').classList.toggle('open'); }
 
-/* ---------- ОБЫЧНОЕ СОЕДИНЕНИЕ ---------- */
 function setupConn(conn, preexisting=false) {
   conns[conn.peer] = conn;
-
   const onOpen = () => {
-    conn.send({
-      type: 'hello',
-      name: myName,
-      mic: micOn,
-      cam: camOn,
-      isHost: isHost
-    });
+    conn.send({ type: 'hello', name: myName, mic: micOn, cam: camOn, isHost: isHost });
     if (isHost) {
       const others = Object.keys(conns).filter(id => id !== conn.peer);
       conn.send({ type: 'peers', peers: others, hostId: myId });
     }
   };
-
   if (preexisting) onOpen();
   else conn.on('open', onOpen);
 
   conn.on('data', msg => handleMsg(conn.peer, msg));
-
   conn.on('close', () => {
     const nm = meta[conn.peer]?.name || 'Участник';
     removeTile(conn.peer);
     calls[conn.peer]?.close();
-    delete conns[conn.peer];
-    delete calls[conn.peer];
-    delete meta[conn.peer];
+    delete conns[conn.peer]; delete calls[conn.peer]; delete meta[conn.peer];
     joinOrder = joinOrder.filter(id => id !== conn.peer);
-    addSystemMsg(nm + ' вышел');
+    addSystemMsg(nm + t('sysLeft'));
     AudioFX.leave();
     applyLayout();
   });
@@ -1054,11 +1359,10 @@ function handleMsg(fromId, msg) {
       meta[fromId].isHost = msg.isHost;
       if (!joinOrder.includes(fromId)) joinOrder.push(fromId);
       updateTileLabel(fromId);
-      addSystemMsg(msg.name + ' присоединился');
+      addSystemMsg(msg.name + t('sysJoined'));
       AudioFX.join();
       applyLayout();
       break;
-
     case 'peers':
       msg.peers.forEach(pid => {
         if (pid === myId || calls[pid]) return;
@@ -1068,7 +1372,6 @@ function handleMsg(fromId, msg) {
         dc.on('open', () => setupConn(dc));
       });
       break;
-
     case 'mic':
       if (meta[fromId]) meta[fromId].mic = msg.on;
       updateMicIcon(fromId, msg.on);
@@ -1082,13 +1385,13 @@ function handleMsg(fromId, msg) {
       AudioFX.message();
       break;
     case 'kick':
-      toast('Тебя кикнул хост');
+      toast(t('toastKickedMe'));
       AudioFX.error();
       setTimeout(leaveRoom, 900);
       break;
     case 'block-chat':
       blockedChat = msg.on;
-      toast(msg.on ? 'Хост заблокировал тебе чат' : 'Чат разблокирован');
+      toast(msg.on ? t('toastBlockedChat') : t('toastUnblockedChat'));
       $('chatText').disabled = msg.on;
       break;
     case 'mute-force':
@@ -1097,7 +1400,7 @@ function handleMsg(fromId, msg) {
       updateMicIcon('me', false);
       broadcast({ type: 'mic', on: false });
       AudioFX.micOff();
-      toast('Хост выключил тебе микрофон');
+      toast(t('toastMutedByHost'));
       break;
   }
 }
@@ -1118,7 +1421,6 @@ function bindCall(call) {
   });
 }
 
-/* ---------- ПЛИТКИ ---------- */
 function addTile(id, stream, name, muted=false) {
   let t = document.getElementById('t-' + id);
   if (!t) {
@@ -1136,11 +1438,10 @@ function addTile(id, stream, name, muted=false) {
       ${id !== 'me' ? '<div class="hostBadge" style="display:none">HOST</div>' : ''}
     `;
     $('stage').appendChild(t);
-
     if (id !== 'me') {
       t.addEventListener('contextmenu', e => {
         e.preventDefault();
-        if (!isHost) { AudioFX.error(); return toast('Только хост может это'); }
+        if (!isHost) { AudioFX.error(); return toast(t('toastOnlyHost')); }
         showCtx(e.clientX, e.clientY, id);
       });
     }
@@ -1155,25 +1456,19 @@ function addTile(id, stream, name, muted=false) {
   applyLayout();
 }
 
-function removeTile(id) {
-  document.getElementById('t-' + id)?.remove();
-}
+function removeTile(id) { document.getElementById('t-' + id)?.remove(); }
 
-/* ---------- LAYOUT ---------- */
 function applyLayout() {
   const stage = $('stage');
   const ordered = ['me', ...joinOrder.filter(id => id !== 'me')]
     .filter(id => document.getElementById('t-' + id));
-
   ordered.forEach(id => {
     const el = document.getElementById('t-' + id);
     if (el) stage.appendChild(el);
   });
-
   stage.querySelector('.tile.more')?.remove();
 
   if (layout === 'mosaic9') {
-    // 3x3 — если больше 9, показываем первые 8 + "+N"
     const max = 9;
     const all = ordered;
     if (all.length > max) {
@@ -1186,11 +1481,7 @@ function applyLayout() {
       const more = document.createElement('div');
       more.className = 'tile more';
       more.innerHTML = `+${hidden}<small>участников</small>`;
-      more.onclick = () => {
-        layout = 'mosaic30';
-        $('layoutBtn').textContent = '▦ Мозаика 30+';
-        applyLayout();
-      };
+      more.onclick = () => { layout = 'mosaic30'; applyLang(); applyLayout(); };
       stage.appendChild(more);
     } else {
       all.forEach(id => {
@@ -1198,11 +1489,9 @@ function applyLayout() {
         if (el) el.style.display = '';
       });
     }
-    // 3x3 сетка
     stage.style.gridTemplateColumns = 'repeat(3, minmax(0, 1fr))';
     stage.style.gridTemplateRows = 'repeat(3, minmax(0, 1fr))';
   } else {
-    // mosaic30 — показываем всех
     ordered.forEach(id => {
       const el = document.getElementById('t-' + id);
       if (el) el.style.display = '';
@@ -1224,14 +1513,13 @@ function applyLayout() {
 
 function toggleMosaic9() {
   layout = layout === 'mosaic9' ? 'mosaic30' : 'mosaic9';
-  $('layoutBtn').textContent = layout === 'mosaic9' ? '▦ Мозаика 9' : '▦ Мозаика 30+';
+  applyLang();
   AudioFX.click();
   applyLayout();
 }
 
 function updateTileLabel(id) {
-  const t = document.getElementById('t-' + id);
-  if (!t) return;
+  const t = document.getElementById('t-' + id); if (!t) return;
   const nm = meta[id]?.name || 'Участник';
   t.querySelector('.nm').textContent = nm;
   t.querySelector('.camOff').textContent = initials(nm);
@@ -1244,8 +1532,7 @@ function updateTileLabel(id) {
 }
 
 function updateMicIcon(id, on) {
-  const t = document.getElementById('t-' + id);
-  if (!t) return;
+  const t = document.getElementById('t-' + id); if (!t) return;
   const ic = t.querySelector('.micIc');
   ic.textContent = on ? '🎤' : '🔇';
   ic.classList.toggle('off', !on);
@@ -1256,18 +1543,14 @@ function updateMicIcon(id, on) {
 }
 
 function updateCamVisibility(id, on) {
-  const t = document.getElementById('t-' + id);
-  if (!t) return;
+  const t = document.getElementById('t-' + id); if (!t) return;
   const off = t.querySelector('.camOff');
   const v = t.querySelector('video');
   off.style.display = on ? 'none' : 'flex';
   v.style.visibility = on ? 'visible' : 'hidden';
-  if (id === 'me') {
-    $('btnCam').classList.toggle('off', !on);
-  }
+  if (id === 'me') $('btnCam').classList.toggle('off', !on);
 }
 
-/* ---------- КНОПКИ ---------- */
 function toggleMic() {
   micOn = !micOn;
   localStream.getAudioTracks().forEach(t => t.enabled = micOn);
@@ -1298,7 +1581,6 @@ function leaveRoom() {
   location.href = location.pathname + (p.toString() ? '?' + p.toString() : '');
 }
 
-/* ---------- ЧАТ ---------- */
 function sendChat() {
   if (blockedChat) return;
   const txt = $('chatText').value.trim();
@@ -1323,7 +1605,6 @@ function addSystemMsg(text) {
   $('chatMsgs').scrollTop = $('chatMsgs').scrollHeight;
 }
 
-/* ---------- КОНТЕКСТНОЕ МЕНЮ ---------- */
 function showCtx(x, y, targetId) {
   const ctx = $('ctx');
   ctx.innerHTML = '';
@@ -1348,7 +1629,7 @@ document.addEventListener('click', () => $('ctx').style.display = 'none');
 
 function forceMute(targetId) {
   const c = conns[targetId]; if (c) c.send({ type: 'mute-force' });
-  toast('Участнику выключен микрофон');
+  toast(t('toastMuted'));
   AudioFX.click();
 }
 function blockChat(targetId) {
@@ -1356,16 +1637,15 @@ function blockChat(targetId) {
   meta[targetId] = meta[targetId] || {};
   meta[targetId].blocked = !meta[targetId].blocked;
   c.send({ type: 'block-chat', on: meta[targetId].blocked });
-  toast(meta[targetId].blocked ? 'Чат заблокирован' : 'Чат разблокирован');
+  toast(meta[targetId].blocked ? t('toastBlocked') : t('toastUnblocked'));
   AudioFX.click();
 }
 function kick(targetId) {
   const c = conns[targetId]; if (c) c.send({ type: 'kick' });
-  toast('Участник кикнут');
+  toast(t('toastKicked'));
   AudioFX.click();
 }
 
-/* ---------- УСТРОЙСТВА ---------- */
 async function openDevices() {
   try {
     const devs = await navigator.mediaDevices.enumerateDevices();
@@ -1378,18 +1658,17 @@ async function openDevices() {
         sel.appendChild(o);
       });
     };
-    fill($('devCam'), 'videoinput', 'Камера');
-    fill($('devMic'), 'audioinput', 'Микрофон');
-    fill($('devSpk'), 'audiooutput', 'Динамики');
+    fill($('devCam'), 'videoinput', t('devCam'));
+    fill($('devMic'), 'audioinput', t('devMic'));
+    fill($('devSpk'), 'audiooutput', t('devSpk'));
     $('devices').classList.add('open');
     AudioFX.click();
-  } catch(e) {
-    toast('Не удалось получить список устройств');
-  }
+  } catch(e) { toast(t('toastDevErr')); }
 }
 function closeDevices() { $('devices').classList.remove('open'); }
 
 /* ---------- СТАРТ ---------- */
+applyLang();
 if (myName) enterMenu();
 
 document.addEventListener('click', function unlock() {
