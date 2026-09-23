@@ -100,8 +100,37 @@
     display: flex; align-items: center; justify-content: space-between;
     margin-bottom: 32px; flex-wrap: wrap; gap: 12px;
   }
+  .logoRow {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  }
   .logo { font-size: 26px; font-weight: 700; letter-spacing: -.5px; }
   .logo span { color: var(--accent); }
+
+  /* Кнопка "Начать" */
+  .startBtn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 18px;
+    background: var(--accent);
+    border: none; border-radius: 12px;
+    color: #fff; font-weight: 700; font-size: 14px;
+    cursor: pointer;
+    transition: .15s;
+    box-shadow: 0 6px 20px rgba(74,125,255,.35);
+  }
+  .startBtn:hover {
+    background: var(--accent2);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 26px rgba(74,125,255,.5);
+  }
+  .startBtn:active { transform: translateY(0); }
+  .startBtn .play {
+    width: 22px; height: 22px;
+    background: rgba(255,255,255,.2);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+  }
+
   .menuHead .right {
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
   }
@@ -117,7 +146,6 @@
     display: flex; align-items: center; justify-content: center;
     font-weight: 700; font-size: 13px;
   }
-  /* смена языка */
   .langSwitch {
     display: flex; gap: 2px;
     background: rgba(26,29,36,.85); backdrop-filter: blur(12px);
@@ -131,9 +159,7 @@
     transition: .15s;
   }
   .langSwitch button:hover { color: var(--text); }
-  .langSwitch button.active {
-    background: var(--accent); color: #fff;
-  }
+  .langSwitch button.active { background: var(--accent); color: #fff; }
 
   .grid {
     display: grid;
@@ -233,13 +259,9 @@
     font-size: 14px;
     transition: .15s;
   }
-  .friendsCard .foot .invite {
-    background: var(--purple);
-  }
+  .friendsCard .foot .invite { background: var(--purple); }
   .friendsCard .foot .invite:hover { background: #6b4de0; }
-  .friendsCard .foot .invite:disabled {
-    background: #3a3550; cursor: not-allowed; opacity: .6;
-  }
+  .friendsCard .foot .invite:disabled { background: #3a3550; cursor: not-allowed; opacity: .6; }
 
   /* ---------- КОНФЕРЕНЦИЯ ---------- */
   #conf {
@@ -291,16 +313,12 @@
     to { opacity: 1; transform: scale(1); }
   }
   .tile.speaking { border-color: var(--accent); }
-  .tile video {
-    width: 100%; height: 100%; object-fit: cover;
-    display: block;
-  }
+  .tile video { width: 100%; height: 100%; object-fit: cover; display: block; }
   .tile .camOff {
     position: absolute; inset: 0;
     display: flex; align-items: center; justify-content: center;
     background: linear-gradient(135deg, var(--purple), #4a3db8);
-    color: #fff;
-    font-size: 64px; font-weight: 700;
+    color: #fff; font-size: 64px; font-weight: 700;
     text-transform: uppercase;
     text-shadow: 0 4px 20px rgba(0,0,0,.3);
   }
@@ -312,9 +330,7 @@
     backdrop-filter: blur(6px);
     max-width: calc(100% - 12px);
   }
-  .tile .label .nm {
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
+  .tile .label .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .tile .micIc { font-size: 11px; }
   .tile .micIc.off { color: var(--danger); }
   .tile .hostBadge {
@@ -327,8 +343,7 @@
     background: linear-gradient(135deg, #2a2f3d, #1a1d24);
     display: flex; align-items: center; justify-content: center;
     flex-direction: column;
-    color: var(--muted);
-    font-size: 24px; font-weight: 700;
+    color: var(--muted); font-size: 24px; font-weight: 700;
     cursor: pointer;
   }
   .tile.more:hover { background: linear-gradient(135deg, #333a4a, #232733); }
@@ -493,9 +508,7 @@
     display: flex; align-items: center; justify-content: center;
     font-weight: 700; font-size: 14px; flex-shrink: 0;
   }
-  .lobbyItem .who .nm {
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
+  .lobbyItem .who .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .lobbyItem .btns { display: flex; gap: 6px; flex-shrink: 0; }
   .lobbyItem .btns button {
     width: 34px; height: 34px; border-radius: 50%;
@@ -569,6 +582,8 @@
     .cbtn.leave { width: 54px; }
     .tile .label { font-size: 10px; padding: 2px 6px; }
     #lobbyPanel { width: calc(100vw - 24px); right: 12px; top: 60px; }
+    .logo { font-size: 22px; }
+    .startBtn { padding: 8px 14px; font-size: 13px; }
   }
 </style>
 </head>
@@ -582,7 +597,7 @@
     <h1>IABG <span>Meet</span></h1>
     <p id="t_nameHint">Введи имя, чтобы продолжить</p>
     <input id="nameInput" placeholder="Твоё имя" maxlength="24" autofocus>
-    <button id="nameGo" id="t_nameGo">Продолжить</button>
+    <button id="nameGo">Продолжить</button>
   </div>
 </div>
 
@@ -590,7 +605,13 @@
 <div id="menu">
   <div class="menuWrap">
     <div class="menuHead">
-      <div class="logo">IABG <span>Meet</span></div>
+      <div class="logoRow">
+        <div class="logo">IABG <span>Meet</span></div>
+        <button class="startBtn" onclick="createRoom()">
+          <span class="play">▶</span>
+          <span id="t_startText">Начать</span>
+        </button>
+      </div>
       <div class="right">
         <div class="langSwitch" id="langSwitch">
           <button data-lang="ru" class="active">RU</button>
@@ -758,7 +779,7 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
 /* =========================================================
-   IABG Meet — с языками и заглушками
+   IABG Meet
    ========================================================= */
 
 /* ---------- ЯЗЫКИ ---------- */
@@ -768,6 +789,7 @@ const I18N = {
     namePlaceholder: 'Твоё имя',
     nameGo: 'Продолжить',
     change: 'сменить',
+    startText: 'Начать',
     joinTitle: 'Войти по ID',
     joinDesc: 'Введи код комнаты',
     joinBtn: 'Войти',
@@ -830,6 +852,7 @@ const I18N = {
     namePlaceholder: 'Твоє ім\u2019я',
     nameGo: 'Продовжити',
     change: 'змінити',
+    startText: 'Почати',
     joinTitle: 'Увійти за ID',
     joinDesc: 'Введи код кімнати',
     joinBtn: 'Увійти',
@@ -892,6 +915,7 @@ const I18N = {
     namePlaceholder: 'Your name',
     nameGo: 'Continue',
     change: 'change',
+    startText: 'Start',
     joinTitle: 'Join by ID',
     joinDesc: 'Enter room code',
     joinBtn: 'Join',
@@ -956,12 +980,11 @@ function t(key) { return (I18N[currentLang] && I18N[currentLang][key]) || I18N.r
 
 function applyLang() {
   const L = I18N[currentLang];
-  // nameScreen
   $('t_nameHint').textContent = L.nameHint;
   $('nameInput').placeholder = L.namePlaceholder;
   $('nameGo').textContent = L.nameGo;
   $('t_change').textContent = L.change;
-  // menu
+  $('t_startText').textContent = L.startText;
   $('t_joinTitle').textContent = L.joinTitle;
   $('t_joinDesc').textContent = L.joinDesc;
   $('t_joinBtn').textContent = L.joinBtn;
@@ -972,17 +995,14 @@ function applyLang() {
     $('t_wipDesc' + i).textContent = L.wipDesc;
     $('t_wip' + i).textContent = L.wipBadge;
   }
-  // friends modal
   $('t_friendsModalTitle').textContent = L.friendsModalTitle;
   $('t_friendsWip').textContent = L.friendsWip;
   $('t_friendsTag').textContent = L.friendsTag;
   $('t_friendsBodyText').innerHTML = L.friendsBodyText;
   $('t_friendsInvite').textContent = L.friendsInvite;
-  // waiting
   $('t_waitTitle').textContent = L.waitTitle;
   $('t_waitDesc').textContent = L.waitDesc;
   $('t_waitCancel').textContent = L.waitCancel;
-  // conf
   $('t_roomLabel').textContent = L.roomLabel;
   $('t_inviteBtn').textContent = L.inviteBtn;
   $('t_lobbyTitle').textContent = L.lobbyTitle;
@@ -994,9 +1014,7 @@ function applyLang() {
   $('t_devMic').textContent = L.devMic;
   $('t_devSpk').textContent = L.devSpk;
   $('t_devDone').textContent = L.devDone;
-  // layout button
   $('layoutBtn').textContent = layout === 'mosaic9' ? L.mosaic9 : L.mosaic30;
-  // lang buttons
   document.querySelectorAll('#langSwitch button').forEach(b => {
     b.classList.toggle('active', b.dataset.lang === currentLang);
   });
@@ -1106,6 +1124,11 @@ function resetUser() {
 }
 
 /* ---------- МЕНЮ ---------- */
+function createRoom() {
+  const id = Math.random().toString(36).slice(2, 8);
+  AudioFX.click();
+  startConference(id, true);
+}
 function joinById() {
   const code = $('joinCode').value.trim().toLowerCase();
   if (!code) { AudioFX.error(); return toast(t('toastCode')); }
@@ -1422,13 +1445,13 @@ function bindCall(call) {
 }
 
 function addTile(id, stream, name, muted=false) {
-  let t = document.getElementById('t-' + id);
-  if (!t) {
-    t = document.createElement('div');
-    t.className = 'tile';
-    t.id = 't-' + id;
-    t.dataset.peer = id;
-    t.innerHTML = `
+  let tile = document.getElementById('t-' + id);
+  if (!tile) {
+    tile = document.createElement('div');
+    tile.className = 'tile';
+    tile.id = 't-' + id;
+    tile.dataset.peer = id;
+    tile.innerHTML = `
       <video autoplay playsinline ${muted ? 'muted' : ''}></video>
       <div class="camOff" style="display:none"></div>
       <div class="label">
@@ -1437,20 +1460,20 @@ function addTile(id, stream, name, muted=false) {
       </div>
       ${id !== 'me' ? '<div class="hostBadge" style="display:none">HOST</div>' : ''}
     `;
-    $('stage').appendChild(t);
+    $('stage').appendChild(tile);
     if (id !== 'me') {
-      t.addEventListener('contextmenu', e => {
+      tile.addEventListener('contextmenu', e => {
         e.preventDefault();
         if (!isHost) { AudioFX.error(); return toast(t('toastOnlyHost')); }
         showCtx(e.clientX, e.clientY, id);
       });
     }
   }
-  t.querySelector('video').srcObject = stream;
-  t.querySelector('.nm').textContent = name;
-  t.querySelector('.camOff').textContent = initials(name);
+  tile.querySelector('video').srcObject = stream;
+  tile.querySelector('.nm').textContent = name;
+  tile.querySelector('.camOff').textContent = initials(name);
   if (meta[id]?.isHost) {
-    const b = t.querySelector('.hostBadge');
+    const b = tile.querySelector('.hostBadge');
     if (b) b.style.display = 'block';
   }
   applyLayout();
@@ -1519,12 +1542,12 @@ function toggleMosaic9() {
 }
 
 function updateTileLabel(id) {
-  const t = document.getElementById('t-' + id); if (!t) return;
+  const tile = document.getElementById('t-' + id); if (!tile) return;
   const nm = meta[id]?.name || 'Участник';
-  t.querySelector('.nm').textContent = nm;
-  t.querySelector('.camOff').textContent = initials(nm);
+  tile.querySelector('.nm').textContent = nm;
+  tile.querySelector('.camOff').textContent = initials(nm);
   if (meta[id]?.isHost) {
-    const b = t.querySelector('.hostBadge');
+    const b = tile.querySelector('.hostBadge');
     if (b) b.style.display = 'block';
   }
   updateMicIcon(id, meta[id]?.mic);
@@ -1532,8 +1555,8 @@ function updateTileLabel(id) {
 }
 
 function updateMicIcon(id, on) {
-  const t = document.getElementById('t-' + id); if (!t) return;
-  const ic = t.querySelector('.micIc');
+  const tile = document.getElementById('t-' + id); if (!tile) return;
+  const ic = tile.querySelector('.micIc');
   ic.textContent = on ? '🎤' : '🔇';
   ic.classList.toggle('off', !on);
   if (id === 'me') {
@@ -1543,9 +1566,9 @@ function updateMicIcon(id, on) {
 }
 
 function updateCamVisibility(id, on) {
-  const t = document.getElementById('t-' + id); if (!t) return;
-  const off = t.querySelector('.camOff');
-  const v = t.querySelector('video');
+  const tile = document.getElementById('t-' + id); if (!tile) return;
+  const off = tile.querySelector('.camOff');
+  const v = tile.querySelector('video');
   off.style.display = on ? 'none' : 'flex';
   v.style.visibility = on ? 'visible' : 'hidden';
   if (id === 'me') $('btnCam').classList.toggle('off', !on);
