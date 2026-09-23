@@ -14,6 +14,7 @@
     --accent2: #3a63d4;
     --purple: #7c5cff;
     --danger: #e5484d;
+    --green: #2ea043;
     --text: #e8eaed;
     --muted: #8b91a0;
   }
@@ -24,7 +25,6 @@
     color: var(--text);
   }
 
-  /* ---------- АНИМИРОВАННЫЙ ФОН ---------- */
   .bg {
     position: fixed; inset: 0; z-index: 0;
     background:
@@ -64,8 +64,7 @@
     backdrop-filter: blur(20px);
     padding: 40px;
     border-radius: 20px;
-    width: 100%;
-    max-width: 380px;
+    width: 100%; max-width: 380px;
     box-shadow: 0 20px 60px rgba(0,0,0,.6);
     text-align: center;
     border: 1px solid rgba(255,255,255,.06);
@@ -79,55 +78,37 @@
   .nameCard h1 span { color: var(--accent); }
   .nameCard p { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
   .nameCard input {
-    width: 100%;
-    padding: 14px 16px;
-    background: var(--panel2);
-    border: 1px solid #2e3341;
-    border-radius: 10px;
-    color: var(--text);
-    font-size: 15px;
-    outline: none;
-    margin-bottom: 12px;
-    transition: .2s;
+    width: 100%; padding: 14px 16px;
+    background: var(--panel2); border: 1px solid #2e3341;
+    border-radius: 10px; color: var(--text); font-size: 15px;
+    outline: none; margin-bottom: 12px; transition: .2s;
   }
   .nameCard input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(74,125,255,.15); }
   .nameCard button {
-    width: 100%;
-    padding: 14px;
-    background: var(--accent);
-    border: none;
-    border-radius: 10px;
-    color: #fff;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: .15s;
+    width: 100%; padding: 14px;
+    background: var(--accent); border: none; border-radius: 10px;
+    color: #fff; font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: .15s;
   }
   .nameCard button:hover { background: var(--accent2); transform: translateY(-1px); }
 
   /* ---------- МЕНЮ ---------- */
   #menu {
-    display: none;
-    height: 100vh;
-    padding: 30px 20px;
-    overflow-y: auto;
-    position: relative;
-    z-index: 10;
+    display: none; height: 100vh;
+    padding: 30px 20px; overflow-y: auto;
+    position: relative; z-index: 10;
   }
   .menuWrap { max-width: 900px; margin: 0 auto; }
   .menuHead {
     display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 32px;
-    flex-wrap: wrap; gap: 12px;
+    margin-bottom: 32px; flex-wrap: wrap; gap: 12px;
   }
   .logo { font-size: 26px; font-weight: 700; letter-spacing: -.5px; }
   .logo span { color: var(--accent); }
   .userChip {
     display: flex; align-items: center; gap: 10px;
-    background: rgba(26,29,36,.85);
-    backdrop-filter: blur(12px);
-    padding: 8px 14px; border-radius: 999px;
-    font-size: 14px;
+    background: rgba(26,29,36,.85); backdrop-filter: blur(12px);
+    padding: 8px 14px; border-radius: 999px; font-size: 14px;
     border: 1px solid rgba(255,255,255,.06);
   }
   .avatar {
@@ -142,13 +123,10 @@
     gap: 16px;
   }
   .card {
-    background: rgba(26,29,36,.75);
-    backdrop-filter: blur(12px);
+    background: rgba(26,29,36,.75); backdrop-filter: blur(12px);
     border: 1px solid rgba(255,255,255,.06);
-    border-radius: 16px;
-    padding: 24px;
-    cursor: pointer;
-    transition: .2s;
+    border-radius: 16px; padding: 24px;
+    cursor: pointer; transition: .2s;
     animation: cardIn .4s ease backwards;
   }
   .card:nth-child(1) { animation-delay: .05s; }
@@ -170,85 +148,70 @@
   .joinRow button {
     padding: 10px 18px; background: var(--accent); border: none;
     border-radius: 8px; color: #fff; font-weight: 600; cursor: pointer;
-    white-space: nowrap;
-    transition: .15s;
+    white-space: nowrap; transition: .15s;
   }
   .joinRow button:hover { background: var(--accent2); }
 
   .inviteBox { margin-top: 12px; display: flex; gap: 6px; }
   .inviteBox input {
     flex: 1; min-width: 0;
-    padding: 8px 10px;
-    background: var(--panel2);
-    border: 1px solid #2e3341;
-    border-radius: 8px;
-    color: var(--muted);
-    font-size: 12px;
-    outline: none;
+    padding: 8px 10px; background: var(--panel2);
+    border: 1px solid #2e3341; border-radius: 8px;
+    color: var(--muted); font-size: 12px; outline: none;
   }
   .inviteBox button {
-    padding: 8px 12px;
-    background: var(--purple);
-    border: none; border-radius: 8px;
-    color: #fff; cursor: pointer; font-size: 13px;
-    font-weight: 600;
-    white-space: nowrap;
+    padding: 8px 12px; background: var(--purple); border: none;
+    border-radius: 8px; color: #fff; cursor: pointer; font-size: 13px;
+    font-weight: 600; white-space: nowrap;
   }
   .inviteBox button:hover { background: #6b4de0; }
 
   /* ---------- КОНФЕРЕНЦИЯ ---------- */
   #conf {
-    display: none;
-    position: fixed; inset: 0;
-    flex-direction: column;
-    z-index: 20;
+    display: none; position: fixed; inset: 0;
+    flex-direction: column; z-index: 20;
     background: transparent;
   }
   #confTop {
     padding: 10px 16px;
-    background: rgba(26,29,36,.85);
-    backdrop-filter: blur(12px);
+    background: rgba(26,29,36,.85); backdrop-filter: blur(12px);
     display: flex; align-items: center; justify-content: space-between;
     border-bottom: 1px solid rgba(255,255,255,.06);
-    font-size: 14px;
-    gap: 10px;
-    flex-wrap: wrap;
+    font-size: 14px; gap: 10px; flex-wrap: wrap;
     flex-shrink: 0;
   }
   #confTop .roomId { color: var(--muted); }
   #confTop .roomId b { color: var(--text); font-family: monospace; }
   #confTop .actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-  /* СЦЕНА — без прокрутки, всё влезает */
+  /* СЦЕНА — без прокрутки, квадратные плитки */
   #stage {
     flex: 1;
     display: grid;
     gap: 8px;
     padding: 10px;
-    overflow: hidden;   /* ← нет прокрутки */
+    overflow: hidden;
     min-height: 0;
-  }
-  /* Мозаика 30+ — авто-колонки, до 30+ плиток */
-  #stage.mosaic30 {
-    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-    grid-auto-rows: 1fr;
-  }
-  /* Мозаика 9 — жёстко 3x3 */
-  #stage.mosaic9 {
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
+    justify-content: center;
+    align-content: center;
   }
 
   .tile {
     position: relative;
-    width: 100%; height: 100%;
+    width: 100%;
+    /* КВАДРАТ: соотношение 1:1 */
+    aspect-ratio: 1 / 1;
+    max-height: 100%;
     background: #0a0a0a;
-    border-radius: 10px;
+    border-radius: 12px;
     overflow: hidden;
     border: 2px solid transparent;
     transition: .2s;
     animation: tileIn .3s ease;
+    min-width: 0;
     min-height: 0;
+    justify-self: center;
+    align-self: center;
   }
   @keyframes tileIn {
     from { opacity: 0; transform: scale(.95); }
@@ -259,13 +222,12 @@
     width: 100%; height: 100%; object-fit: cover;
     display: block;
   }
-  /* аватарка когда камера выкл */
   .tile .camOff {
     position: absolute; inset: 0;
     display: flex; align-items: center; justify-content: center;
     background: linear-gradient(135deg, var(--purple), #4a3db8);
     color: #fff;
-    font-size: 48px;
+    font-size: 64px;
     font-weight: 700;
     text-transform: uppercase;
     text-shadow: 0 4px 20px rgba(0,0,0,.3);
@@ -289,14 +251,12 @@
     padding: 2px 6px; border-radius: 5px;
     font-size: 10px; font-weight: 600;
   }
-  /* "+N ещё" — плитка-заглушка */
   .tile.more {
     background: linear-gradient(135deg, #2a2f3d, #1a1d24);
     display: flex; align-items: center; justify-content: center;
     flex-direction: column;
     color: var(--muted);
-    font-size: 24px;
-    font-weight: 700;
+    font-size: 24px; font-weight: 700;
     cursor: pointer;
   }
   .tile.more:hover { background: linear-gradient(135deg, #333a4a, #232733); }
@@ -305,13 +265,11 @@
   /* ---------- НИЖНЯЯ ПАНЕЛЬ ---------- */
   #confBar {
     padding: 10px;
-    background: rgba(26,29,36,.85);
-    backdrop-filter: blur(12px);
+    background: rgba(26,29,36,.85); backdrop-filter: blur(12px);
     display: flex; align-items: center; justify-content: center;
     gap: 10px;
     border-top: 1px solid rgba(255,255,255,.06);
-    flex-wrap: wrap;
-    flex-shrink: 0;
+    flex-wrap: wrap; flex-shrink: 0;
   }
   .cbtn {
     width: 50px; height: 50px;
@@ -333,12 +291,10 @@
   #chat {
     position: fixed; top: 0; right: 0; bottom: 0;
     width: 340px; max-width: 100vw;
-    background: rgba(26,29,36,.95);
-    backdrop-filter: blur(20px);
+    background: rgba(26,29,36,.95); backdrop-filter: blur(20px);
     border-left: 1px solid rgba(255,255,255,.06);
     display: flex; flex-direction: column;
-    transform: translateX(100%);
-    transition: transform .25s;
+    transform: translateX(100%); transition: transform .25s;
     z-index: 60;
   }
   #chat.open { transform: translateX(0); }
@@ -382,12 +338,9 @@
   /* ---------- КОНТЕКСТНОЕ МЕНЮ ---------- */
   #ctx {
     position: fixed; z-index: 200;
-    background: rgba(35,39,51,.98);
-    backdrop-filter: blur(20px);
+    background: rgba(35,39,51,.98); backdrop-filter: blur(20px);
     border: 1px solid rgba(255,255,255,.08);
-    border-radius: 10px;
-    padding: 6px;
-    min-width: 210px;
+    border-radius: 10px; padding: 6px; min-width: 210px;
     box-shadow: 0 10px 30px rgba(0,0,0,.6);
     display: none;
   }
@@ -395,8 +348,7 @@
     width: 100%; text-align: left;
     padding: 10px 12px; background: none; border: none;
     color: var(--text); cursor: pointer; border-radius: 6px;
-    font-size: 14px;
-    transition: .1s;
+    font-size: 14px; transition: .1s;
   }
   #ctx button:hover { background: #2e3341; }
   #ctx button.danger { color: var(--danger); }
@@ -405,8 +357,7 @@
   /* ---------- МОДАЛКА УСТРОЙСТВ ---------- */
   #devices {
     position: fixed; inset: 0; z-index: 300;
-    background: rgba(0,0,0,.7);
-    backdrop-filter: blur(4px);
+    background: rgba(0,0,0,.7); backdrop-filter: blur(4px);
     display: none; align-items: center; justify-content: center;
     padding: 20px;
   }
@@ -431,18 +382,112 @@
     color: #fff; font-weight: 600; cursor: pointer;
   }
 
+  /* ---------- ЗАЯВКИ НА ВХОД (для хоста) ---------- */
+  #lobbyPanel {
+    position: fixed; top: 70px; right: 16px;
+    width: 340px; max-width: calc(100vw - 32px);
+    background: rgba(26,29,36,.98); backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 14px;
+    z-index: 150;
+    display: none;
+    box-shadow: 0 20px 60px rgba(0,0,0,.6);
+    animation: cardIn .25s ease;
+  }
+  #lobbyPanel.open { display: block; }
+  #lobbyPanel .head {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: 600; font-size: 15px;
+  }
+  #lobbyPanel .head .count {
+    background: var(--accent); color: #fff;
+    padding: 2px 8px; border-radius: 999px;
+    font-size: 12px; margin-left: 8px;
+  }
+  #lobbyList {
+    max-height: 320px; overflow-y: auto;
+    padding: 10px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .lobbyItem {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--panel2);
+    border-radius: 10px;
+    font-size: 14px;
+  }
+  .lobbyItem .who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .lobbyItem .who .av {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px; flex-shrink: 0;
+  }
+  .lobbyItem .who .nm {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .lobbyItem .btns { display: flex; gap: 6px; flex-shrink: 0; }
+  .lobbyItem .btns button {
+    width: 34px; height: 34px; border-radius: 50%;
+    border: none; cursor: pointer; font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+    transition: .15s;
+  }
+  .lobbyItem .btns .accept { background: var(--green); color: #fff; }
+  .lobbyItem .btns .accept:hover { background: #2a8f3c; transform: scale(1.1); }
+  .lobbyItem .btns .reject { background: var(--danger); color: #fff; }
+  .lobbyItem .btns .reject:hover { background: #c93b3f; transform: scale(1.1); }
+  #lobbyPanel .foot {
+    padding: 10px;
+    border-top: 1px solid rgba(255,255,255,.06);
+    display: flex; gap: 8px;
+  }
+  #lobbyPanel .foot button {
+    flex: 1; padding: 10px; border: none; border-radius: 8px;
+    cursor: pointer; font-weight: 600; font-size: 14px;
+  }
+  #lobbyPanel .foot .all { background: var(--green); color: #fff; }
+  #lobbyPanel .foot .all:hover { background: #2a8f3c; }
+
+  /* Экран ожидания для гостя */
+  #waiting {
+    position: fixed; inset: 0; z-index: 90;
+    background: rgba(11,13,18,.92); backdrop-filter: blur(20px);
+    display: none; align-items: center; justify-content: center;
+    flex-direction: column; gap: 20px;
+    padding: 20px; text-align: center;
+  }
+  #waiting.open { display: flex; }
+  #waiting .spinner {
+    width: 60px; height: 60px;
+    border: 4px solid rgba(255,255,255,.1);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #waiting h2 { font-size: 20px; }
+  #waiting p { color: var(--muted); font-size: 14px; max-width: 400px; }
+  #waiting button {
+    padding: 10px 20px; background: var(--panel2);
+    border: 1px solid #2e3341; border-radius: 8px;
+    color: var(--text); cursor: pointer;
+  }
+  #waiting button:hover { background: #2e3341; }
+
   /* ---------- TOAST ---------- */
   #toast {
     position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px);
-    background: rgba(35,39,51,.98);
-    backdrop-filter: blur(20px);
+    background: rgba(35,39,51,.98); backdrop-filter: blur(20px);
     padding: 12px 20px; border-radius: 10px;
     font-size: 14px; z-index: 400;
     opacity: 0; transition: .25s;
     pointer-events: none;
     border: 1px solid rgba(255,255,255,.08);
-    max-width: 90vw;
-    text-align: center;
+    max-width: 90vw; text-align: center;
   }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
@@ -454,10 +499,11 @@
   @media (max-width: 600px) {
     .nameCard { padding: 28px 22px; }
     #chat { width: 100vw; }
-    .tile .camOff { font-size: 32px; }
+    .tile .camOff { font-size: 36px; }
     .cbtn { width: 44px; height: 44px; font-size: 17px; }
     .cbtn.leave { width: 54px; }
     .tile .label { font-size: 10px; padding: 2px 6px; }
+    #lobbyPanel { width: calc(100vw - 24px); right: 12px; top: 60px; }
   }
 </style>
 </head>
@@ -523,6 +569,14 @@
   </div>
 </div>
 
+<!-- ================= ЭКРАН ОЖИДАНИЯ (для гостя) ================= -->
+<div id="waiting">
+  <div class="spinner"></div>
+  <h2>Заявка отправлена</h2>
+  <p>Ждём, пока хост подтвердит твой вход в конференцию…</p>
+  <button onclick="cancelWaiting()">Отменить</button>
+</div>
+
 <!-- ================= КОНФЕРЕНЦИЯ ================= -->
 <div id="conf">
   <div id="confTop">
@@ -533,7 +587,7 @@
     </div>
   </div>
 
-  <div id="stage" class="mosaic30"></div>
+  <div id="stage"></div>
 
   <div id="confBar">
     <button class="cbtn" id="btnMic" onclick="toggleMic()" title="Микрофон">🎤</button>
@@ -541,6 +595,18 @@
     <button class="cbtn" onclick="openDevices()" title="Устройства">⚙️</button>
     <button class="cbtn" onclick="toggleChat()" title="Чат">💬</button>
     <button class="cbtn leave" onclick="leaveRoom()" title="Выйти">🚪</button>
+  </div>
+</div>
+
+<!-- ================= ПАНЕЛЬ ЗАЯВОК (хост) ================= -->
+<div id="lobbyPanel">
+  <div class="head">
+    <span>Заявки на вход <span class="count" id="lobbyCount">0</span></span>
+    <button onclick="toggleLobby()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;">×</button>
+  </div>
+  <div id="lobbyList"></div>
+  <div class="foot">
+    <button class="all" onclick="acceptAll()">✓ Принять всех</button>
   </div>
 </div>
 
@@ -577,7 +643,7 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
 /* =========================================================
-   IABG Meet
+   IABG Meet — с подтверждением входа хостом
    ========================================================= */
 
 const params = new URLSearchParams(location.search);
@@ -590,12 +656,16 @@ let peer = null;
 const conns = {};
 const calls = {};
 const meta = {};
-// порядок входа: массив peerId в порядке появления
 let joinOrder = [];
 let micOn = true, camOn = true;
-let layout = 'mosaic30'; // mosaic30 | mosaic9
+let layout = 'mosaic30';
 let chatOpen = false;
 let blockedChat = false;
+let waitingForApproval = false;  // гость ждёт подтверждения
+let approved = false;            // гость получил approve
+
+/* Заявки у хоста: Map peerId -> { name, conn } */
+const pending = new Map();
 
 /* ---------- ЗВУКИ ---------- */
 const AudioFX = (() => {
@@ -608,10 +678,8 @@ const AudioFX = (() => {
     return ctx;
   }
   function tone({ freq = 440, dur = 0.12, type = 'sine', vol = 0.08, slideTo = null }) {
-    const c = ensure();
-    if (!c) return;
-    const o = c.createOscillator();
-    const g = c.createGain();
+    const c = ensure(); if (!c) return;
+    const o = c.createOscillator(), g = c.createGain();
     o.type = type;
     o.frequency.setValueAtTime(freq, c.currentTime);
     if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, c.currentTime + dur);
@@ -622,13 +690,14 @@ const AudioFX = (() => {
     o.start(); o.stop(c.currentTime + dur + 0.02);
   }
   return {
-    join()    { tone({ freq: 523, dur: 0.1, type: 'sine' }); setTimeout(()=>tone({freq:784, dur:0.12, type:'sine'}), 90); },
-    leave()   { tone({ freq: 400, dur: 0.14, type: 'sine', slideTo: 200 }); },
+    join()    { tone({ freq: 523, dur: 0.1 }); setTimeout(()=>tone({freq:784, dur:0.12}), 90); },
+    leave()   { tone({ freq: 400, dur: 0.14, slideTo: 200 }); },
     message() { tone({ freq: 880, dur: 0.08, type: 'triangle', vol: 0.06 }); },
     micOff()  { tone({ freq: 300, dur: 0.12, type: 'square', vol: 0.05, slideTo: 180 }); },
     micOn()   { tone({ freq: 500, dur: 0.1, type: 'square', vol: 0.05, slideTo: 700 }); },
-    click()   { tone({ freq: 600, dur: 0.05, type: 'sine', vol: 0.04 }); },
-    error()   { tone({ freq: 220, dur: 0.2, type: 'sawtooth', vol: 0.06 }); }
+    click()   { tone({ freq: 600, dur: 0.05, vol: 0.04 }); },
+    error()   { tone({ freq: 220, dur: 0.2, type: 'sawtooth', vol: 0.06 }); },
+    knock()   { tone({ freq: 700, dur: 0.1, type: 'sine' }); setTimeout(()=>tone({freq:900, dur:0.15, type:'sine'}),120); }
   };
 })();
 
@@ -642,7 +711,6 @@ function toast(text) {
   t._t = setTimeout(() => t.classList.remove('show'), 2200);
 }
 function initials(name) {
-  // первая буква имени (не фамилии)
   const parts = String(name || '?').trim().split(/\s+/);
   return (parts[0] || '?').slice(0, 1).toUpperCase();
 }
@@ -672,7 +740,6 @@ function enterMenu() {
   updateFriendInvite();
   if (room) startConference(room, false);
 }
-
 function resetUser() {
   localStorage.removeItem('iabg_name');
   location.href = location.pathname;
@@ -694,29 +761,25 @@ function createAndInvite() {
   const id = Math.random().toString(36).slice(2, 8);
   room = id;
   updateFriendInvite();
-  const url = location.origin + location.pathname + '?room=' + id;
-  navigator.clipboard.writeText(url);
+  navigator.clipboard.writeText(location.origin + location.pathname + '?room=' + id);
   toast('Ссылка скопирована');
   AudioFX.click();
   startConference(id, true);
 }
 function updateFriendInvite() {
-  const box = $('friendInvite');
-  if (!box) return;
+  const box = $('friendInvite'); if (!box) return;
   if (room) box.value = location.origin + location.pathname + '?room=' + room;
   else { box.value = ''; box.placeholder = 'Сначала создай комнату'; }
 }
 function copyFriendInvite() {
   if (!room) { AudioFX.error(); return toast('Сначала создай комнату'); }
   navigator.clipboard.writeText(location.origin + location.pathname + '?room=' + room);
-  AudioFX.click();
-  toast('Ссылка скопирована');
+  AudioFX.click(); toast('Ссылка скопирована');
 }
 function copyInvite() {
   if (!room) return;
   navigator.clipboard.writeText(location.origin + location.pathname + '?room=' + room);
-  AudioFX.click();
-  toast('Ссылка скопирована');
+  AudioFX.click(); toast('Ссылка скопирована');
 }
 
 /* =========================================================
@@ -763,6 +826,11 @@ async function startConference(roomId, host) {
     addSystemMsg('Ты создал комнату. Ждём участников...');
     AudioFX.join();
   } else {
+    // ГОСТЬ — сначала заявка, конференция подождёт
+    waitingForApproval = true;
+    approved = false;
+    $('waiting').classList.add('open');
+
     peer = new Peer({
       debug: 1,
       config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
@@ -771,15 +839,14 @@ async function startConference(roomId, host) {
       myId = id;
       const conn = peer.connect(hostId, { reliable: true });
       conn.on('open', () => {
-        setupConn(conn);
-        addSystemMsg('Подключено к комнате');
-        AudioFX.join();
-        const call = peer.call(hostId, localStream, { metadata: { name: myName } });
-        if (call) bindCall(call);
+        // отправляем заявку, НЕ подключаемся как обычно
+        conn.send({ type: 'knock', name: myName });
+        setupLobbyConn(conn);
       });
       conn.on('error', () => {
         toast('Комната не найдена');
         AudioFX.error();
+        $('waiting').classList.remove('open');
         leaveRoom();
       });
     });
@@ -789,19 +856,161 @@ async function startConference(roomId, host) {
   }
 
   if (micOn) updateMicIcon('me', true);
-  applyLayout();
 }
 
-function onIncomingConn(conn) { setupConn(conn); }
+/* Отдельная обработка соединения в режиме "лобби" (для гостя) */
+function setupLobbyConn(conn) {
+  conn.on('data', msg => {
+    if (!msg || !msg.type) return;
+    if (msg.type === 'approve') {
+      // Хост принял — превращаем это соединение в обычное
+      approved = true;
+      waitingForApproval = false;
+      $('waiting').classList.remove('open');
+      addSystemMsg('Хост принял тебя');
+      AudioFX.join();
+      // превращаем conn в обычное
+      setupConn(conn, true);
+      // звоним хосту
+      const call = peer.call(conn.peer, localStream, { metadata: { name: myName } });
+      if (call) bindCall(call);
+    } else if (msg.type === 'reject') {
+      toast('Хост отклонил заявку');
+      AudioFX.error();
+      $('waiting').classList.remove('open');
+      setTimeout(leaveRoom, 800);
+    }
+  });
+  conn.on('close', () => {
+    if (waitingForApproval) {
+      toast('Хост закрыл комнату');
+      setTimeout(leaveRoom, 800);
+    }
+  });
+}
+
+function cancelWaiting() {
+  if (peer) peer.destroy();
+  localStream?.getTracks().forEach(t => t.stop());
+  const p = new URLSearchParams(location.search);
+  p.delete('room');
+  location.href = location.pathname + (p.toString() ? '?' + p.toString() : '');
+}
+
+/* ---------- ВХОДЯЩИЕ ---------- */
+function onIncomingConn(conn) {
+  // Хост: сюда прилетает заявка "knock" или обычное соединение
+  conn.on('data', msg => {
+    if (msg && msg.type === 'knock') {
+      // Это заявка на вход
+      if (isHost) {
+        addPending(conn.peer, msg.name, conn);
+      }
+      return;
+    }
+    // иначе — обычные сообщения
+    handleMsg(conn.peer, msg);
+  });
+  conn.on('close', () => {
+    // если это была заявка — убираем из списка
+    if (pending.has(conn.peer)) {
+      pending.delete(conn.peer);
+      renderLobby();
+    }
+  });
+}
+
 function onIncomingCall(call) {
+  // Хост принимает звонок только от одобренных
+  if (isHost && !meta[call.peer] && !approved.includes?.(call.peer)) {
+    // не одобрен — отклоняем
+    try { call.close(); } catch(e){}
+    return;
+  }
   call.answer(localStream);
   bindCall(call);
 }
 
-function setupConn(conn) {
+/* ---------- ЗАЯВКИ (хост) ---------- */
+function addPending(peerId, name, conn) {
+  pending.set(peerId, { name, conn, peerId });
+  AudioFX.knock();
+  renderLobby();
+  $('lobbyPanel').classList.add('open');
+  toast(name + ' хочет войти');
+}
+
+function renderLobby() {
+  const list = $('lobbyList');
+  list.innerHTML = '';
+  $('lobbyCount').textContent = pending.size;
+  if (pending.size === 0) {
+    $('lobbyPanel').classList.remove('open');
+    return;
+  }
+  pending.forEach((item, peerId) => {
+    const d = document.createElement('div');
+    d.className = 'lobbyItem';
+    d.innerHTML = `
+      <div class="who">
+        <div class="av">${escapeHtml(initials(item.name))}</div>
+        <div class="nm">${escapeHtml(item.name)}</div>
+      </div>
+      <div class="btns">
+        <button class="accept" title="Принять">✓</button>
+        <button class="reject" title="Отклонить">✕</button>
+      </div>
+    `;
+    d.querySelector('.accept').onclick = () => acceptPending(peerId);
+    d.querySelector('.reject').onclick = () => rejectPending(peerId);
+    list.appendChild(d);
+  });
+}
+
+function acceptPending(peerId) {
+  const item = pending.get(peerId);
+  if (!item) return;
+  try {
+    item.conn.send({ type: 'approve' });
+    // превращаем это соединение в обычное
+    setupConn(item.conn, true);
+    // и звоним новому участнику
+    const call = peer.call(peerId, localStream, { metadata: { name: myName } });
+    if (call) bindCall(call);
+  } catch(e) { console.warn(e); }
+  pending.delete(peerId);
+  renderLobby();
+  toast('Принят: ' + item.name);
+  AudioFX.click();
+}
+
+function rejectPending(peerId) {
+  const item = pending.get(peerId);
+  if (!item) return;
+  try { item.conn.send({ type: 'reject' }); } catch(e){}
+  try { item.conn.close(); } catch(e){}
+  pending.delete(peerId);
+  renderLobby();
+  toast('Отклонён: ' + item.name);
+  AudioFX.error();
+}
+
+function acceptAll() {
+  const ids = [...pending.keys()];
+  if (ids.length === 0) return;
+  ids.forEach(id => acceptPending(id));
+  toast('Принято всех: ' + ids.length);
+}
+
+function toggleLobby() {
+  $('lobbyPanel').classList.toggle('open');
+}
+
+/* ---------- ОБЫЧНОЕ СОЕДИНЕНИЕ ---------- */
+function setupConn(conn, preexisting=false) {
   conns[conn.peer] = conn;
 
-  conn.on('open', () => {
+  const onOpen = () => {
     conn.send({
       type: 'hello',
       name: myName,
@@ -813,7 +1022,10 @@ function setupConn(conn) {
       const others = Object.keys(conns).filter(id => id !== conn.peer);
       conn.send({ type: 'peers', peers: others, hostId: myId });
     }
-  });
+  };
+
+  if (preexisting) onOpen();
+  else conn.on('open', onOpen);
 
   conn.on('data', msg => handleMsg(conn.peer, msg));
 
@@ -861,29 +1073,24 @@ function handleMsg(fromId, msg) {
       if (meta[fromId]) meta[fromId].mic = msg.on;
       updateMicIcon(fromId, msg.on);
       break;
-
     case 'cam':
       if (meta[fromId]) meta[fromId].cam = msg.on;
       updateCamVisibility(fromId, msg.on);
       break;
-
     case 'chat':
       addChatMsg(meta[fromId]?.name || 'Аноним', msg.text, false);
       AudioFX.message();
       break;
-
     case 'kick':
       toast('Тебя кикнул хост');
       AudioFX.error();
       setTimeout(leaveRoom, 900);
       break;
-
     case 'block-chat':
       blockedChat = msg.on;
       toast(msg.on ? 'Хост заблокировал тебе чат' : 'Чат разблокирован');
       $('chatText').disabled = msg.on;
       break;
-
     case 'mute-force':
       micOn = false;
       localStream.getAudioTracks().forEach(t => t.enabled = false);
@@ -952,40 +1159,38 @@ function removeTile(id) {
   document.getElementById('t-' + id)?.remove();
 }
 
-/* ---------- LAYOUT: мозаика 30+ / мозаика 9 ---------- */
+/* ---------- LAYOUT ---------- */
 function applyLayout() {
   const stage = $('stage');
-  // порядок: me, затем по joinOrder
   const ordered = ['me', ...joinOrder.filter(id => id !== 'me')]
     .filter(id => document.getElementById('t-' + id));
-  // пересортируем DOM
+
   ordered.forEach(id => {
     const el = document.getElementById('t-' + id);
     if (el) stage.appendChild(el);
   });
 
-  // убираем старую плитку "+N"
   stage.querySelector('.tile.more')?.remove();
 
   if (layout === 'mosaic9') {
+    // 3x3 — если больше 9, показываем первые 8 + "+N"
     const max = 9;
-    const tiles = ordered.filter(id => id !== 'me' || true);
-    // me + остальные = все
     const all = ordered;
     if (all.length > max) {
-      // показываем первые max-1, последняя — "+N"
       const show = all.slice(0, max - 1);
       const hidden = all.length - (max - 1);
-      // скрываем лишние
       all.forEach(id => {
         const el = document.getElementById('t-' + id);
         if (el) el.style.display = show.includes(id) ? '' : 'none';
       });
-      // добавляем "+N"
       const more = document.createElement('div');
       more.className = 'tile more';
       more.innerHTML = `+${hidden}<small>участников</small>`;
-      more.onclick = () => { layout = 'mosaic30'; applyLayout(); $('layoutBtn').textContent = '▦ Мозаика 30+'; };
+      more.onclick = () => {
+        layout = 'mosaic30';
+        $('layoutBtn').textContent = '▦ Мозаика 30+';
+        applyLayout();
+      };
       stage.appendChild(more);
     } else {
       all.forEach(id => {
@@ -993,13 +1198,15 @@ function applyLayout() {
         if (el) el.style.display = '';
       });
     }
+    // 3x3 сетка
+    stage.style.gridTemplateColumns = 'repeat(3, minmax(0, 1fr))';
+    stage.style.gridTemplateRows = 'repeat(3, minmax(0, 1fr))';
   } else {
     // mosaic30 — показываем всех
     ordered.forEach(id => {
       const el = document.getElementById('t-' + id);
       if (el) el.style.display = '';
     });
-    // авто-колонки в зависимости от количества
     const n = ordered.length;
     let cols = 1;
     if (n === 1) cols = 1;
@@ -1009,9 +1216,9 @@ function applyLayout() {
     else if (n <= 16) cols = 4;
     else if (n <= 25) cols = 5;
     else cols = 6;
-    stage.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
     const rows = Math.ceil(n / cols);
-    stage.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+    stage.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+    stage.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`;
   }
 }
 
@@ -1140,14 +1347,12 @@ function showCtx(x, y, targetId) {
 document.addEventListener('click', () => $('ctx').style.display = 'none');
 
 function forceMute(targetId) {
-  const c = conns[targetId];
-  if (c) c.send({ type: 'mute-force' });
+  const c = conns[targetId]; if (c) c.send({ type: 'mute-force' });
   toast('Участнику выключен микрофон');
   AudioFX.click();
 }
 function blockChat(targetId) {
-  const c = conns[targetId];
-  if (!c) return;
+  const c = conns[targetId]; if (!c) return;
   meta[targetId] = meta[targetId] || {};
   meta[targetId].blocked = !meta[targetId].blocked;
   c.send({ type: 'block-chat', on: meta[targetId].blocked });
@@ -1155,8 +1360,7 @@ function blockChat(targetId) {
   AudioFX.click();
 }
 function kick(targetId) {
-  const c = conns[targetId];
-  if (c) c.send({ type: 'kick' });
+  const c = conns[targetId]; if (c) c.send({ type: 'kick' });
   toast('Участник кикнут');
   AudioFX.click();
 }
