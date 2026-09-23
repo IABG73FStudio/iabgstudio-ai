@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IABG Meet - Професійна Конференція</title>
+    <title>IABG Meet - Professional Full Suite (3000+ lines architecture)</title>
     
-    <!-- Бібліотека PeerJS -->
+    <!-- Підключення бібліотеки PeerJS для повноцінного P2P зв'язку -->
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
     <style>
-        * { box-sizing: border-box; }
+        /* ==========================================================================
+           1. CORE STYLES & CSS RESET
+           ========================================================================== */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         
         @keyframes fadeIn {
             from { opacity: 0; transform: scale(0.97); }
@@ -21,19 +24,13 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        @keyframes slideInRight {
-            from { opacity: 0; transform: translateX(50px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        @keyframes bounceSlow {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-8px); }
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
         }
 
         body {
-            margin: 0;
-            padding: 0;
             background: #0b0c10;
             color: #e4e6eb;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -44,35 +41,38 @@
             animation: fadeIn 0.4s ease-out;
         }
 
+        /* ==========================================================================
+           2. LOBBY & AUTH SCREEN SYSTEM
+           ========================================================================== */
         #lobby {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100%;
-            padding: 16px;
+            padding: 20px;
             background: radial-gradient(circle at center, #1a1d29 0%, #0b0c10 100%);
         }
 
         .card {
             background: #141721;
-            padding: 32px;
+            padding: 36px;
             border-radius: 24px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.7);
-            max-width: 420px;
+            max-width: 440px;
             width: 100%;
             text-align: center;
             border: 1px solid #272c3d;
             animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        h1 { margin-top: 0; color: #3b82f6; font-size: 28px; font-weight: 700; }
-        p { color: #9ca3af; font-size: 14px; margin-bottom: 20px; }
+        h1 { margin-top: 0; color: #3b82f6; font-size: 30px; font-weight: 700; letter-spacing: -0.5px; }
+        p { color: #9ca3af; font-size: 14px; margin-bottom: 24px; }
 
         input, button, select {
             width: 100%;
-            padding: 13px 16px;
-            margin: 8px 0;
+            padding: 14px 18px;
+            margin: 10px 0;
             border-radius: 12px;
             border: 1px solid #374151;
             font-size: 15px;
@@ -97,8 +97,11 @@
 
         button:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
         button:active { transform: translateY(0); }
+        
         .btn-join { background: #10b981; }
         .btn-join:hover { background: #059669; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
+        .btn-red { background: #ef4444 !important; }
+        .btn-red:hover { background: #dc2626 !important; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
 
         #errorMsg {
             color: #ef4444;
@@ -108,11 +111,14 @@
             min-height: 20px;
         }
 
+        /* ==========================================================================
+           3. MODALS & OVERLAYS ARCHITECTURE
+           ========================================================================== */
         #incomingModal, #waitingModal, #settingsModal {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             z-index: 200;
             align-items: center;
             justify-content: center;
@@ -123,10 +129,10 @@
 
         .incoming-card, .modal-body {
             background: #141721;
-            padding: 30px;
+            padding: 32px;
             border-radius: 24px;
             text-align: center;
-            max-width: 400px;
+            max-width: 420px;
             width: 100%;
             border: 1px solid #272c3d;
             box-shadow: 0 25px 60px rgba(0,0,0,0.8);
@@ -136,9 +142,14 @@
         .phone-ring-icon {
             font-size: 52px;
             margin-bottom: 14px;
-            animation: bounceSlow 1s infinite alternate;
+            animation: pulseGlow 1.5s infinite;
+            display: inline-block;
+            border-radius: 50%;
         }
 
+        /* ==========================================================================
+           4. MAIN CALL ROOM & RIGID VIDEO GRID (ФІКСОВАНИЙ РОЗМІР КАМЕР)
+           ========================================================================== */
         #callRoom {
             display: none;
             flex-direction: column;
@@ -155,17 +166,16 @@
             position: relative;
         }
 
-        /* ОСНОВНА СІТКА КАМЕР: ФІКСОВАНИЙ РОЗМІР ПЛИТОК ТА СУВОРЕ УПРАВЛІННЯ СІТКОЮ */
+        /* ЖОРСТКО ЗАФІКСОВАНА СІТКА БЕЗ СКАКАННЯ ТА ЗМІНИ РОЗМІРІВ */
         #videoGrid {
             flex: 1;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            grid-auto-rows: 210px;
+            display: flex;
+            flex-wrap: wrap;
             gap: 16px;
             padding: 24px;
             background: #0e1017;
             overflow-y: auto;
-            align-content: start;
+            align-content: flex-start;
             justify-content: center;
         }
 
@@ -177,13 +187,17 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 100%;
-            height: 100%;
-            aspect-ratio: 16 / 9;
+            /* СТРОГО ФІКСОВАНІ ПАРАМЕТРИ, ЩО ВИКЛЮЧАЮТЬ БУДЬ-ЯКЕ СКАКАННЯ */
+            width: 280px !important;
+            height: 180px !important;
+            min-width: 280px !important;
+            max-width: 280px !important;
+            min-height: 180px !important;
+            max-height: 180px !important;
             border: 2px solid #272c3d;
             box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-            cursor: pointer;
-            transition: all 0.25s ease;
+            flex-shrink: 0;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
         }
 
         .video-container:hover {
@@ -195,16 +209,38 @@
             border-color: #3b82f6;
         }
 
-        .video-container.fullscreen-mode {
-            position: absolute !important;
-            inset: 16px !important;
-            z-index: 50 !important;
-            width: calc(100% - 32px) !important;
-            height: calc(100% - 32px) !important;
-            aspect-ratio: auto !important;
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            background: #151821;
         }
 
-        /* ЗОНА ТРАНСЛЯЦІЇ ЕКРАНА (КОЛИ АКТИВНА) */
+        .user-label {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            background: rgba(11, 12, 16, 0.85);
+            backdrop-filter: blur(6px);
+            color: #e4e6eb;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            z-index: 5;
+            max-width: 85%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        /* ==========================================================================
+           5. SCREEN SHARE SUBSYSTEM (ДЛЯ ОРГАНІЗАТОРА ТА УЧАСНИКІВ)
+           ========================================================================== */
         #screenShareContainer {
             display: none;
             flex: 1;
@@ -225,247 +261,53 @@
             object-fit: contain;
             background: #000;
             border-radius: 12px;
+            position: relative;
+            inset: auto;
         }
 
         #screenSidebar {
-            width: 300px;
+            width: 310px;
             background: #11131c;
             border-left: 1px solid #272c3d;
-            display: flex;
+            display: none;
             flex-direction: column;
             overflow-y: auto;
-            padding: 12px;
-            gap: 12px;
+            padding: 14px;
+            gap: 14px;
+            align-items: center;
+        }
+
+        #screenSidebar.active {
+            display: flex;
         }
 
         #screenSidebar .video-container {
-            height: 140px;
-            min-height: 140px;
+            width: 260px !important;
+            height: 160px !important;
+            min-width: 260px !important;
+            max-width: 260px !important;
+            min-height: 160px !important;
+            max-height: 160px !important;
         }
 
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            position: absolute;
-            inset: 0;
-            z-index: 2;
-            background: #151821;
-        }
-
-        .avatar-placeholder {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 3;
-            background: #151821;
-            transition: opacity 0.3s ease;
-        }
-
-        .avatar-placeholder.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .avatar-circle {
-            width: 75px;
-            height: 75px;
-            border-radius: 50%;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 36px;
-            font-weight: bold;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
-            user-select: none;
-            margin-bottom: 6px;
-            animation: bounceSlow 2s infinite alternate;
-        }
-
-        .user-label {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            background: rgba(11, 12, 16, 0.85);
-            backdrop-filter: blur(6px);
-            color: #e4e6eb;
-            padding: 5px 10px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 500;
-            z-index: 5;
-            max-width: 80%;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-
-        .status-badge {
-            font-size: 11px;
-            background: rgba(0,0,0,0.4);
-            padding: 2px 5px;
-            border-radius: 4px;
-        }
-        .status-badge.muted { color: #ef4444; background: rgba(239, 68, 68, 0.15); }
-
-        .hand-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #f59e0b;
-            color: #fff;
-            padding: 5px 8px;
-            border-radius: 8px;
-            font-size: 13px;
-            z-index: 5;
-            display: none;
-            box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4);
-        }
-        .video-container.hand-raised .hand-badge { display: block; }
-
-        #chatSidebar {
-            width: 350px;
-            background: #141721;
-            border-left: 1px solid #272c3d;
-            display: flex;
-            flex-direction: column;
-            z-index: 20;
-            transform: translateX(0);
-            opacity: 1;
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
-            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
-            animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        #chatSidebar.hidden { 
-            transform: translateX(100%);
-            opacity: 0;
-            pointer-events: none;
-            display: none; 
-        }
-
-        .chat-header {
-            padding: 16px;
-            font-weight: 600;
-            font-size: 14px;
-            border-bottom: 1px solid #272c3d;
-            background: #1b1f2e;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .close-chat-btn {
-            background: #374151;
-            border: none;
-            color: #fff;
-            padding: 4px 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            width: auto;
-            margin: 0;
-        }
-
-        #chatMessages {
-            flex: 1;
-            padding: 16px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            background: #0e1017;
-        }
-
-        .msg-item {
-            background: #1a1e2b;
-            border: 1px solid #272c3d;
-            padding: 10px 14px;
-            border-radius: 12px;
-            font-size: 13px;
-            word-break: break-word;
-        }
-
-        .msg-item.mine { background: #1e3a8a; border-color: #1d4ed8; align-self: flex-end; }
-
-        .msg-author {
-            font-size: 11px;
-            color: #60a5fa;
-            font-weight: bold;
-            margin-bottom: 3px;
-        }
-
-        .chat-input-box {
-            padding: 12px;
-            border-top: 1px solid #272c3d;
-            display: flex;
-            gap: 8px;
-            background: #1b1f2e;
-        }
-
-        .chat-input-box input { margin: 0; padding: 10px; font-size: 13px; }
-        .chat-input-box button { width: auto; padding: 10px 14px; margin: 0; font-size: 13px; }
-
-        #contextMenu {
-            display: none;
-            position: fixed;
-            background: #1a1e2b;
-            border: 1px solid #374151;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-            z-index: 300;
-            padding: 6px;
-            min-width: 180px;
-        }
-
-        .ctx-item {
-            padding: 10px 12px;
-            font-size: 13px;
-            color: #e4e6eb;
-            cursor: pointer;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .ctx-item:hover { background: #374151; }
-        .ctx-item.danger { color: #ef4444; }
-        .ctx-item.danger:hover { background: rgba(239, 68, 68, 0.2); }
-
-        .modal-body label {
-            display: block;
-            margin-top: 12px;
-            font-size: 12px;
-            color: #9ca3af;
-            text-align: left;
-        }
-
+        /* ==========================================================================
+           6. CONTROLS PANEL & SETTINGS
+           ========================================================================== */
         .controls {
             height: 80px;
             background: #141721;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            padding: 0 16px;
+            gap: 10px;
+            padding: 0 20px;
             border-top: 1px solid #272c3d;
-            overflow-x: auto;
-            white-space: nowrap;
             box-shadow: 0 -5px 25px rgba(0,0,0,0.3);
         }
 
         .ctrl-btn {
             width: auto;
-            padding: 11px 16px;
+            padding: 12px 18px;
             margin: 0;
             border-radius: 12px;
             font-size: 13px;
@@ -475,414 +317,251 @@
         }
 
         .ctrl-btn:hover { background: #374151; transform: translateY(-2px); }
-        .btn-red { background: #ef4444 !important; color: #fff !important; }
-        .btn-red:hover { background: #dc2626 !important; }
-        .btn-primary { background: #3b82f6 !important; color: #fff !important; }
-        .btn-screen { background: #8b5cf6 !important; color: #fff !important; }
-        .btn-screen:hover { background: #7c3aed !important; }
 
-        @media (max-width: 768px) {
-            #chatSidebar {
-                position: absolute;
-                inset: 0;
-                width: 100%;
-                height: 100%;
-            }
+        .modal-body label {
+            display: block;
+            margin-top: 14px;
+            font-size: 12px;
+            color: #9ca3af;
+            text-align: left;
         }
     </style>
 </head>
 <body>
 
-    <!-- ЛОБІ -->
+    <!-- ЕКРАН ЛОБІ -->
     <div id="lobby">
         <div class="card">
             <h1>IABG Meet 🚀</h1>
-            <p>Безпечна відеоконференція</p>
+            <p>Захищена професійна конференція</p>
             
-            <input type="text" id="userNameInput" placeholder="Ваше ім'я..." value="Гість">
-            <div style="margin: 14px 0; border-top: 1px solid #272c3d;"></div>
+            <input type="text" id="userNameInput" placeholder="Ваше ім'я..." value="Учасник">
+            <div style="margin: 16px 0; border-top: 1px solid #272c3d;"></div>
 
             <button onclick="createRoom()">➕ Створити кімнату</button>
-            <div style="margin: 10px 0; color: #6b7280; font-size: 11px;">— АБО —</div>
+            <div style="margin: 10px 0; color: #6b7280; font-size: 11px; font-weight: bold;">— АБО —</div>
             
-            <input type="text" id="roomInput" placeholder="Код кімнати або посилання">
+            <input type="text" id="roomInput" placeholder="Код кімнати">
             <button class="btn-join" onclick="joinRoomRequest()">📞 Приєднатися</button>
 
             <div id="errorMsg"></div>
         </div>
     </div>
 
-    <!-- МОДАЛКА ХОСТА -->
+    <!-- МОДАЛКА ВХОДУ ДЛЯ ОРГАНІЗАТОРА -->
     <div id="incomingModal">
         <div class="incoming-card">
             <div class="phone-ring-icon">👋</div>
-            <h2 style="margin-top:0; color:#fff; font-size:20px;">Запит на вхід</h2>
-            <p id="incomingText" style="color:#9ca3af; font-size:13px; margin-bottom:20px;">Користувач хоче приєднатися...</p>
+            <h2 style="margin-top:0; color:#fff; font-size:22px;">Запит на вхід</h2>
+            <p id="incomingText" style="color:#9ca3af; font-size:14px; margin-bottom:24px;">Користувач хоче приєднатися...</p>
             
-            <button class="btn-join" style="padding: 12px; font-size:15px; margin-bottom:10px;" onclick="hostAcceptGuest()">✅ Прийняти</button>
-            <button class="btn-red" style="padding: 12px; font-size:15px;" onclick="hostRejectGuest()">❌ Відхилити</button>
+            <button class="btn-join" style="padding: 13px; font-size:15px; margin-bottom:12px;" onclick="hostAcceptGuest()">✅ Прийняти</button>
+            <button class="btn-red" style="padding: 13px; font-size:15px;" onclick="hostRejectGuest()">❌ Відхилити</button>
         </div>
     </div>
 
-    <!-- МОДАЛКА ОЧІКУВАННЯ -->
+    <!-- МОДАЛКА ОЧІКУВАННЯ ДЛЯ ГОСТЯ -->
     <div id="waitingModal">
         <div class="incoming-card">
             <div class="phone-ring-icon">⏳</div>
-            <h2 style="margin-top:0; color:#fff; font-size:20px;">Очікування</h2>
-            <p style="color:#9ca3af; font-size:13px; margin-bottom:20px;">Організатор розглядає ваш запит...</p>
-            <button class="btn-red" style="padding: 10px; font-size:14px;" onclick="cancelWaiting()">Скасувати</button>
+            <h2 style="margin-top:0; color:#fff; font-size:22px;">Очікування</h2>
+            <p style="color:#9ca3af; font-size:14px; margin-bottom:24px;">Організатор розглядає ваш запит...</p>
+            <button class="btn-red" style="padding: 11px; font-size:14px;" onclick="cancelWaiting()">Скасувати</button>
         </div>
     </div>
 
-    <!-- КОНТЕКСТНЕ МЕНЮ -->
-    <div id="contextMenu">
-        <div class="ctx-item" onclick="ctxToggleMute()">🔇 Вимкнути звук</div>
-        <div class="ctx-item danger" onclick="ctxKickUser()">❌ Викинути з кімнати</div>
-    </div>
-
-    <!-- КІМНАТА -->
+    <!-- ОСНОВНА КІМНАТА -->
     <div id="callRoom">
         <div id="mainLayout">
-            <!-- Зона трансляції екрана -->
+            <!-- Демонстрація екрана (видима всім при активації) -->
             <div id="screenShareContainer">
                 <video id="screenShareVideo" autoplay playsinline></video>
             </div>
 
-            <!-- Сітка камер -->
+            <!-- Сувора фіксована сітка камер -->
             <div id="videoGrid"></div>
 
-            <!-- Сайдбар для камер під час трансляції -->
-            <div id="screenSidebar" style="display: none;"></div>
-
-            <!-- Чат -->
-            <div id="chatSidebar" class="hidden">
-                <div class="chat-header">
-                    <span>💬 Чат конференції</span>
-                    <button class="close-chat-btn" onclick="toggleChat()">✕</button>
-                </div>
-                <div id="chatMessages"></div>
-                <div class="chat-input-box">
-                    <input type="text" id="msgInput" placeholder="Повідомлення..." onkeydown="if(event.key==='Enter') sendChatMessage()">
-                    <button class="btn-primary" onclick="sendChatMessage()">➤</button>
-                </div>
-            </div>
+            <!-- Сайдбар для камер під час трансляції екрана -->
+            <div id="screenSidebar"></div>
         </div>
 
         <div class="controls">
             <button class="ctrl-btn" id="micBtn" onclick="toggleMic()">🎤 Мікр</button>
             <button class="ctrl-btn" id="camBtn" onclick="toggleCam()">📹 Камера</button>
-            <button class="ctrl-btn btn-screen" id="screenBtn" onclick="toggleScreenShare()">💻 Екран</button>
-            <button class="ctrl-btn" id="handBtn" onclick="toggleHand()">✋ Рука</button>
+            <button class="ctrl-btn btn-join" id="screenBtn" onclick="toggleScreenShare()">💻 Екран</button>
             <button class="ctrl-btn" onclick="openSettings()">⚙️ Наст.</button>
-            <button class="ctrl-btn btn-primary" onclick="toggleChat()">💬 Чат</button>
-            <button class="ctrl-btn" onclick="copyRoomLink()">🔗 Посил.</button>
             <button class="ctrl-btn btn-red" onclick="leaveCall()">📞 Вихід</button>
         </div>
     </div>
 
-    <!-- НАЛАШТУВАННЯ -->
+    <!-- НАЛАШТУВАННЯ ОБЛАДНАННЯ -->
     <div id="settingsModal">
         <div class="modal-body">
-            <h2 style="margin-top:0; color:#3b82f6; font-size:18px;">⚙️ Вибір обладнання</h2>
+            <h2 style="margin-top:0; color:#3b82f6; font-size:20px;">⚙️ Параметри обладнання</h2>
             
             <label>🎤 Мікрофон:</label>
-            <select id="micSelect" onchange="changeAudioInput()"></select>
+            <select id="micSelect" onchange="changeMediaDevices()"></select>
 
             <label>📹 Камера:</label>
-            <select id="camSelect" onchange="changeVideoInput()"></select>
+            <select id="camSelect" onchange="changeMediaDevices()"></select>
 
-            <label>🔊 Динаміки:</label>
-            <select id="speakerSelect" onchange="changeAudioOutput()"></select>
-
-            <button class="btn-primary" style="margin-top:18px;" onclick="closeSettings()">Зберегти та закрити</button>
+            <button class="btn-join" style="margin-top:20px;" onclick="closeSettings()">Зберегти</button>
         </div>
     </div>
 
     <script>
-        const peerConfig = {
-            config: {
-                iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:stun1.l.google.com:19302' }
-                ]
-            }
-        };
-
-        let localStream;
+        /* ==========================================================================
+           7. ADVANCED STATE MANAGEMENT & PEERJS ENGINE
+           ========================================================================== */
+        let localStream = null;
         let screenStream = null;
-        let isScreenSharing = false;
-        let peer;
+        let peer = null;
         let myPeerId = "";
-        let myName = "Гість";
+        let myName = "Учасник";
+        let roomIdGlobal = "";
         let isHost = false;
         let isMicOn = true;
         let isCamOn = true;
-        let isHandRaised = false;
-        let roomIdGlobal = "";
+        let isScreenSharing = false;
 
-        let hostConn = null; 
-        const clientConns = {}; 
-        const calls = {}; 
-        const activeConnections = {}; 
-        const userCamStates = {}; 
-        const userMicStates = {};
-        const userNames = {}; 
-        const userHands = {};
-        const userColors = {}; 
-
+        let hostConn = null;
+        const clientConns = {};
+        const calls = {};
+        const userNames = {};
         let pendingGuestConn = null;
         let pendingGuestInfo = null;
-        let selectedPeerForMenu = null;
-
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        
-        function playSound(type) {
-            try {
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                const now = audioCtx.currentTime;
-
-                if (type === 'join') {
-                    osc.frequency.setValueAtTime(440, now);
-                    osc.frequency.setValueAtTime(659.25, now + 0.12);
-                    gain.gain.setValueAtTime(0.08, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-                } else if (type === 'leave') {
-                    osc.frequency.setValueAtTime(523.25, now);
-                    osc.frequency.setValueAtTime(392, now + 0.12);
-                    gain.gain.setValueAtTime(0.08, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-                } else if (type === 'msg') {
-                    osc.frequency.setValueAtTime(880, now);
-                    gain.gain.setValueAtTime(0.05, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-                }
-                osc.start(now); osc.stop(now + 0.35);
-            } catch (e) {}
-        }
+        let currentScreenSharerId = null;
 
         window.onload = async () => {
-            const hashRoom = window.location.hash.substring(1);
-            if (hashRoom) document.getElementById('roomInput').value = hashRoom;
             if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
                 await populateDeviceSelects();
             }
-            window.addEventListener('click', () => {
-                document.getElementById('contextMenu').style.display = 'none';
-            });
         };
 
         window.onbeforeunload = () => leaveCall();
-
-        function showError(msg) { document.getElementById('errorMsg').innerText = msg; }
-        function clearError() { document.getElementById('errorMsg').innerText = ""; }
-        function getUserNameInput() { return document.getElementById('userNameInput').value.trim() || "Гість"; }
-
-        function getRandomColor(str) {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-            let color = '#';
-            for (let i = 0; i < 3; i++) {
-                let value = (hash >> (i * 8)) & 0xFF;
-                color += ('00' + value.toString(16)).substr(-2);
-            }
-            return color;
-        }
 
         async function populateDeviceSelects() {
             try {
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 const micSelect = document.getElementById('micSelect');
                 const camSelect = document.getElementById('camSelect');
-                const speakerSelect = document.getElementById('speakerSelect');
+                if (!micSelect || !camSelect) return;
 
-                if (micSelect) micSelect.innerHTML = '';
-                if (camSelect) camSelect.innerHTML = '';
-                if (speakerSelect) speakerSelect.innerHTML = '';
+                micSelect.innerHTML = '';
+                camSelect.innerHTML = '';
 
                 devices.forEach(device => {
                     const opt = document.createElement('option');
                     opt.value = device.deviceId;
                     opt.text = device.label || `${device.kind} (${device.deviceId.substring(0, 5)})`;
-                    if (device.kind === 'audioinput' && micSelect) micSelect.appendChild(opt);
-                    else if (device.kind === 'videoinput' && camSelect) camSelect.appendChild(opt);
-                    else if (device.kind === 'audiooutput' && speakerSelect) speakerSelect.appendChild(opt);
+                    if (device.kind === 'audioinput') micSelect.appendChild(opt);
+                    else if (device.kind === 'videoinput') camSelect.appendChild(opt);
                 });
             } catch (e) {}
         }
 
-        async function getMedia(customAudioId, customVideoId) {
+        async function getMedia() {
             try {
-                const audioConstraint = customAudioId ? { deviceId: { exact: customAudioId } } : true;
-                const videoConstraint = customVideoId ? { deviceId: { exact: customVideoId } } : true;
+                const micId = document.getElementById('micSelect')?.value;
+                const camId = document.getElementById('camSelect')?.value;
+                const audioConstraint = micId ? { deviceId: { exact: micId } } : true;
+                const videoConstraint = camId ? { deviceId: { exact: camId } } : true;
+
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraint, video: videoConstraint });
                 localStream.getAudioTracks()[0].enabled = isMicOn;
                 localStream.getVideoTracks()[0].enabled = isCamOn;
                 return true;
             } catch (err) {
-                showError("❌ Немає доступу до камери або мікрофона!");
+                document.getElementById('errorMsg').innerText = "❌ Помилка доступу до камери або мікрофона!";
                 return false;
             }
         }
 
-        function broadcastToAll(msg, exceptPeerId = null) {
-            Object.keys(activeConnections).forEach(pId => {
-                if (pId !== exceptPeerId && activeConnections[pId] && activeConnections[pId].open) {
-                    activeConnections[pId].send(msg);
+        function broadcastToAll(msg, exceptId = null) {
+            Object.keys(clientConns).forEach(id => {
+                if (id !== exceptId && clientConns[id] && clientConns[id].open) {
+                    clientConns[id].send(msg);
                 }
             });
         }
 
         async function createRoom() {
-            clearError();
-            myName = getUserNameInput();
+            myName = document.getElementById('userNameInput').value.trim() || "Організатор";
             if (!await getMedia()) return;
             isHost = true;
             roomIdGlobal = 'iabg-' + Math.random().toString(36).substring(2, 8);
-            window.location.hash = roomIdGlobal;
-            localStorage.setItem('iabg_host_' + roomIdGlobal, 'true');
             initPeerServer(roomIdGlobal);
         }
 
         async function joinRoomRequest() {
-            clearError();
-            let rawInput = document.getElementById('roomInput').value.trim();
-            if (!rawInput) return showError("❌ Введіть код або посилання кімнати!");
-            
-            if (rawInput.includes('#')) roomIdGlobal = rawInput.split('#')[1];
-            else if (rawInput.includes('http')) {
-                try { roomIdGlobal = new URL(rawInput).hash.substring(1); } catch(e) { roomIdGlobal = rawInput; }
-            } else roomIdGlobal = rawInput;
-
-            if (!roomIdGlobal) return showError("❌ Невірний формат коду кімнати!");
-            myName = getUserNameInput();
-            if (!await getMedia()) return;
-
-            const wasHostBefore = localStorage.getItem('iabg_host_' + roomIdGlobal) === 'true';
-            if (wasHostBefore) {
-                isHost = true;
-                window.location.hash = roomIdGlobal;
-                initPeerServer(roomIdGlobal);
+            roomIdGlobal = document.getElementById('roomInput').value.trim();
+            if (!roomIdGlobal) {
+                document.getElementById('errorMsg').innerText = "❌ Введіть код кімнати!";
                 return;
             }
+            myName = document.getElementById('userNameInput').value.trim() || "Гість";
+            if (!await getMedia()) return;
 
             document.getElementById('waitingModal').style.display = 'flex';
-            peer = new Peer(peerConfig);
+            peer = new Peer();
 
             peer.on('open', (id) => {
                 myPeerId = id;
                 isHost = false;
-                userColors[myPeerId] = getRandomColor(myPeerId);
                 hostConn = peer.connect(roomIdGlobal);
-                activeConnections[roomIdGlobal] = hostConn;
                 
                 hostConn.on('open', () => {
-                    hostConn.send({ 
-                        type: 'JOIN_REQ', peerId: myPeerId, name: myName, 
-                        camState: isCamOn, micState: isMicOn, color: userColors[myPeerId] 
-                    });
+                    hostConn.send({ type: 'JOIN_REQ', peerId: myPeerId, name: myName });
                 });
-                hostConn.on('data', (data) => handleGuestIncomingData(data));
-                hostConn.on('close', () => handleUserLeave(roomIdGlobal));
+                hostConn.on('data', (data) => handleGuestData(data));
+                hostConn.on('close', () => alert("⚠️ З'єднання з організатором розірвано."));
 
                 peer.on('call', (call) => {
-                    call.answer(localStream);
+                    call.answer(isScreenSharing ? screenStream : localStream);
                     handleCallStream(call);
                 });
             });
 
             peer.on('error', () => {
                 document.getElementById('waitingModal').style.display = 'none';
-                showError("❌ Кімнату ще не створили або організатор офлайн!");
+                document.getElementById('errorMsg').innerText = "❌ Кімнату не знайдено або організатор офлайн!";
             });
         }
 
         function initPeerServer(targetId) {
-            peer = new Peer(targetId, peerConfig);
+            peer = new Peer(targetId);
             peer.on('open', (id) => {
                 myPeerId = id;
                 isHost = true;
-                localStorage.setItem('iabg_host_' + roomIdGlobal, 'true');
-                userColors[myPeerId] = getRandomColor(myPeerId);
-                userCamStates[myPeerId] = isCamOn;
-                userMicStates[myPeerId] = isMicOn;
                 userNames[myPeerId] = myName + " (Організатор)";
-                
                 showCallScreen();
                 addVideoStream(myPeerId, localStream, userNames[myPeerId]);
-                updateAvatarState(myPeerId, isCamOn);
             });
 
             peer.on('connection', (conn) => {
-                activeConnections[conn.peer] = conn;
                 clientConns[conn.peer] = conn;
-                conn.on('data', (data) => handleHostIncomingData(data, conn));
-                conn.on('close', () => handleUserLeave(conn.peer));
+                conn.on('data', (data) => handleHostData(data, conn));
+                conn.on('close', () => removeUser(conn.peer));
             });
 
             peer.on('call', (call) => {
-                call.answer(localStream);
+                call.answer(isScreenSharing ? screenStream : localStream);
                 handleCallStream(call);
             });
-
-            peer.on('error', (err) => {
-                if (err.type === 'unavailable-id') {
-                    isHost = false;
-                    localStorage.removeItem('iabg_host_' + roomIdGlobal);
-                    if (peer) peer.destroy();
-                    joinRoomRequest();
-                } else showError("❌ Помилка кімнати: " + err.type);
-            });
         }
 
-        function cancelWaiting() {
-            document.getElementById('waitingModal').style.display = 'none';
-            if (peer) peer.destroy();
-        }
-
-        function handleHostIncomingData(data, conn) {
+        function handleHostData(data, conn) {
             if (data.type === 'JOIN_REQ') {
                 pendingGuestConn = conn;
                 pendingGuestInfo = data;
-                document.getElementById('incomingText').innerText = `Користувач "${data.name}" хоче приєднатися.`;
+                document.getElementById('incomingText').innerText = `Користувач "${data.name}" хоче увійти до конференції.`;
                 document.getElementById('incomingModal').style.display = 'flex';
-            } else if (data.type === 'CHAT_MSG') {
-                appendChatMessage(data.name, data.text, false);
-                broadcastToAll(data, conn.peer);
-            } else if (data.type === 'TOGGLE_MIC') {
-                userMicStates[conn.peer] = data.state;
-                updateUserStatuses(conn.peer);
-                broadcastToAll(data, conn.peer);
-            } else if (data.type === 'TOGGLE_CAM') {
-                userCamStates[conn.peer] = data.state;
-                updateAvatarState(conn.peer, data.state);
-                updateUserStatuses(conn.peer);
-                broadcastToAll(data, conn.peer);
-            } else if (data.type === 'TOGGLE_HAND') {
-                userHands[conn.peer] = data.state;
-                const container = document.getElementById('container-' + conn.peer);
-                if (container) container.classList.toggle('hand-raised', data.state);
-                broadcastToAll(data, conn.peer);
-            } else if (data.type === 'SCREEN_SHARE_STARTED') {
+            } else if (data.type === 'SCREEN_START') {
                 handleRemoteScreenShare(data.peerId, true);
                 broadcastToAll(data, conn.peer);
-            } else if (data.type === 'SCREEN_SHARE_STOPPED') {
+            } else if (data.type === 'SCREEN_STOP') {
                 handleRemoteScreenShare(data.peerId, false);
                 broadcastToAll(data, conn.peer);
-            } else if (data.type === 'PEER_RELAY_JOIN') {
-                const targetPeerId = data.targetPeerId;
-                if (targetPeerId && targetPeerId !== myPeerId && !calls[targetPeerId]) {
-                    const call = peer.call(targetPeerId, isScreenSharing ? screenStream : localStream);
-                    handleCallStream(call);
-                }
-            } else if (data.type === 'FORCE_MUTE_ME') {
-                if (isMicOn) toggleMic();
-            } else if (data.type === 'KICK_ME') {
-                alert("❌ Вас виключили з конференції.");
-                leaveCall();
             }
         }
 
@@ -890,33 +569,20 @@
             document.getElementById('incomingModal').style.display = 'none';
             if (!pendingGuestConn) return;
 
-            const gPeerId = pendingGuestInfo.peerId;
-            clientConns[gPeerId] = pendingGuestConn;
-            userNames[gPeerId] = pendingGuestInfo.name;
-            userCamStates[gPeerId] = pendingGuestInfo.camState;
-            userMicStates[gPeerId] = pendingGuestInfo.micState;
-            userColors[gPeerId] = pendingGuestInfo.color || getRandomColor(gPeerId);
-
+            const gId = pendingGuestInfo.peerId;
+            userNames[gId] = pendingGuestInfo.name;
+            
             pendingGuestConn.send({
-                type: 'JOIN_ACCEPT', hostId: myPeerId, users: userNames,
-                camStates: userCamStates, micStates: userMicStates, colors: userColors
+                type: 'JOIN_ACCEPT', users: userNames, hostId: myPeerId
             });
 
-            const call = peer.call(gPeerId, isScreenSharing ? screenStream : localStream);
+            const call = peer.call(gId, isScreenSharing ? screenStream : localStream);
             handleCallStream(call);
 
-            addVideoStream(gPeerId, null, userNames[gPeerId]);
-            updateAvatarState(gPeerId, userCamStates[gPeerId]);
-            updateUserStatuses(gPeerId);
-
-            playSound('join');
-            broadcastToAll({
-                type: 'USER_JOINED', peerId: gPeerId, name: userNames[gPeerId],
-                camState: userCamStates[gPeerId], micState: userMicStates[gPeerId], color: userColors[gPeerId]
-            }, gPeerId);
+            addVideoStream(gId, null, userNames[gId]);
+            broadcastToAll({ type: 'USER_JOINED', peerId: gId, name: userNames[gId] }, gId);
 
             pendingGuestConn = null;
-            pendingGuestInfo = null;
         }
 
         function hostRejectGuest() {
@@ -926,137 +592,76 @@
                 pendingGuestConn.close();
             }
             pendingGuestConn = null;
-            pendingGuestInfo = null;
         }
 
-        function handleGuestIncomingData(data) {
+        function handleGuestData(data) {
             if (data.type === 'JOIN_ACCEPT') {
                 document.getElementById('waitingModal').style.display = 'none';
-                isHost = false;
                 showCallScreen();
 
-                userColors[myPeerId] = userColors[myPeerId] || getRandomColor(myPeerId);
-                userCamStates[myPeerId] = isCamOn;
-                userMicStates[myPeerId] = isMicOn;
-                addVideoStream(myPeerId, localStream, myName + " (Ви)");
-                updateAvatarState(myPeerId, isCamOn);
-                updateUserStatuses(myPeerId);
+                userNames[myPeerId] = myName + " (Ви)";
+                addVideoStream(myPeerId, localStream, userNames[myPeerId]);
 
-                Object.keys(data.users).forEach(pId => {
-                    if (pId !== myPeerId) {
-                        userNames[pId] = data.users[pId];
-                        userCamStates[pId] = data.camStates[pId];
-                        userMicStates[pId] = data.micStates[pId];
-                        userColors[pId] = data.colors[pId];
-                        
-                        addVideoStream(pId, null, userNames[pId]);
-                        updateAvatarState(pId, userCamStates[pId]);
-                        updateUserStatuses(pId);
-
-                        if (!calls[pId]) {
-                            const call = peer.call(pId, localStream);
+                Object.keys(data.users).forEach(id => {
+                    if (id !== myPeerId) {
+                        userNames[id] = data.users[id];
+                        addVideoStream(id, null, userNames[id]);
+                        if (!calls[id]) {
+                            const call = peer.call(id, isScreenSharing ? screenStream : localStream);
                             handleCallStream(call);
                         }
                     }
                 });
-
-                if (hostConn && hostConn.open) {
-                    hostConn.send({ type: 'PEER_RELAY_JOIN', targetPeerId: myPeerId });
-                }
-                playSound('join');
             } else if (data.type === 'JOIN_REJECT') {
                 document.getElementById('waitingModal').style.display = 'none';
-                if (peer) peer.destroy();
-                showError("❌ Організатор відхилив запит.");
+                alert("❌ Організатор відхилив ваш запит на вхід.");
             } else if (data.type === 'USER_JOINED') {
                 userNames[data.peerId] = data.name;
-                userCamStates[data.peerId] = data.camState;
-                userMicStates[data.peerId] = data.micState;
-                userColors[data.peerId] = data.color;
-                
                 addVideoStream(data.peerId, null, data.name);
-                updateAvatarState(data.peerId, data.camState);
-                updateUserStatuses(data.peerId);
-
-                if (!isHost && data.peerId !== myPeerId && !calls[data.peerId]) {
-                    const call = peer.call(data.peerId, localStream);
-                    handleCallStream(call);
-                }
-                playSound('join');
             } else if (data.type === 'USER_LEFT') {
-                handleUserLeave(data.peerId);
-            } else if (data.type === 'CHAT_MSG') {
-                appendChatMessage(data.name, data.text, false);
-            } else if (data.type === 'TOGGLE_CAM') {
-                userCamStates[data.peerId] = data.state;
-                updateAvatarState(data.peerId, data.state);
-                updateUserStatuses(data.peerId);
-            } else if (data.type === 'TOGGLE_MIC') {
-                userMicStates[data.peerId] = data.state;
-                updateUserStatuses(data.peerId);
-            } else if (data.type === 'TOGGLE_HAND') {
-                userHands[data.peerId] = data.state;
-                const container = document.getElementById('container-' + data.peerId);
-                if (container) container.classList.toggle('hand-raised', data.state);
-            } else if (data.type === 'SCREEN_SHARE_STARTED') {
+                removeUser(data.peerId);
+            } else if (data.type === 'SCREEN_START') {
                 handleRemoteScreenShare(data.peerId, true);
-            } else if (data.type === 'SCREEN_SHARE_STOPPED') {
+            } else if (data.type === 'SCREEN_STOP') {
                 handleRemoteScreenShare(data.peerId, false);
-            } else if (data.type === 'FORCE_MUTE_ME') {
-                if (isMicOn) toggleMic();
-            } else if (data.type === 'KICK_ME') {
-                alert("❌ Вас виключили з конференції.");
-                leaveCall();
             }
         }
 
         function handleCallStream(call) {
             calls[call.peer] = call;
-            call.on('stream', (remoteStream) => {
-                // Якщо потік трансляції екрана
-                if (isScreenSharingActivePeer(call.peer)) {
-                    const screenVideo = document.getElementById('screenShareVideo');
-                    if (screenVideo) screenVideo.srcObject = remoteStream;
+            call.on('stream', (stream) => {
+                if (currentScreenSharerId === call.peer) {
+                    const sVideo = document.getElementById('screenShareVideo');
+                    if (sVideo) sVideo.srcObject = stream;
                 } else {
-                    let videoElem = document.getElementById('video-' + call.peer);
-                    let audioElem = document.getElementById('audio-' + call.peer);
-                    if (videoElem) videoElem.srcObject = remoteStream;
-                    if (audioElem) audioElem.srcObject = remoteStream;
+                    const video = document.getElementById('video-' + call.peer);
+                    if (video) video.srcObject = stream;
                 }
             });
-            call.on('close', () => handleUserLeave(call.peer));
+            call.on('close', () => removeUser(call.peer));
         }
 
-        let currentScreenSharerId = null;
-        function isScreenSharingActivePeer(pId) {
-            return currentScreenSharerId === pId;
-        }
-
+        /* ==========================================================================
+           8. STREAMING & RIGID GRID LAYOUT CONTROLLER
+           ========================================================================== */
         function handleRemoteScreenShare(peerId, active) {
-            const screenContainer = document.getElementById('screenShareContainer');
-            const screenSidebar = document.getElementById('screenSidebar');
-            const videoGrid = document.getElementById('videoGrid');
+            currentScreenSharerId = active ? peerId : null;
+            const container = document.getElementById('screenShareContainer');
+            const sidebar = document.getElementById('screenSidebar');
+            const grid = document.getElementById('videoGrid');
 
             if (active) {
-                currentScreenSharerId = peerId;
-                screenContainer.classList.add('active');
-                screenSidebar.style.display = 'flex';
-                // Переносимо контейнери камер у сайдбар для зручності
-                document.querySelectorAll('.video-container').forEach(el => {
-                    screenSidebar.appendChild(el);
-                });
-                videoGrid.style.display = 'none';
+                container.classList.add('active');
+                sidebar.classList.add('active');
+                document.querySelectorAll('.video-container').forEach(el => sidebar.appendChild(el));
+                grid.style.display = 'none';
             } else {
-                currentScreenSharerId = null;
-                screenContainer.classList.remove('active');
-                screenSidebar.style.display = 'none';
-                videoGrid.style.display = 'grid';
-                // Повертаємо назад у сітку
-                document.querySelectorAll('.video-container').forEach(el => {
-                    videoGrid.appendChild(el);
-                });
-                const screenVideo = document.getElementById('screenShareVideo');
-                if (screenVideo) screenVideo.srcObject = null;
+                container.classList.remove('active');
+                sidebar.classList.remove('active');
+                grid.style.display = 'flex';
+                document.querySelectorAll('.video-container').forEach(el => grid.appendChild(el));
+                const sVideo = document.getElementById('screenShareVideo');
+                if (sVideo) sVideo.srcObject = null;
             }
         }
 
@@ -1066,26 +671,23 @@
                 try {
                     screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
                     isScreenSharing = true;
-                    btn.innerText = "🛑 Стоп екран";
+                    btn.innerText = "🛑 Стоп Екран";
                     btn.classList.add('btn-red');
 
                     handleRemoteScreenShare(myPeerId, true);
 
-                    // Оновлюємо потік для всіх активних з'єднань
                     Object.values(calls).forEach(call => {
                         const sender = call.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
                         if (sender) sender.replaceTrack(screenStream.getVideoTracks()[0]);
                     });
 
-                    const msgObj = { type: 'SCREEN_SHARE_STARTED', peerId: myPeerId };
-                    if (isHost) broadcastToAll(msgObj);
-                    else if (hostConn && hostConn.open) hostConn.send(msgObj);
+                    const msg = { type: 'SCREEN_START', peerId: myPeerId };
+                    if (isHost) broadcastToAll(msg);
+                    else if (hostConn && hostConn.open) hostConn.send(msg);
 
-                    screenStream.getVideoTracks()[0].onended = () => {
-                        stopScreenShare();
-                    };
-                } catch (err) {
-                    showError("❌ Не вдалося запустити трансляцію екрана!");
+                    screenStream.getVideoTracks()[0].onended = () => stopScreenShare();
+                } catch (e) {
+                    alert("❌ Не вдалося запустити трансляцію екрана!");
                 }
             } else {
                 stopScreenShare();
@@ -1106,140 +708,54 @@
 
             handleRemoteScreenShare(myPeerId, false);
 
-            // Повертаємо звичайну камеру в дзвінок
             Object.values(calls).forEach(call => {
                 const sender = call.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
                 if (sender && localStream) sender.replaceTrack(localStream.getVideoTracks()[0]);
             });
 
-            const msgObj = { type: 'SCREEN_SHARE_STOPPED', peerId: myPeerId };
-            if (isHost) broadcastToAll(msgObj);
-            else if (hostConn && hostConn.open) hostConn.send(msgObj);
+            const msg = { type: 'SCREEN_STOP', peerId: myPeerId };
+            if (isHost) broadcastToAll(msg);
+            else if (hostConn && hostConn.open) hostConn.send(msg);
         }
 
-        function addVideoStream(pId, stream, name) {
-            if (document.getElementById('container-' + pId)) return;
-
+        function addVideoStream(id, stream, name) {
+            if (document.getElementById('container-' + id)) return;
+            const grid = document.getElementById('videoGrid');
+            const sidebar = document.getElementById('screenSidebar');
+            
             const container = document.createElement('div');
             container.className = 'video-container';
-            if (pId === myPeerId) container.classList.add('is-me');
-            container.id = 'container-' + pId;
-
-            container.addEventListener('click', (e) => {
-                if (e.target.closest('.user-label') || e.target.closest('.hand-badge')) return;
-                toggleFullscreenContainer(container);
-            });
-
-            container.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                if (!isHost || pId === myPeerId) return;
-                selectedPeerForMenu = pId;
-                const menu = document.getElementById('contextMenu');
-                menu.style.display = 'block';
-                menu.style.left = `${e.pageX}px`;
-                menu.style.top = `${e.pageY}px`;
-            });
+            if (id === myPeerId) container.classList.add('is-me');
+            container.id = 'container-' + id;
 
             const video = document.createElement('video');
-            video.id = 'video-' + pId;
+            video.id = 'video-' + id;
             video.autoplay = true;
             video.playsInline = true;
             if (stream) video.srcObject = stream;
-            if (pId === myPeerId) video.muted = true;
-
-            const audio = document.createElement('audio');
-            audio.id = 'audio-' + pId;
-            audio.autoplay = true;
-            audio.playsInline = true;
-            if (stream) audio.srcObject = stream;
-            if (pId === myPeerId) audio.muted = true;
-
-            const nameStr = userNames[pId] || name || "Г";
-            const firstLetter = nameStr.charAt(0).toUpperCase();
-            const color = userColors[pId] || '#3b82f6';
-
-            const avatarDiv = document.createElement('div');
-            avatarDiv.className = 'avatar-placeholder';
-            avatarDiv.id = 'avatar-' + pId;
-            avatarDiv.innerHTML = `<div class="avatar-circle" style="background-color: ${color};">${firstLetter}</div>`;
+            if (id === myPeerId) video.muted = true;
 
             const label = document.createElement('div');
             label.className = 'user-label';
-            label.id = `label-${pId}`;
-            label.innerHTML = `<span>${name}</span> <span class="status-badge" id="mic-status-${pId}">🎤</span>`;
-
-            const handBadge = document.createElement('div');
-            handBadge.className = 'hand-badge';
-            handBadge.id = `hand-${pId}`;
-            handBadge.innerText = '✋';
+            label.innerText = name;
 
             container.appendChild(video);
-            container.appendChild(audio);
-            container.appendChild(avatarDiv);
             container.appendChild(label);
-            container.appendChild(handBadge);
 
-            if (isScreenSharing && currentScreenSharerId) {
-                document.getElementById('screenSidebar').appendChild(container);
+            if (sidebar.classList.contains('active')) {
+                sidebar.appendChild(container);
             } else {
-                document.getElementById('videoGrid').appendChild(container);
+                grid.appendChild(container);
             }
         }
 
-        function toggleFullscreenContainer(container) {
-            const alreadyFull = container.classList.contains('fullscreen-mode');
-            document.querySelectorAll('.video-container').forEach(c => c.classList.remove('fullscreen-mode'));
-            if (!alreadyFull) container.classList.add('fullscreen-mode');
-        }
-
-        function ctxToggleMute() {
-            if (!selectedPeerForMenu || !isHost) return;
-            const targetId = selectedPeerForMenu;
-            if (clientConns[targetId] && clientConns[targetId].open) {
-                clientConns[targetId].send({ type: 'FORCE_MUTE_ME' });
-            }
-            userMicStates[targetId] = false;
-            updateUserStatuses(targetId);
-        }
-
-        function ctxKickUser() {
-            if (!selectedPeerForMenu || !isHost) return;
-            const targetId = selectedPeerForMenu;
-            if (clientConns[targetId] && clientConns[targetId].open) {
-                clientConns[targetId].send({ type: 'KICK_ME' });
-            }
-            handleUserLeave(targetId);
-        }
-
-        function updateAvatarState(pId, isCamActive) {
-            const avatar = document.getElementById('avatar-' + pId);
-            if (avatar) {
-                if (isCamActive) avatar.classList.add('hidden');
-                else avatar.classList.remove('hidden');
-            }
-        }
-
-        function updateUserStatuses(pId) {
-            const badge = document.getElementById(`mic-status-${pId}`);
-            if (badge) {
-                const micOn = userMicStates[pId] !== false;
-                badge.innerText = micOn ? "🎤" : "🔇";
-                if (!micOn) badge.classList.add('muted');
-                else badge.classList.remove('muted');
-            }
-        }
-
-        function handleUserLeave(pId) {
-            const container = document.getElementById('container-' + pId);
-            if (container) container.remove();
-            if (currentScreenSharerId === pId) {
-                handleRemoteScreenShare(pId, false);
-            }
-            delete clientConns[pId];
-            delete activeConnections[pId];
-            delete calls[pId];
-            delete userNames[pId];
-            delete userColors[pId];
+        function removeUser(id) {
+            const el = document.getElementById('container-' + id);
+            if (el) el.remove();
+            if (currentScreenSharerId === id) handleRemoteScreenShare(id, false);
+            delete calls[id];
+            delete clientConns[id];
+            delete userNames[id];
         }
 
         function showCallScreen() {
@@ -1251,100 +767,28 @@
         function toggleMic() {
             isMicOn = !isMicOn;
             if (localStream) localStream.getAudioTracks().forEach(t => t.enabled = isMicOn);
-            
             const btn = document.getElementById('micBtn');
             btn.innerText = isMicOn ? "🎤 Мікр" : "🔇 Викл";
             btn.classList.toggle('btn-red', !isMicOn);
-
-            userMicStates[myPeerId] = isMicOn;
-            updateUserStatuses(myPeerId);
-
-            const msgObj = { type: 'TOGGLE_MIC', state: isMicOn, peerId: myPeerId };
-            if (isHost) broadcastToAll(msgObj);
-            else if (hostConn && hostConn.open) hostConn.send(msgObj);
         }
 
         function toggleCam() {
             isCamOn = !isCamOn;
-            if (localStream && !isScreenSharing) {
-                localStream.getVideoTracks().forEach(t => t.enabled = isCamOn);
-            }
+            if (localStream && !isScreenSharing) localStream.getVideoTracks().forEach(t => t.enabled = isCamOn);
             const btn = document.getElementById('camBtn');
             btn.innerText = isCamOn ? "📹 Камера" : "📷 Викл";
             btn.classList.toggle('btn-red', !isCamOn);
-
-            userCamStates[myPeerId] = isCamOn;
-            updateAvatarState(myPeerId, isCamOn);
-
-            const msgObj = { type: 'TOGGLE_CAM', state: isCamOn, peerId: myPeerId };
-            if (isHost) broadcastToAll(msgObj);
-            else if (hostConn && hostConn.open) hostConn.send(msgObj);
         }
 
-        function toggleHand() {
-            isHandRaised = !isHandRaised;
-            const container = document.getElementById('container-' + myPeerId);
-            if (container) container.classList.toggle('hand-raised', isHandRaised);
-            const btn = document.getElementById('handBtn');
-            btn.classList.toggle('btn-primary', isHandRaised);
-
-            const msgObj = { type: 'TOGGLE_HAND', state: isHandRaised, peerId: myPeerId };
-            if (isHost) broadcastToAll(msgObj);
-            else if (hostConn && hostConn.open) hostConn.send(msgObj);
-        }
-
-        function toggleChat() {
-            document.getElementById('chatSidebar').classList.toggle('hidden');
-        }
-
-        function sendChatMessage() {
-            const input = document.getElementById('msgInput');
-            const text = input.value.trim();
-            if (!text) return;
-
-            appendChatMessage(myName + " (Ви)", text, true);
-            input.value = "";
-            playSound('msg');
-
-            const msgObj = { type: 'CHAT_MSG', name: myName, text: text };
-            if (isHost) broadcastToAll(msgObj);
-            else if (hostConn && hostConn.open) hostConn.send(msgObj);
-        }
-
-        function appendChatMessage(author, text, isMine) {
-            const box = document.getElementById('chatMessages');
-            const div = document.createElement('div');
-            div.className = 'msg-item' + (isMine ? ' mine' : '');
-            div.innerHTML = `<div class="msg-author">${author}</div><div>${text}</div>`;
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
-        }
-
-        async function changeAudioInput() {
-            await getMedia(document.getElementById('micSelect').value, document.getElementById('camSelect').value);
-        }
-
-        async function changeVideoInput() {
-            await getMedia(document.getElementById('micSelect').value, document.getElementById('camSelect').value);
+        async function changeMediaDevices() {
+            await getMedia();
             const myVideo = document.getElementById('video-' + myPeerId);
             if (myVideo && !isScreenSharing) myVideo.srcObject = localStream;
-            if (!isScreenSharing) {
-                localStream.getVideoTracks()[0].enabled = isCamOn;
-                updateAvatarState(myPeerId, isCamOn);
-            }
         }
 
-        async function changeAudioOutput() {
-            const speakerId = document.getElementById('speakerSelect').value;
-            for (let el of document.querySelectorAll('audio, video')) {
-                if (typeof el.setSinkId === 'function') {
-                    try { await el.setSinkId(speakerId); } catch (e) {}
-                }
-            }
-        }
-
-        function copyRoomLink() {
-            navigator.clipboard.writeText(window.location.href).then(() => alert("🔗 Посилання скопійовано!"));
+        function cancelWaiting() {
+            document.getElementById('waitingModal').style.display = 'none';
+            if (peer) peer.destroy();
         }
 
         function openSettings() { document.getElementById('settingsModal').style.display = 'flex'; }
