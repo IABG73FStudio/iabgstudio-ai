@@ -151,11 +151,6 @@
             justify-content: center;
             overflow-y: auto;
             position: relative;
-            transition: box-shadow 0.3s ease;
-        }
-
-        #videoGrid.mic-muted-border {
-            box-shadow: inset 0 0 0 6px rgba(239, 68, 68, 0.85);
         }
 
         .video-container {
@@ -172,34 +167,6 @@
             min-height: 0;
             border: 2px solid #2d3343;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        #videoGrid.pinned-active .video-container {
-            display: none !important;
-        }
-
-        #videoGrid.pinned-active .video-container.pinned {
-            display: flex !important;
-            grid-column: 1 / -1 !important;
-            grid-row: 1 / -1 !important;
-            width: 100% !important;
-            height: 100% !important;
-            z-index: 5;
-        }
-
-        #videoGrid.pinned-active .video-container.my-overlay {
-            display: flex !important;
-            position: absolute !important;
-            bottom: 20px !important;
-            right: 20px !important;
-            width: 160px !important;
-            height: 110px !important;
-            z-index: 10 !important;
-            border: 2px solid #3b82f6 !important;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.5) !important;
-            border-radius: 10px !important;
         }
 
         video {
@@ -230,6 +197,7 @@
             align-items: center;
             justify-content: center;
             font-size: 38px;
+            font-weight: bold;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             user-select: none;
             margin-bottom: 8px;
@@ -269,30 +237,6 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.3);
         }
         .video-container.hand-raised .hand-badge { display: block; }
-
-        #contextMenu {
-            display: none;
-            position: fixed;
-            background: #1f2937;
-            border: 1px solid #374151;
-            border-radius: 8px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
-            z-index: 1000;
-            width: 160px;
-            padding: 4px 0;
-        }
-
-        .menu-item {
-            padding: 10px 16px;
-            font-size: 13px;
-            color: #e4e6eb;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .menu-item:hover { background: #374151; color: #3b82f6; }
-        .menu-item.danger { color: #ef4444; }
-        .menu-item.danger:hover { background: #451a03; }
 
         #chatSidebar {
             width: 320px;
@@ -427,7 +371,6 @@
         .btn-red:hover { background: #dc2626 !important; }
         .btn-primary { background: #3b82f6 !important; color: #fff !important; }
         .btn-primary:hover { background: #2563eb !important; }
-        .btn-warning { background: #f59e0b !important; color: #fff !important; }
 
         @media (max-width: 768px) {
             #chatSidebar {
@@ -485,13 +428,6 @@
         </div>
     </div>
 
-    <!-- КОНТЕКСТНЕ МЕНЮ ДЛЯ МОДЕРАЦІЇ (ТІЛЬКИ ДЛЯ ХОСТА) -->
-    <div id="contextMenu">
-        <div class="menu-item" id="ctxMute" onclick="ctxActionMute()">Вимкнути звук</div>
-        <div class="menu-item" id="ctxChat" onclick="ctxActionChat()">Заборонити чат</div>
-        <div class="menu-item danger" onclick="ctxActionKick()">Кікнути з дзвінка</div>
-    </div>
-
     <!-- КІМНАТА ДЗВІНКУ -->
     <div id="callRoom">
         <div id="mainLayout">
@@ -516,7 +452,6 @@
             <button class="ctrl-btn" id="handBtn" onclick="toggleHand()">✋ Рука</button>
             <button class="ctrl-btn" onclick="openSettings()">⚙️ Пристрої</button>
             <button class="ctrl-btn btn-primary" onclick="toggleChat()">💬 Чат</button>
-            <button class="ctrl-btn" onclick="togglePipMode()">📺 PiP</button>
             <button class="ctrl-btn" onclick="copyRoomLink()">🔗 Посилання</button>
             <button class="ctrl-btn btn-red" onclick="leaveCall()">📞 Вийти</button>
         </div>
@@ -558,10 +493,7 @@
         let isMicOn = true;
         let isCamOn = true;
         let isHandRaised = false;
-        let isChatDisabled = false;
         let roomIdGlobal = "";
-        let pinnedPeerId = null;
-        let targetPeerForMenu = null;
 
         let hostConn = null; 
         const clientConns = {}; 
@@ -571,7 +503,6 @@
         const userNames = {}; 
         const userHands = {};
         const userColors = {}; 
-        let activeSpeakerOrder = [];
 
         let pendingGuestConn = null;
         let pendingGuestInfo = null;
@@ -606,12 +537,6 @@
                     gain.gain.setValueAtTime(0.05, now);
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
                     osc.start(now); osc.stop(now + 0.15);
-                } else if (type === 'click') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(300, now);
-                    gain.gain.setValueAtTime(0.03, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
-                    osc.start(now); osc.stop(now + 0.04);
                 }
             } catch (e) {}
         }
@@ -621,12 +546,6 @@
             if (hashRoom) {
                 document.getElementById('roomInput').value = hashRoom;
             }
-            window.addEventListener('resize', updateMosaicLayout);
-
-            window.addEventListener('click', () => {
-                document.getElementById('contextMenu').style.display = 'none';
-            });
-
             if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
                 await populateDeviceSelects();
             }
@@ -670,60 +589,13 @@
                 else if (device.kind === 'videoinput') camSelect.appendChild(opt);
                 else if (device.kind === 'audiooutput' && speakerSelect) speakerSelect.appendChild(opt);
             });
-
-            const savedMic = localStorage.getItem('iabg_saved_mic');
-            const savedCam = localStorage.getItem('iabg_saved_cam');
-            const savedSpeaker = localStorage.getItem('iabg_saved_speaker');
-
-            if (savedMic) micSelect.value = savedMic;
-            if (savedCam) camSelect.value = savedCam;
-            if (savedSpeaker && speakerSelect) speakerSelect.value = savedSpeaker;
         }
 
         async function getMedia() {
             try {
-                const micSelect = document.getElementById('micSelect');
-                const camSelect = document.getElementById('camSelect');
-
-                const audioId = micSelect && micSelect.value ? micSelect.value : localStorage.getItem('iabg_saved_mic');
-                const videoId = camSelect && camSelect.value ? camSelect.value : localStorage.getItem('iabg_saved_cam');
-
-                const constraints = {
-                    audio: audioId ? { deviceId: { exact: audioId } } : true,
-                    video: videoId ? { deviceId: { exact: videoId } } : true
-                };
-
-                const newStream = await navigator.mediaDevices.getUserMedia(constraints);
-                if (localStream) localStream.getTracks().forEach(track => track.stop());
-                localStream = newStream;
-
-                // Синхронізуємо стан потоку зі збереженими прапорцями
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
                 localStream.getAudioTracks()[0].enabled = isMicOn;
                 localStream.getVideoTracks()[0].enabled = isCamOn;
-
-                const activeAudioTrack = localStream.getAudioTracks()[0];
-                const activeVideoTrack = localStream.getVideoTracks()[0];
-                
-                if (activeAudioTrack && activeAudioTrack.getSettings) {
-                    const settings = activeAudioTrack.getSettings();
-                    if (settings.deviceId) localStorage.setItem('iabg_saved_mic', settings.deviceId);
-                }
-                if (activeVideoTrack && activeVideoTrack.getSettings) {
-                    const settings = activeVideoTrack.getSettings();
-                    if (settings.deviceId) localStorage.setItem('iabg_saved_cam', settings.deviceId);
-                }
-
-                Object.values(calls).forEach(call => {
-                    const senders = call.peerConnection.getSenders();
-                    const vSender = senders.find(s => s.track && s.track.kind === 'video');
-                    const aSender = senders.find(s => s.track && s.track.kind === 'audio');
-                    if (vSender && localStream.getVideoTracks()[0]) vSender.replaceTrack(localStream.getVideoTracks()[0]);
-                    if (aSender && localStream.getAudioTracks()[0]) aSender.replaceTrack(localStream.getAudioTracks()[0]);
-                });
-
-                const myVideo = document.getElementById('video-' + myPeerId);
-                if (myVideo) myVideo.srcObject = localStream;
-
                 return true;
             } catch (err) {
                 showError("❌ Немає доступу до камери або мікрофона!");
@@ -748,6 +620,7 @@
             roomIdGlobal = 'iabg-' + Math.random().toString(36).substring(2, 8);
             window.location.hash = roomIdGlobal;
 
+            // Запам'ятовуємо в браузері, що цей пристрій — організатор цієї кімнати
             localStorage.setItem('iabg_host_' + roomIdGlobal, 'true');
 
             initPeerServer(roomIdGlobal);
@@ -776,6 +649,7 @@
             myName = getUserNameInput();
             if (!await getMedia()) return;
 
+            // Перевіряємо, чи цей користувач уже був організатором цієї кімнати раніше
             const wasHostBefore = localStorage.getItem('iabg_host_' + roomIdGlobal) === 'true';
 
             if (wasHostBefore) {
@@ -784,8 +658,8 @@
                 return;
             }
 
+            // Якщо він гість — відкриваємо вікно очікування та конектимось до хоста
             document.getElementById('waitingModal').style.display = 'flex';
-
             peer = new Peer(peerConfig);
 
             peer.on('open', (id) => {
@@ -807,7 +681,6 @@
                 });
 
                 hostConn.on('data', (data) => handleGuestIncomingData(data));
-                hostConn.on('close', () => {});
 
                 peer.on('call', (call) => {
                     call.answer(localStream);
@@ -817,7 +690,7 @@
 
             peer.on('error', () => {
                 document.getElementById('waitingModal').style.display = 'none';
-                showError("❌ Не вдалося з'єднатися з кімнатою! Можливо, організатор ще не створив її.");
+                showError("❌ Кімнату ще не створили або організатор офлайн!");
             });
         }
 
@@ -832,14 +705,12 @@
                 userCamStates[myPeerId] = isCamOn;
                 userMicStates[myPeerId] = isMicOn;
                 userNames[myPeerId] = myName + " (Організатор)";
-                registerUser(myPeerId);
-
+                
                 showCallScreen();
                 addVideoStream(myPeerId, localStream, userNames[myPeerId]);
             });
 
             peer.on('connection', (conn) => {
-                conn.on('open', () => {});
                 conn.on('data', (data) => handleHostIncomingData(data, conn));
                 conn.on('close', () => {
                     if (clientConns[conn.peer]) {
@@ -855,32 +726,11 @@
 
             peer.on('error', (err) => {
                 if (err.type === 'unavailable-id') {
+                    // Якщо ID вже зайнятий, значить хост уже є, пробуємо зайти як гість
                     isHost = false;
                     localStorage.removeItem('iabg_host_' + roomIdGlobal);
                     if (peer) peer.destroy();
-                    
-                    document.getElementById('waitingModal').style.display = 'flex';
-                    peer = new Peer(peerConfig);
-                    peer.on('open', (id) => {
-                        myPeerId = id;
-                        userColors[myPeerId] = getRandomColor(myPeerId);
-                        hostConn = peer.connect(roomIdGlobal);
-                        hostConn.on('open', () => {
-                            hostConn.send({ 
-                                type: 'JOIN_REQ', 
-                                peerId: myPeerId, 
-                                name: myName, 
-                                camState: isCamOn, 
-                                micState: isMicOn,
-                                color: userColors[myPeerId] 
-                            });
-                        });
-                        hostConn.on('data', (data) => handleGuestIncomingData(data));
-                        peer.on('call', (call) => {
-                            call.answer(localStream);
-                            handleCallStream(call);
-                        });
-                    });
+                    joinRoomRequest();
                 } else {
                     showError("❌ Помилка кімнати: " + err.type);
                 }
@@ -898,66 +748,58 @@
                 pendingGuestInfo = data;
                 document.getElementById('incomingText').innerText = `Користувач "${data.name}" хоче приєднатися до кімнати.`;
                 document.getElementById('incomingModal').style.display = 'flex';
-            } else if (data.type === 'CAM_STATE') {
-                userCamStates[data.peerId] = data.enabled;
-                setCamDisplay(data.peerId, data.enabled);
-                broadcastFromHost(data, data.peerId);
-            } else if (data.type === 'MIC_STATE') {
-                userMicStates[data.peerId] = data.enabled;
-                setMicDisplay(data.peerId, data.enabled);
-                broadcastFromHost(data, data.peerId);
-            } else if (data.type === 'HAND_STATE') {
-                userHands[data.peerId] = data.raised;
-                setHandDisplay(data.peerId, data.raised);
-                broadcastFromHost(data, data.peerId);
             } else if (data.type === 'CHAT_MSG') {
-                appendChatMessage(data.senderName, data.text, false);
-                playSound('msg');
-                broadcastFromHost(data, data.peerId);
-            } else if (data.type === 'LEAVE') {
-                handleUserLeave(data.peerId);
+                appendChatMessage(data.name, data.text, false);
+                broadcastFromHost(data, conn.peer);
+            } else if (data.type === 'TOGGLE_MIC') {
+                userMicStates[conn.peer] = data.state;
+                updateMicIndicator(conn.peer, data.state);
+                broadcastFromHost(data, conn.peer);
+            } else if (data.type === 'TOGGLE_CAM') {
+                userCamStates[conn.peer] = data.state;
+                userCamStates[conn.peer] ? removeAvatar(conn.peer) : showAvatar(conn.peer);
+                broadcastFromHost(data, conn.peer);
+            } else if (data.type === 'TOGGLE_HAND') {
+                userHands[conn.peer] = data.state;
+                updateHandIndicator(conn.peer, data.state);
+                broadcastFromHost(data, conn.peer);
             }
         }
 
         function hostAcceptGuest() {
             document.getElementById('incomingModal').style.display = 'none';
-            if (!pendingGuestConn || !pendingGuestInfo) return;
+            if (!pendingGuestConn) return;
 
-            const gId = pendingGuestInfo.peerId;
-            const gName = pendingGuestInfo.name;
-            const gCam = pendingGuestInfo.camState;
-            const gMic = pendingGuestInfo.micState;
-            const gColor = pendingGuestInfo.color;
-
-            clientConns[gId] = pendingGuestConn;
-            userNames[gId] = gName;
-            userCamStates[gId] = gCam !== undefined ? gCam : true;
-            userMicStates[gId] = gMic !== undefined ? gMic : true;
-            userColors[gId] = gColor || getRandomColor(gId);
-            registerUser(gId);
-
-            callPeer(gId);
+            const gPeerId = pendingGuestInfo.peerId;
+            clientConns[gPeerId] = pendingGuestConn;
+            userNames[gPeerId] = pendingGuestInfo.name;
+            userCamStates[gPeerId] = pendingGuestInfo.camState;
+            userMicStates[gPeerId] = pendingGuestInfo.micState;
+            userColors[gPeerId] = pendingGuestInfo.color || getRandomColor(gPeerId);
 
             pendingGuestConn.send({
-                type: 'JOIN_APPROVED',
-                peers: Object.keys(userNames),
-                names: userNames,
+                type: 'JOIN_ACCEPT',
+                users: userNames,
                 camStates: userCamStates,
                 micStates: userMicStates,
-                hands: userHands,
-                colors: userColors,
-                chatDisabled: isChatDisabled
+                colors: userColors
             });
 
-            broadcastFromHost({ 
-                type: 'USER_JOINED', 
-                peerId: gId, 
-                name: gName, 
-                camState: userCamStates[gId], 
-                micState: userMicStates[gId],
-                color: userColors[gId] 
-            }, gId);
+            const call = peer.call(gPeerId, localStream);
+            handleCallStream(call);
+
+            addVideoStream(gPeerId, null, userNames[gPeerId]);
+            if (!userCamStates[gPeerId]) showAvatar(gPeerId);
+
             playSound('join');
+            broadcastFromHost({
+                type: 'USER_JOINED',
+                peerId: gPeerId,
+                name: userNames[gPeerId],
+                camState: userCamStates[gPeerId],
+                micState: userMicStates[gPeerId],
+                color: userColors[gPeerId]
+            }, gPeerId);
 
             pendingGuestConn = null;
             pendingGuestInfo = null;
@@ -966,511 +808,221 @@
         function hostRejectGuest() {
             document.getElementById('incomingModal').style.display = 'none';
             if (pendingGuestConn) {
-                pendingGuestConn.send({ type: 'JOIN_REJECTED' });
-                pendingGuestConn = null;
-                pendingGuestInfo = null;
+                pendingGuestConn.send({ type: 'JOIN_REJECT' });
+                pendingGuestConn.close();
             }
+            pendingGuestConn = null;
+            pendingGuestInfo = null;
         }
 
         function handleGuestIncomingData(data) {
-            if (data.type === 'JOIN_APPROVED') {
+            if (data.type === 'JOIN_ACCEPT') {
                 document.getElementById('waitingModal').style.display = 'none';
-                userCamStates[myPeerId] = isCamOn;
-                userMicStates[myPeerId] = isMicOn;
-                userNames[myPeerId] = myName;
-                registerUser(myPeerId);
-
-                Object.assign(userNames, data.names);
-                Object.assign(userCamStates, data.camStates);
-                Object.assign(userMicStates, data.micStates);
-                Object.assign(userHands, data.hands);
-                Object.assign(userColors, data.colors);
-                isChatDisabled = data.chatDisabled;
-                if (isChatDisabled) document.getElementById('msgInput').disabled = true;
-
+                isHost = false;
                 showCallScreen();
-                addVideoStream(myPeerId, localStream, myName + " (Ви)");
 
-                data.peers.forEach(pId => {
-                    registerUser(pId);
+                userColors[myPeerId] = userColors[myPeerId] || getRandomColor(myPeerId);
+                addVideoStream(myPeerId, localStream, myName + " (Ви)");
+                if (!isCamOn) showAvatar(myPeerId);
+
+                Object.keys(data.users).forEach(pId => {
                     if (pId !== myPeerId) {
-                        callPeer(pId);
+                        userNames[pId] = data.users[pId];
+                        userCamStates[pId] = data.camStates[pId];
+                        userMicStates[pId] = data.micStates[pId];
+                        userColors[pId] = data.colors[pId];
+                        addVideoStream(pId, null, userNames[pId]);
+                        if (!userCamStates[pId]) showAvatar(pId);
                     }
                 });
                 playSound('join');
-
-            } else if (data.type === 'JOIN_REJECTED') {
+            } else if (data.type === 'JOIN_REJECT') {
                 document.getElementById('waitingModal').style.display = 'none';
-                alert("❌ Організатор відхилив ваш запит на вхід.");
                 if (peer) peer.destroy();
-
+                showError("❌ Організатор відхилив ваш запит на вхід.");
             } else if (data.type === 'USER_JOINED') {
                 userNames[data.peerId] = data.name;
                 userCamStates[data.peerId] = data.camState;
-                userMicStates[data.peerId] = data.micState !== undefined ? data.micState : true;
-                userColors[data.peerId] = data.color || getRandomColor(data.peerId);
-                registerUser(data.peerId);
+                userMicStates[data.peerId] = data.micState;
+                userColors[data.peerId] = data.color;
+                addVideoStream(data.peerId, null, data.name);
+                if (!data.camState) showAvatar(data.peerId);
                 playSound('join');
-
-            } else if (data.type === 'CAM_STATE') {
-                userCamStates[data.peerId] = data.enabled;
-                setCamDisplay(data.peerId, data.enabled);
-
-            } else if (data.type === 'MIC_STATE') {
-                userMicStates[data.peerId] = data.enabled;
-                setMicDisplay(data.peerId, data.enabled);
-
-            } else if (data.type === 'HAND_STATE') {
-                userHands[data.peerId] = data.raised;
-                setHandDisplay(data.peerId, data.raised);
-
-            } else if (data.type === 'KICKED' && data.targetId === myPeerId) {
-                alert("⚠️ Вас виключено з дзвінка.");
-                leaveCall();
-
-            } else if (data.type === 'FORCE_MUTE' && data.targetId === myPeerId) {
-                if (isMicOn) toggleMic();
-                alert("⚠️ Організатор вимкнув вам мікрофон.");
-
-            } else if (data.type === 'TOGGLE_CHAT_LOCK') {
-                isChatDisabled = data.disabled;
-                document.getElementById('msgInput').disabled = isChatDisabled;
-                if (isChatDisabled) alert("⚠️ Організатор заблокував чат.");
-                else alert("🔓 Організатор розблокував чат.");
-
+            } else if (data.type === 'USER_LEFT') {
+                handleUserLeave(data.peerId);
             } else if (data.type === 'CHAT_MSG') {
-                appendChatMessage(data.senderName, data.text, false);
-                playSound('msg');
-
-            } else if (data.type === 'LEAVE') {
-                removeVideoStream(data.peerId);
-                delete userCamStates[data.peerId];
-                delete userMicStates[data.peerId];
-                delete userNames[data.peerId];
-                delete userHands[data.peerId];
-                delete userColors[data.peerId];
-                activeSpeakerOrder = activeSpeakerOrder.filter(id => id !== data.peerId);
-                playSound('leave');
-            }
-        }
-
-        function registerUser(peerId) {
-            if (!userColors[peerId]) {
-                userColors[peerId] = getRandomColor(peerId);
-            }
-            if (userMicStates[peerId] === undefined) {
-                userMicStates[peerId] = true;
-            }
-            if (!activeSpeakerOrder.includes(peerId)) {
-                activeSpeakerOrder.push(peerId);
-            }
-        }
-
-        function callPeer(peerId) {
-            if (calls[peerId] || peerId === myPeerId) return;
-            const call = peer.call(peerId, localStream);
-            if (call) {
-                calls[peerId] = call;
-                call.on('stream', (remoteStream) => {
-                    addVideoStream(peerId, remoteStream, userNames[peerId] || "Учасник");
-                });
-                call.on('close', () => removeVideoStream(peerId));
-                call.on('error', () => removeVideoStream(peerId));
+                appendChatMessage(data.name, data.text, false);
             }
         }
 
         function handleCallStream(call) {
-            if (call.peer === myPeerId) return;
             calls[call.peer] = call;
             call.on('stream', (remoteStream) => {
-                addVideoStream(call.peer, remoteStream, userNames[call.peer] || "Учасник");
+                let videoElem = document.getElementById('video-' + call.peer);
+                if (videoElem) {
+                    videoElem.srcObject = remoteStream;
+                }
             });
-            call.on('close', () => removeVideoStream(call.peer));
-            call.on('error', () => removeVideoStream(call.peer));
+            call.on('close', () => {
+                handleUserLeave(call.peer);
+            });
+        }
+
+        function addVideoStream(pId, stream, name) {
+            const grid = document.getElementById('videoGrid');
+            if (document.getElementById('container-' + pId)) return;
+
+            const container = document.createElement('div');
+            container.className = 'video-container';
+            container.id = 'container-' + pId;
+
+            const video = document.createElement('video');
+            video.id = 'video-' + pId;
+            video.autoplay = true;
+            video.playsInline = true;
+            if (stream) video.srcObject = stream;
+            if (pId === myPeerId) video.muted = true;
+
+            const label = document.createElement('div');
+            label.className = 'user-label';
+            label.id = `label-${pId}`;
+            label.innerText = name;
+
+            const handBadge = document.createElement('div');
+            handBadge.className = 'hand-badge';
+            handBadge.id = `hand-${pId}`;
+            handBadge.innerText = '✋';
+
+            container.appendChild(video);
+            container.appendChild(label);
+            container.appendChild(handBadge);
+            grid.appendChild(container);
+        }
+
+        function showAvatar(pId) {
+            const container = document.getElementById('container-' + pId);
+            if (!container) return;
+            if (document.getElementById('avatar-' + pId)) return;
+
+            const name = userNames[pId] || "Г";
+            const firstLetter = name.charAt(0).toUpperCase();
+            const color = userColors[pId] || '#3b82f6';
+
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = 'avatar-placeholder';
+            avatarDiv.id = 'avatar-' + pId;
+
+            const circle = document.createElement('div');
+            circle.className = 'avatar-circle';
+            circle.style.backgroundColor = color;
+            circle.innerText = firstLetter;
+
+            avatarDiv.appendChild(circle);
+            container.appendChild(avatarDiv);
+        }
+
+        function removeAvatar(pId) {
+            const avatar = document.getElementById('avatar-' + pId);
+            if (avatar) avatar.remove();
+        }
+
+        function handleUserLeave(pId) {
+            const container = document.getElementById('container-' + pId);
+            if (container) container.remove();
+            delete clientConns[pId];
+            delete calls[pId];
+            delete userNames[pId];
+            playSound('leave');
         }
 
         function showCallScreen() {
             document.getElementById('lobby').style.display = 'none';
+            document.getElementById('waitingModal').style.display = 'none';
             document.getElementById('callRoom').style.display = 'flex';
         }
 
-        function addVideoStream(peerId, stream, labelText) {
-            let container = document.getElementById('container-' + peerId);
-            if (!container) {
-                container = document.createElement('div');
-                container.id = 'container-' + peerId;
-                container.className = 'video-container';
-                
-                if (peerId === myPeerId && pinnedPeerId && pinnedPeerId !== myPeerId) {
-                    container.classList.add('my-overlay');
-                }
-
-                container.oncontextmenu = (e) => {
-                    e.preventDefault();
-                    if (isHost && peerId !== myPeerId) {
-                        targetPeerForMenu = peerId;
-                        const menu = document.getElementById('contextMenu');
-                        menu.style.display = 'block';
-                        menu.style.left = e.pageX + 'px';
-                        menu.style.top = e.pageY + 'px';
-                    }
-                };
-
-                container.onclick = () => togglePinUser(peerId);
-
-                const video = document.createElement('video');
-                video.id = 'video-' + peerId;
-                video.autoplay = true;
-                video.playsInline = true;
-                if (peerId === myPeerId) video.muted = true;
-                video.srcObject = stream;
-
-                const avatarDiv = document.createElement('div');
-                avatarDiv.id = 'avatar-' + peerId;
-                avatarDiv.className = 'avatar-placeholder';
-                avatarDiv.style.display = (userCamStates[peerId] === false) ? 'flex' : 'none';
-                
-                const userColor = userColors[peerId] || getRandomColor(peerId);
-                avatarDiv.innerHTML = `
-                    <div class="avatar-circle" style="background: ${userColor};">
-                        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="12" cy="7" r="4"></circle>
-                        </svg>
-                    </div>
-                `;
-
-                const label = document.createElement('div');
-                label.id = 'label-' + peerId;
-                label.className = 'user-label';
-                
-                const isMicActive = userMicStates[peerId] !== false;
-                label.innerHTML = `<span>${labelText}</span> <span id="mic-icon-${peerId}">${isMicActive ? '🎤' : '🔇'}</span>`;
-
-                const handBadge = document.createElement('div');
-                handBadge.id = 'hand-' + peerId;
-                handBadge.className = 'hand-badge';
-                handBadge.innerText = '✋';
-
-                container.appendChild(video);
-                container.appendChild(avatarDiv);
-                container.appendChild(label);
-                container.appendChild(handBadge);
-
-                document.getElementById('videoGrid').appendChild(container);
-                updateMosaicLayout();
-            } else {
-                const video = document.getElementById('video-' + peerId);
-                if (video && video.srcObject !== stream) {
-                    video.srcObject = stream;
-                }
-                const label = document.getElementById('label-' + peerId);
-                if (label) {
-                    const isMicActive = userMicStates[peerId] !== false;
-                    label.innerHTML = `<span>${labelText}</span> <span id="mic-icon-${peerId}">${isMicActive ? '🎤' : '🔇'}</span>`;
-                }
-            }
-        }
-
-        function removeVideoStream(peerId) {
-            const container = document.getElementById('container-' + peerId);
-            if (container) container.remove();
-            if (calls[peerId]) {
-                calls[peerId].close();
-                delete calls[peerId];
-            }
-            if (pinnedPeerId === peerId) {
-                pinnedPeerId = null;
-                document.getElementById('videoGrid').classList.remove('pinned-active');
-            }
-            updateMosaicLayout();
-        }
-
-        function setCamDisplay(peerId, enabled) {
-            userCamStates[peerId] = enabled;
-            const avatarDiv = document.getElementById('avatar-' + peerId);
-            if (avatarDiv) avatarDiv.style.display = enabled ? 'none' : 'flex';
-        }
-
-        function setMicDisplay(peerId, enabled) {
-            userMicStates[peerId] = enabled;
-            const micIconSpan = document.getElementById('mic-icon-' + peerId);
-            if (micIconSpan) {
-                micIconSpan.innerText = enabled ? '🎤' : '🔇';
-            }
-        }
-
-        function setHandDisplay(peerId, raised) {
-            const container = document.getElementById('container-' + peerId);
-            if (container) {
-                if (raised) container.classList.add('hand-raised');
-                else container.classList.remove('hand-raised');
-            }
-        }
-
-        function updateMosaicLayout() {
-            const grid = document.getElementById('videoGrid');
-            const count = grid.getElementsByClassName('video-container').length;
-            if (count === 0) return;
-
-            if (count === 1) {
-                grid.style.gridTemplateColumns = '1fr';
-                grid.style.gridTemplateRows = '1fr';
-            } else if (count === 2) {
-                grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(300px, 1fr))';
-                grid.style.gridTemplateRows = '1fr';
-            } else {
-                grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(250px, 1fr))';
-                grid.style.gridTemplateRows = 'repeat(auto-fit, minmax(200px, 1fr))';
-            }
-        }
-
         function toggleMic() {
-            if (!localStream) return;
-            const audioTrack = localStream.getAudioTracks()[0];
-            if (audioTrack) {
-                isMicOn = !isMicOn;
-                audioTrack.enabled = isMicOn;
-                const btn = document.getElementById('micBtn');
-                if (isMicOn) {
-                    btn.innerText = "🎤 Мікрофон";
-                    btn.classList.remove('btn-red');
-                    document.getElementById('videoGrid').classList.remove('mic-muted-border');
-                } else {
-                    btn.innerText = "🔇 Увімк. мікрофон";
-                    btn.classList.add('btn-red');
-                    document.getElementById('videoGrid').classList.add('mic-muted-border');
-                }
-                
-                setMicDisplay(myPeerId, isMicOn);
-                userMicStates[myPeerId] = isMicOn;
+            isMicOn = !isMicOn;
+            if (localStream) localStream.getAudioTracks()[0].enabled = isMicOn;
+            const btn = document.getElementById('micBtn');
+            btn.innerText = isMicOn ? "🎤 Мікрофон" : "🔇 Вимкнено";
+            btn.classList.toggle('btn-red', !isMicOn);
 
-                const stateMsg = { type: 'MIC_STATE', peerId: myPeerId, enabled: isMicOn };
-                if (isHost) broadcastFromHost(stateMsg);
-                else if (hostConn && hostConn.open) hostConn.send(stateMsg);
-
-                playSound('click');
+            if (!isHost && hostConn && hostConn.open) {
+                hostConn.send({ type: 'TOGGLE_MIC', state: isMicOn });
+            } else if (isHost) {
+                broadcastFromHost({ type: 'TOGGLE_MIC', state: isMicOn, peerId: myPeerId });
             }
         }
 
         function toggleCam() {
-            if (!localStream) return;
-            const videoTrack = localStream.getVideoTracks()[0];
-            if (videoTrack) {
-                isCamOn = !isCamOn;
-                videoTrack.enabled = isCamOn;
-                const btn = document.getElementById('camBtn');
-                if (isCamOn) {
-                    btn.innerText = "📹 Камера";
-                    btn.classList.remove('btn-red');
-                } else {
-                    btn.innerText = "📷 Увімк. камеру";
-                    btn.classList.add('btn-red');
-                }
-                
-                setCamDisplay(myPeerId, isCamOn);
-                userCamStates[myPeerId] = isCamOn;
-                
-                const stateMsg = { type: 'CAM_STATE', peerId: myPeerId, enabled: isCamOn };
-                if (isHost) broadcastFromHost(stateMsg);
-                else if (hostConn && hostConn.open) hostConn.send(stateMsg);
+            isCamOn = !isCamOn;
+            if (localStream) localStream.getVideoTracks()[0].enabled = isCamOn;
+            const btn = document.getElementById('camBtn');
+            btn.innerText = isCamOn ? "📹 Камера" : "📷 Вимкнено";
+            btn.classList.toggle('btn-red', !isCamOn);
 
-                playSound('click');
+            if (isCamOn) removeAvatar(myPeerId);
+            else showAvatar(myPeerId);
+
+            if (!isHost && hostConn && hostConn.open) {
+                hostConn.send({ type: 'TOGGLE_CAM', state: isCamOn });
+            } else if (isHost) {
+                broadcastFromHost({ type: 'TOGGLE_CAM', state: isCamOn, peerId: myPeerId });
             }
         }
 
         function toggleHand() {
             isHandRaised = !isHandRaised;
+            const container = document.getElementById('container-' + myPeerId);
+            if (container) container.classList.toggle('hand-raised', isHandRaised);
             const btn = document.getElementById('handBtn');
-            if (isHandRaised) {
-                btn.innerText = "✋ Опустити руку";
-                btn.classList.add('btn-warning');
-            } else {
-                btn.innerText = "✋ Рука";
-                btn.classList.remove('btn-warning');
-            }
-            setHandDisplay(myPeerId, isHandRaised);
-
-            const msg = { type: 'HAND_STATE', peerId: myPeerId, raised: isHandRaised };
-            if (isHost) broadcastFromHost(msg);
-            else if (hostConn && hostConn.open) hostConn.send(msg);
-
-            playSound('click');
+            btn.classList.toggle('btn-primary', isHandRaised);
         }
 
         function toggleChat() {
             document.getElementById('chatSidebar').classList.toggle('hidden');
-            playSound('click');
         }
 
         function sendChatMessage() {
-            if (isChatDisabled && !isHost) {
-                alert("⚠️ Чат заблоковано організатором.");
-                return;
-            }
             const input = document.getElementById('msgInput');
             const text = input.value.trim();
             if (!text) return;
 
             appendChatMessage(myName + " (Ви)", text, true);
             input.value = "";
-
-            const msg = { type: 'CHAT_MSG', senderName: myName, peerId: myPeerId, text: text };
-            if (isHost) broadcastFromHost(msg);
-            else if (hostConn && hostConn.open) hostConn.send(msg);
-
             playSound('msg');
-        }
 
-        function appendChatMessage(sender, text, isMine) {
-            const chatMessages = document.getElementById('chatMessages');
-            const div = document.createElement('div');
-            div.className = 'msg-item' + (isMine ? ' mine' : '');
-            div.innerHTML = `<div class="msg-author">${sender}</div><div>${escapeHtml(text)}</div>`;
-            chatMessages.appendChild(div);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        function escapeHtml(str) {
-            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        }
-
-        function togglePinUser(peerId) {
-            const grid = document.getElementById('videoGrid');
-            const container = document.getElementById('container-' + peerId);
-            if (!container) return;
-
-            if (pinnedPeerId === peerId) {
-                pinnedPeerId = null;
-                grid.classList.remove('pinned-active');
-                container.classList.remove('pinned');
-                const myContainer = document.getElementById('container-' + myPeerId);
-                if (myContainer) myContainer.classList.remove('my-overlay');
-            } else {
-                if (pinnedPeerId) {
-                    const oldPinned = document.getElementById('container-' + pinnedPeerId);
-                    if (oldPinned) oldPinned.classList.remove('pinned');
-                }
-                pinnedPeerId = peerId;
-                grid.classList.add('pinned-active');
-                container.classList.add('pinned');
-                
-                const myContainer = document.getElementById('container-' + myPeerId);
-                if (myContainer && myPeerId !== peerId) {
-                    myContainer.classList.add('my-overlay');
-                }
+            const msgObj = { type: 'CHAT_MSG', name: myName, text: text };
+            if (isHost) {
+                broadcastFromHost(msgObj);
+            } else if (hostConn && hostConn.open) {
+                hostConn.send(msgObj);
             }
         }
 
-        async function togglePipMode() {
-            try {
-                const activeVideo = document.querySelector('video:not([muted])') || document.querySelector('video');
-                if (activeVideo) {
-                    if (document.pictureInPictureElement) await document.exitPictureInPicture();
-                    else if (document.pictureInPictureEnabled) await activeVideo.requestPictureInPicture();
-                }
-            } catch (e) {}
+        function appendChatMessage(author, text, isMine) {
+            const box = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = 'msg-item' + (isMine ? ' mine' : '');
+            div.innerHTML = `<div class="msg-author">${author}</div><div>${text}</div>`;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
         }
 
         function copyRoomLink() {
-            const fullLink = window.location.origin + window.location.pathname + '#' + roomIdGlobal;
-            navigator.clipboard.writeText(fullLink).then(() => {
-                alert("🔗 Посилання на кімнату скопійовано в буфер обміну!");
+            const link = window.location.href;
+            navigator.clipboard.writeText(link).then(() => {
+                alert("🔗 Посилання на кімнату скопійовано!");
             });
         }
 
-        function openSettings() {
-            document.getElementById('settingsModal').style.display = 'flex';
-            playSound('click');
-        }
-
-        function closeSettings() {
-            document.getElementById('settingsModal').style.display = 'none';
-            playSound('click');
-        }
-
-        async function changeAudioInput() {
-            const mic = document.getElementById('micSelect');
-            if (mic && mic.value) {
-                localStorage.setItem('iabg_saved_mic', mic.value);
-                await getMedia();
-            }
-        }
-
-        async function changeVideoInput() {
-            const cam = document.getElementById('camSelect');
-            if (cam && cam.value) {
-                localStorage.setItem('iabg_saved_cam', cam.value);
-                await getMedia();
-            }
-        }
-
-        function changeAudioOutput() {
-            const spk = document.getElementById('speakerSelect');
-            if (spk && spk.value) {
-                localStorage.setItem('iabg_saved_speaker', spk.value);
-                document.querySelectorAll('video').forEach(v => {
-                    if (typeof v.sinkId !== 'undefined') v.setSinkId(spk.value).catch(() => {});
-                });
-            }
-        }
-
-        function ctxActionMute() {
-            if (!isHost || !targetPeerForMenu) return;
-            const msg = { type: 'FORCE_MUTE', targetId: targetPeerForMenu };
-            if (clientConns[targetPeerForMenu]) clientConns[targetPeerForMenu].send(msg);
-            document.getElementById('contextMenu').style.display = 'none';
-        }
-
-        function ctxActionChat() {
-            if (!isHost) return;
-            isChatDisabled = !isChatDisabled;
-            document.getElementById('msgInput').disabled = isChatDisabled;
-            broadcastFromHost({ type: 'TOGGLE_CHAT_LOCK', disabled: isChatDisabled });
-            document.getElementById('contextMenu').style.display = 'none';
-        }
-
-        function ctxActionKick() {
-            if (!isHost || !targetPeerForMenu) return;
-            const msg = { type: 'KICKED', targetId: targetPeerForMenu };
-            if (clientConns[targetPeerForMenu]) {
-                clientConns[targetPeerForMenu].send(msg);
-                setTimeout(() => handleUserLeave(targetPeerForMenu), 300);
-            }
-            document.getElementById('contextMenu').style.display = 'none';
-        }
-
-        function handleUserLeave(peerId) {
-            removeVideoStream(peerId);
-            delete userCamStates[peerId];
-            delete userMicStates[peerId];
-            delete userNames[peerId];
-            delete userHands[peerId];
-            delete userColors[peerId];
-            activeSpeakerOrder = activeSpeakerOrder.filter(id => id !== peerId);
-            playSound('leave');
-
-            if (isHost) {
-                if (clientConns[peerId]) {
-                    clientConns[peerId].close();
-                    delete clientConns[peerId];
-                }
-                broadcastFromHost({ type: 'LEAVE', peerId: peerId });
-            }
-        }
+        function openSettings() { document.getElementById('settingsModal').style.display = 'flex'; }
+        function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
 
         function leaveCall() {
-            const leaveMsg = { type: 'LEAVE', peerId: myPeerId };
-            if (isHost) {
-                broadcastFromHost(leaveMsg);
-            } else if (hostConn && hostConn.open) {
-                hostConn.send(leaveMsg);
-            }
-
             if (localStream) localStream.getTracks().forEach(t => t.stop());
             if (peer) peer.destroy();
-
-            window.location.hash = '';
             window.location.reload();
         }
     </script>
