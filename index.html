@@ -81,6 +81,40 @@
             min-height: 20px;
         }
 
+        /* МОДАЛЬНЕ ВІКНО «ПРИЙНЯТИ ДЗВІНОК» */
+        #incomingModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .incoming-card {
+            background: #181b24;
+            padding: 36px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 360px;
+            width: 90%;
+            border: 1px solid #2d3343;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+        }
+
+        .phone-ring-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+            animation: bounce 1.2s infinite alternate;
+        }
+
+        @keyframes bounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-10px); }
+        }
+
         /* ОСНОВНА КІМНАТА ДЗВІНКУ */
         #callRoom {
             display: none;
@@ -111,7 +145,6 @@
             transition: box-shadow 0.3s ease;
         }
 
-        /* ЧЕРВОНА РАМКА ПО БОКАХ, КОЛИ МІКРОФОН ВИМКНЕНО */
         #videoGrid.mic-muted-border {
             box-shadow: inset 0 0 0 6px rgba(239, 68, 68, 0.85);
         }
@@ -165,7 +198,6 @@
             border-radius: 10px !important;
         }
 
-        /* ЗЕЛЕНЕ СЯЙВО ПРИ РОЗМОВІ */
         .video-container.speaking {
             border-color: #10b981 !important;
             box-shadow: 0 0 16px 3px rgba(16, 185, 129, 0.4) !important;
@@ -219,7 +251,6 @@
             text-overflow: ellipsis;
         }
 
-        /* ІНДИКАТОР ПІДНЯТОЇ РУКИ */
         .hand-badge {
             position: absolute;
             top: 10px;
@@ -415,20 +446,32 @@
     <div id="lobby">
         <div class="card">
             <h1>IABG Meet 🚀</h1>
-            <p>Введіть своє ім'я для підключення</p>
+            <p>Введіть своє ім'я для дзвінка</p>
             
             <input type="text" id="userNameInput" placeholder="Ваше ім'я..." value="Гість">
 
             <div style="margin: 10px 0; border-top: 1px solid #2d3343;"></div>
 
-            <button onclick="createRoom()">➕ Створити кімнату</button>
+            <button onclick="prepareCreateRoom()">➕ Створити кімнату</button>
             
             <div style="margin: 8px 0; color: #6b7280; font-size: 12px;">— АБО —</div>
             
             <input type="text" id="roomInput" placeholder="Код кімнати">
-            <button class="btn-join" onclick="joinByInput()">Приєднатися</button>
+            <button class="btn-join" onclick="prepareJoinRoom()">📞 Приєднатися</button>
 
             <div id="errorMsg"></div>
+        </div>
+    </div>
+
+    <!-- ВХІДНЕ ВІКНО ВИКЛИКУ (ПРИЙНЯТИ / ВІДХИЛИТИ) -->
+    <div id="incomingModal">
+        <div class="incoming-card">
+            <div class="phone-ring-icon">📞</div>
+            <h2 style="margin-top:0; color:#fff; font-size:22px;">Вхідний дзвінок</h2>
+            <p id="incomingText" style="color:#9ca3af; font-size:14px; margin-bottom:20px;">Готові до приєднання?</p>
+            
+            <button class="btn-join" style="padding: 14px; font-size:16px; margin-bottom:8px;" onclick="acceptCallAndConnect()">✅ Прийняти дзвінок</button>
+            <button class="btn-red" style="padding: 14px; font-size:16px;" onclick="cancelIncomingCall()">❌ Відхилити</button>
         </div>
     </div>
 
@@ -510,6 +553,8 @@
         let isHandRaised = false;
         let isChatDisabled = false;
         let roomIdGlobal = "";
+        let pendingRoomId = "";
+        let isCreatingRoom = false;
         let pinnedPeerId = null;
         let targetPeerForMenu = null;
 
@@ -521,7 +566,7 @@
         const userHands = {};
         let activeSpeakerOrder = [];
 
-        // 🔊 НОВІ КРАСИВІ ТА М'ЯКІ ЗВУКИ (Web Audio API)
+        // ЗВУКИ (Web Audio API)
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
             try {
@@ -533,10 +578,9 @@
                 const now = audioCtx.currentTime;
 
                 if (type === 'join') {
-                    // Приємний двотональний дзвіночок входу
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(440, now); // A4
-                    osc.frequency.setValueAtTime(659.25, now + 0.12); // E5
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.12);
                     gain.gain.setValueAtTime(0.08, now);
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
                     osc.start(now); osc.stop(now + 0.35);
@@ -549,7 +593,7 @@
                     osc.start(now); osc.stop(now + 0.3);
                 } else if (type === 'msg') {
                     osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(880, now); // A5
+                    osc.frequency.setValueAtTime(880, now);
                     gain.gain.setValueAtTime(0.05, now);
                     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
                     osc.start(now); osc.stop(now + 0.15);
@@ -586,7 +630,6 @@
             return document.getElementById('userNameInput').value.trim() || "Гість";
         }
 
-        // ЗАВАНТАЖЕННЯ ТА ЗБЕРЕЖЕННЯ ПРИСТРОЇВ (localStorage)
         async function populateDeviceSelects() {
             const devices = await navigator.mediaDevices.enumerateDevices();
             const micSelect = document.getElementById('micSelect');
@@ -671,11 +714,44 @@
             });
         }
 
-        async function createRoom() {
+        // КРОК 1: ПІДГОТОВКА СТВОРЕННЯ / ПРИЄДНАННЯ (ПОКАЗУЄМО МОДАЛКУ ВИКЛИКУ)
+        function prepareCreateRoom() {
             clearError();
+            myName = getUserNameInput();
+            isCreatingRoom = true;
+            document.getElementById('incomingText').innerText = "Готові створити кімнату та почати дзвінок?";
+            document.getElementById('incomingModal').style.display = 'flex';
+        }
+
+        function prepareJoinRoom() {
+            clearError();
+            const rId = document.getElementById('roomInput').value.trim();
+            if (!rId) return showError("❌ Введіть код кімнати!");
+            
+            myName = getUserNameInput();
+            isCreatingRoom = false;
+            pendingRoomId = rId;
+            document.getElementById('incomingText').innerText = `Готові підключитися до кімнати: ${rId}?`;
+            document.getElementById('incomingModal').style.display = 'flex';
+        }
+
+        function cancelIncomingCall() {
+            document.getElementById('incomingModal').style.display = 'none';
+        }
+
+        // КРОК 2: НАТИСНУТО «ПРИЙНЯТИ ДЗВІНОК»
+        async function acceptCallAndConnect() {
+            document.getElementById('incomingModal').style.display = 'none';
             if (!await getMedia()) return;
 
-            myName = getUserNameInput();
+            if (isCreatingRoom) {
+                createRoomFinal();
+            } else {
+                joinRoomFinal(pendingRoomId);
+            }
+        }
+
+        function createRoomFinal() {
             isHost = true;
             roomIdGlobal = 'meet-' + Math.random().toString(36).substring(2, 8);
             window.location.hash = roomIdGlobal;
@@ -706,18 +782,7 @@
             peer.on('error', (err) => showError("❌ Помилка: " + err.type));
         }
 
-        function joinByInput() {
-            clearError();
-            const rId = document.getElementById('roomInput').value.trim();
-            if (!rId) return showError("❌ Введіть код кімнати!");
-            joinRoom(rId);
-        }
-
-        async function joinRoom(rId) {
-            clearError();
-            if (!await getMedia()) return;
-
-            myName = getUserNameInput();
+        function joinRoomFinal(rId) {
             roomIdGlobal = rId;
             peer = new Peer(peerConfig);
 
@@ -866,7 +931,6 @@
 
                 container.onclick = () => togglePinUser(peerId);
 
-                // ПРАВА КНОПКА МИШІ ДЛЯ МОДЕРАЦІЇ
                 container.oncontextmenu = (e) => {
                     e.preventDefault();
                     if (!isHost && myPeerId !== peerId) return;
@@ -1048,7 +1112,7 @@
             }
         }
 
-        // 📺 НАДІЙНИЙ PiP (Картинка в картинці для телефонів при виході з браузера)
+        // PiP (Картинка в картинці)
         async function togglePipMode() {
             try {
                 const myVideo = document.getElementById('video-' + myPeerId);
